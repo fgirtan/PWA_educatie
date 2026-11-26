@@ -1,0 +1,847 @@
+{
+ "sun": {
+  "file": "sun.jpg",
+  "page": "Sun",
+  "license": "CC BY-SA 4.0",
+  "artist": "Matúš Motlo",
+  "bytes": 44470
+ },
+ "mercury": {
+  "file": "mercury.jpg",
+  "page": "Mercury (planet)",
+  "license": "Public domain",
+  "artist": "NASA/Johns Hopkins University Applied Physics Laboratory/Arizona State University/Carnegie Instituti",
+  "bytes": 71367
+ },
+ "venus": {
+  "file": "venus.jpg",
+  "page": "Venus",
+  "license": "Public domain",
+  "artist": "NASA/JPL-Caltech",
+  "bytes": 26848
+ },
+ "earth": {
+  "file": "earth.jpg",
+  "page": "Earth",
+  "license": "Attribution",
+  "artist": "EUMETSAT",
+  "bytes": 108036
+ },
+ "moon": {
+  "file": "moon.jpg",
+  "page": "Moon",
+  "license": "CC BY-SA 3.0",
+  "artist": "Gregory H. Revera",
+  "bytes": 71481
+ },
+ "mars": {
+  "file": "mars.jpg",
+  "page": "Mars",
+  "license": "CC BY 2.0",
+  "artist": "Kevin Gill from Los Angeles, CA, United States",
+  "bytes": 32431
+ },
+ "phobos": {
+  "file": "phobos.jpg",
+  "page": "Phobos (moon)",
+  "license": "Public domain",
+  "artist": "NASA / JPL-Caltech / University of Arizona",
+  "bytes": 57058
+ },
+ "deimos": {
+  "file": "deimos.jpg",
+  "page": "Deimos (moon)",
+  "license": "Public domain",
+  "artist": "NASA/JPL/University of Arizona",
+  "bytes": 29258
+ },
+ "jupiter": {
+  "file": "jupiter.jpg",
+  "page": "Jupiter",
+  "license": "Public domain",
+  "artist": "NASA/STSCI (S.T.A.R.S)",
+  "bytes": 38573
+ },
+ "io": {
+  "file": "io.jpg",
+  "page": "Io (moon)",
+  "license": "Public domain",
+  "artist": "NASA",
+  "bytes": 47297
+ },
+ "europa": {
+  "file": "europa.jpg",
+  "page": "Europa (moon)",
+  "license": "CC BY 2.0",
+  "artist": "NASA/JPL-Caltech/SwRI/MSSS/Kevin M. Gill",
+  "bytes": 61958
+ },
+ "ganymede": {
+  "file": "ganymede.jpg",
+  "page": "Ganymede (moon)",
+  "license": "CC BY 2.0",
+  "artist": "NASA/JPL-Caltech/SwRI/MSSS/Kevin M. Gill",
+  "bytes": 53362
+ },
+ "callisto": {
+  "file": "callisto.jpg",
+  "page": "Callisto (moon)",
+  "license": "CC BY-SA 2.0",
+  "artist": "zelario12",
+  "bytes": 55913
+ },
+ "saturn": {
+  "file": "saturn.jpg",
+  "page": "Saturn",
+  "license": "Public domain",
+  "artist": "NASA / JPL-Caltech / SSI / color composite by Gordan Ugarkovic",
+  "bytes": 13643
+ },
+ "titan": {
+  "file": "titan.jpg",
+  "page": "Titan (moon)",
+  "license": "CC BY 2.0",
+  "artist": "NASA/JPL-Caltech/SSI/Kevin M. Gill",
+  "bytes": 22573
+ },
+ "enceladus": {
+  "file": "enceladus.jpg",
+  "page": "Enceladus",
+  "license": "Public domain",
+  "artist": "National Aeronautics and Space Administration (NASA) / Jet Propulsion Laboratory (JPL)",
+  "bytes": 66087
+ },
+ "mimas": {
+  "file": "mimas.jpg",
+  "page": "Mimas",
+  "license": "Public domain",
+  "artist": "NASA / JPL / Space Science Institute",
+  "bytes": 65541
+ },
+ "rhea": {
+  "file": "rhea.jpg",
+  "page": "Rhea (moon)",
+  "license": "Public domain",
+  "artist": "NASA/JPL/Space Science Institute",
+  "bytes": 88294
+ },
+ "iapetus": {
+  "file": "iapetus.jpg",
+  "page": "Iapetus (moon)",
+  "license": "Public domain",
+  "artist": "Anonymsiy",
+  "bytes": 76363
+ },
+ "uranus": {
+  "file": "uranus.jpg",
+  "page": "Uranus",
+  "license": "CC0",
+  "artist": "Ardenau4",
+  "bytes": 19131
+ },
+ "miranda": {
+  "file": "miranda.jpg",
+  "page": "Miranda (moon)",
+  "license": "CC BY-SA 2.0",
+  "artist": "zelario12",
+  "bytes": 48845
+ },
+ "titania": {
+  "file": "titania.jpg",
+  "page": "Titania (moon)",
+  "license": "CC BY-SA 2.0",
+  "artist": "zelario12",
+  "bytes": 37593
+ },
+ "neptune": {
+  "file": "neptune.jpg",
+  "page": "Neptune",
+  "license": "CC0",
+  "artist": "NASA / Voyager 2 / PDS / OPUS / Ardenau4",
+  "bytes": 19243
+ },
+ "triton": {
+  "file": "triton.jpg",
+  "page": "Triton (moon)",
+  "license": "CC BY 4.0",
+  "artist": "Michael T. Bland, U.S. Geological Survey (USGS)",
+  "bytes": 38153
+ },
+ "pluto": {
+  "file": "pluto.jpg",
+  "page": "Pluto",
+  "license": "Public domain",
+  "artist": "NASA/Johns Hopkins University Applied Physics Laboratory/Southwest Research Institute/Alex Parker",
+  "bytes": 56117
+ },
+ "charon": {
+  "file": "charon.jpg",
+  "page": "Charon (moon)",
+  "license": "Public domain",
+  "artist": "NASA/Johns Hopkins University Applied Physics Laboratory/Southwest Research Institute/Alex Parker",
+  "bytes": 40793
+ },
+ "ceres": {
+  "file": "ceres.jpg",
+  "page": "Ceres (dwarf planet)",
+  "license": "Public domain",
+  "artist": "Justin Cowart",
+  "bytes": 58283
+ },
+ "vesta": {
+  "file": "vesta.jpg",
+  "page": "4 Vesta",
+  "license": "Public domain",
+  "artist": "NASA / JPL / MPS / DLR / IDA / Björn Jónsson",
+  "bytes": 58710
+ },
+ "pallas": {
+  "file": "pallas.jpg",
+  "page": "2 Pallas",
+  "license": "CC BY 4.0",
+  "artist": "Credit: ESO/Vernazza et al.",
+  "bytes": 17273
+ },
+ "juno": {
+  "file": "juno.jpg",
+  "page": "3 Juno",
+  "license": "CC BY-SA 4.0",
+  "artist": "VSO Very Large Telescope SPHERE/ZIMPOL team",
+  "bytes": 21026
+ },
+ "haumea": {
+  "file": "haumea.jpg",
+  "page": "Haumea",
+  "license": "Public domain",
+  "artist": "Renerpho",
+  "bytes": 13866
+ },
+ "makemake": {
+  "file": "makemake.jpg",
+  "page": "Makemake",
+  "license": "CC BY 4.0",
+  "artist": "NASA, ESA, and A. Parker and M. Buie (Southwest Research Institute)",
+  "bytes": 27250
+ },
+ "eris": {
+  "file": "eris.jpg",
+  "page": "Eris (dwarf planet)",
+  "license": "CC BY-SA 4.0",
+  "artist": "NASA/ESA/CSA JWST NIRCam; Ana Carolina de Souza Feliciano et al. &amp; Melina Thévenot",
+  "bytes": 40605
+ },
+ "sedna": {
+  "file": "sedna.jpg",
+  "page": "Sedna (dwarf planet)",
+  "license": "Public domain",
+  "artist": "NASA",
+  "bytes": 47558
+ },
+ "bennu": {
+  "file": "bennu.jpg",
+  "page": "101955 Bennu",
+  "license": "Public domain",
+  "artist": "NASA/Goddard/University of Arizona",
+  "bytes": 74288
+ },
+ "eros": {
+  "file": "eros.jpg",
+  "page": "433 Eros",
+  "license": "Public domain",
+  "artist": "NASA/JPL/JHUAPL (color version published at Planetary Society)",
+  "bytes": 50788
+ },
+ "psyche": {
+  "file": "psyche.jpg",
+  "page": "16 Psyche",
+  "license": "CC BY 4.0",
+  "artist": "ESO/Vernazza et al./MISTRAL algorithm (ONERA/CNRS)",
+  "bytes": 8560
+ },
+ "itokawa": {
+  "file": "itokawa.jpg",
+  "page": "25143 Itokawa",
+  "license": "CC BY 4.0",
+  "artist": "JAXA",
+  "bytes": 43700
+ },
+ "halley": {
+  "file": "halley.jpg",
+  "page": "Halley's Comet",
+  "license": "Public domain",
+  "artist": "NASA/W. Liller",
+  "bytes": 101970
+ },
+ "encke": {
+  "file": "encke.jpg",
+  "page": "Comet Encke",
+  "license": "Public domain",
+  "artist": "Jim Scotti",
+  "bytes": 64021
+ },
+ "tempel1": {
+  "file": "tempel1.jpg",
+  "page": "Tempel 1",
+  "license": "Public domain",
+  "artist": "NASA / Jet Propulsion Laboratory / University of Maryland",
+  "bytes": 32442
+ },
+ "churyumov": {
+  "file": "churyumov.jpg",
+  "page": "67P/Churyumov–Gerasimenko",
+  "license": "CC BY-SA 4.0",
+  "artist": "ESA/Rosetta/MPS for OSIRIS Team MPS/UPD/LAM/IAA/SSO/INTA/UPM/DASP/IDA",
+  "bytes": 79910
+ },
+ "halebopp": {
+  "file": "halebopp.jpg",
+  "page": "Comet Hale–Bopp",
+  "license": "CC BY-SA 3.0",
+  "artist": "E. Kolmhofer, H. Raab; Johannes-Kepler-Observatory, Linz, Austria (https://sternwarte.at)",
+  "bytes": 157753
+ },
+ "neowise": {
+  "file": "neowise.jpg",
+  "page": "Comet NEOWISE",
+  "license": "CC BY-SA 4.0",
+  "artist": "SimgDe",
+  "bytes": 93236
+ },
+ "iss": {
+  "file": "iss.jpg",
+  "page": "International Space Station",
+  "license": "Public domain",
+  "artist": "NASA",
+  "bytes": 36870
+ },
+ "tiangong": {
+  "file": "tiangong.jpg",
+  "page": "Tiangong space station",
+  "license": "CC BY-SA 4.0",
+  "artist": "Shujianyang",
+  "bytes": 127406
+ },
+ "starlink": {
+  "file": "starlink.jpg",
+  "page": "Starlink",
+  "license": "Public domain",
+  "artist": "Starlink Services, LLC",
+  "bytes": 42513
+ },
+ "hubble": {
+  "file": "hubble.jpg",
+  "page": "Hubble Space Telescope",
+  "license": "Public domain",
+  "artist": "NASA",
+  "bytes": 43691
+ },
+ "jwst": {
+  "file": "jwst.jpg",
+  "page": "James Webb Space Telescope",
+  "license": "Public domain",
+  "artist": "NASA",
+  "bytes": 41587
+ },
+ "chandra": {
+  "file": "chandra.jpg",
+  "page": "Chandra X-ray Observatory",
+  "license": "Public domain",
+  "artist": "NASA/CXC/NGST",
+  "bytes": 50247
+ },
+ "parker": {
+  "file": "parker.jpg",
+  "page": "Parker Solar Probe",
+  "license": "Public domain",
+  "artist": "National Aeronautics and Space Administration (NASA)",
+  "bytes": 25130
+ },
+ "juno-probe": {
+  "file": "juno-probe.jpg",
+  "page": "Juno (spacecraft)",
+  "license": "Public domain",
+  "artist": "National Aeronautics and Space Administration (NASA)",
+  "bytes": 29137
+ },
+ "clipper": {
+  "file": "clipper.jpg",
+  "page": "Europa Clipper",
+  "license": "Public domain",
+  "artist": "National Aeronautics and Space Administration (NASA) · Jet Propulsion Laboratory",
+  "bytes": 24779
+ },
+ "lucy": {
+  "file": "lucy.jpg",
+  "page": "Lucy (spacecraft)",
+  "license": "Public domain",
+  "artist": "NASA’s Goddard Space Flight Center/Conceptual Image Lab/Adriana Gutierrez",
+  "bytes": 35075
+ },
+ "newhorizons": {
+  "file": "newhorizons.jpg",
+  "page": "New Horizons",
+  "license": "Public domain",
+  "artist": "National Aeronautics and Space Administration (NASA), Applied Physics Laboratory",
+  "bytes": 63927
+ },
+ "voyager1": {
+  "file": "voyager1.jpg",
+  "page": "Voyager 1",
+  "license": "Public domain",
+  "artist": "National Aeronautics and Space Administration (NASA)",
+  "bytes": 17427
+ },
+ "voyager2": {
+  "file": "voyager2.jpg",
+  "page": "Voyager 2",
+  "license": "Public domain",
+  "artist": "National Aeronautics and Space Administration (NASA)",
+  "bytes": 17427
+ },
+ "bepicolombo": {
+  "file": "bepicolombo.jpg",
+  "page": "BepiColombo",
+  "license": "CC BY-SA 3.0 igo",
+  "artist": "ESA–C. Carreau",
+  "bytes": 84085
+ },
+ "juice": {
+  "file": "juice.jpg",
+  "page": "Jupiter Icy Moons Explorer",
+  "license": "CC BY-SA 3.0 igo",
+  "artist": "ESA",
+  "bytes": 27026
+ },
+ "gaia": {
+  "file": "gaia.jpg",
+  "page": "Gaia (spacecraft)",
+  "license": "CC BY-SA 3.0 igo",
+  "artist": "European Space Agency",
+  "bytes": 114769
+ },
+ "solarorbiter": {
+  "file": "solarorbiter.jpg",
+  "page": "Solar Orbiter",
+  "license": "CC BY-SA 3.0 igo",
+  "artist": "European Space Agency",
+  "bytes": 48576
+ },
+ "perseverance": {
+  "file": "perseverance.jpg",
+  "page": "Perseverance (rover)",
+  "license": "Public domain",
+  "artist": "NASA/JPL-Caltech",
+  "bytes": 46643
+ },
+ "curiosity": {
+  "file": "curiosity.jpg",
+  "page": "Curiosity (rover)",
+  "license": "Public domain",
+  "artist": "NASA",
+  "bytes": 93246
+ },
+ "ingenuity": {
+  "file": "ingenuity.jpg",
+  "page": "Ingenuity (helicopter)",
+  "license": "Public domain",
+  "artist": "NASA",
+  "bytes": 89936
+ },
+ "proxima": {
+  "file": "proxima.jpg",
+  "page": "Proxima Centauri",
+  "license": "CC BY 4.0",
+  "artist": "ESA/Hubble &amp; NASA",
+  "bytes": 38454
+ },
+ "alphacen": {
+  "file": "alphacen.jpg",
+  "page": "Alpha Centauri",
+  "license": "CC BY 4.0",
+  "artist": "Digitized Sky Survey 2. Acknowledgement: Davide De Martin/Mahdi Zamani",
+  "bytes": 147743
+ },
+ "barnard": {
+  "file": "barnard.jpg",
+  "page": "Barnard's Star",
+  "license": "Public domain",
+  "artist": "Steve Quirk",
+  "bytes": 34642
+ },
+ "sirius": {
+  "file": "sirius.jpg",
+  "page": "Sirius",
+  "license": "CC BY-SA 3.0",
+  "artist": "Canis_major_constellation_map.png: Torsten Bronger. derivative work: Kxx (talk)",
+  "bytes": 62106
+ },
+ "altair": {
+  "file": "altair.jpg",
+  "page": "Altair",
+  "license": "CC BY-SA 3.0",
+  "artist": "Aquila_constellation_map.png: Torsten Bronger derivative work: Kxx (talk)",
+  "bytes": 68281
+ },
+ "vega": {
+  "file": "vega.jpg",
+  "page": "Vega",
+  "license": "CC BY-SA 3.0",
+  "artist": "Lyra_constellation_map.png: Torsten Bronger derivative work: Kxx (talk)",
+  "bytes": 37584
+ },
+ "arcturus": {
+  "file": "arcturus.jpg",
+  "page": "Arcturus",
+  "license": "CC BY 3.0",
+  "artist": "IAU and Sky &amp; Telescope magazine (Roger Sinnott &amp; Rick Fienberg)",
+  "bytes": 51776
+ },
+ "betelgeuse": {
+  "file": "betelgeuse.jpg",
+  "page": "Betelgeuse",
+  "license": "CC BY-SA 3.0",
+  "artist": "Orion_constellation_map.png: Torsten Bronger derivative work: Kxx (talk)",
+  "bytes": 56339
+ },
+ "rigel": {
+  "file": "rigel.jpg",
+  "page": "Rigel",
+  "license": "CC BY-SA 3.0",
+  "artist": "Orion_constellation_map.png: Torsten Bronger derivative work: Kxx (talk)",
+  "bytes": 56339
+ },
+ "polaris": {
+  "file": "polaris.jpg",
+  "page": "Polaris",
+  "license": "CC BY-SA 3.0",
+  "artist": "Ursa Minor constellation map.png: Torsten Bronger / derivative work: Kxx",
+  "bytes": 57577
+ },
+ "aldebaran": {
+  "file": "aldebaran.jpg",
+  "page": "Aldebaran",
+  "license": "CC BY-SA 3.0",
+  "artist": "Taurus_constellation_map.png: Torsten Bronger derivative work: Kxx (talk)",
+  "bytes": 60451
+ },
+ "antares": {
+  "file": "antares.jpg",
+  "page": "Antares",
+  "license": "CC BY-SA 3.0",
+  "artist": "Scorpius_constellation_map.png: Torsten Bronger derivative work: Kxx (talk)",
+  "bytes": 81676
+ },
+ "capella": {
+  "file": "capella.jpg",
+  "page": "Capella",
+  "license": "CC BY-SA 3.0",
+  "artist": "Auriga_constellation_map.png: Torsten Bronger derivative work: Kxx (talk)",
+  "bytes": 62040
+ },
+ "deneb": {
+  "file": "deneb.jpg",
+  "page": "Deneb",
+  "license": "CC BY-SA 3.0",
+  "artist": "Cygnus_constellation_map.png: Torsten Bronger derivative work: Kxx (talk)",
+  "bytes": 72406
+ },
+ "trappist": {
+  "file": "trappist.jpg",
+  "page": "TRAPPIST-1",
+  "license": "CC BY 4.0",
+  "artist": "Processing and color compositing by Nrco0e; original images by Sloan Digital Sky Survey",
+  "bytes": 71222
+ },
+ "orion-neb": {
+  "file": "orion-neb.jpg",
+  "page": "Orion Nebula",
+  "license": "Public domain",
+  "artist": "NASA, ESA, M. Robberto (Space Telescope Science Institute/ESA) and the Hubble Space Telescope Orion ",
+  "bytes": 65629
+ },
+ "crab": {
+  "file": "crab.jpg",
+  "page": "Crab Nebula",
+  "license": "Public domain",
+  "artist": "NASA, ESA, J. Hester and A. Loll (Arizona State University)",
+  "bytes": 113626
+ },
+ "eagle": {
+  "file": "eagle.jpg",
+  "page": "Eagle Nebula",
+  "license": "CC BY 4.0",
+  "artist": "ESO",
+  "bytes": 127941
+ },
+ "helix": {
+  "file": "helix.jpg",
+  "page": "Helix Nebula",
+  "license": "Public domain",
+  "artist": "NASA, ESA, C.R. O'Dell (Vanderbilt University), M. Meixner and P. McCullough (STScI)",
+  "bytes": 46995
+ },
+ "lagoon": {
+  "file": "lagoon.jpg",
+  "page": "Lagoon Nebula",
+  "license": "CC BY 4.0",
+  "artist": "ESO/VPHAS+ team",
+  "bytes": 91266
+ },
+ "ring": {
+  "file": "ring.jpg",
+  "page": "Ring Nebula",
+  "license": "CC BY 4.0",
+  "artist": "ESA/Webb, NASA, CSA, M. Barlow, N. Cox, R. Wesson",
+  "bytes": 91963
+ },
+ "horsehead": {
+  "file": "horsehead.jpg",
+  "page": "Horsehead Nebula",
+  "license": "CC BY 4.0",
+  "artist": "ESO",
+  "bytes": 55764
+ },
+ "carina": {
+  "file": "carina.jpg",
+  "page": "Carina Nebula",
+  "license": "CC BY-SA 4.0",
+  "artist": "Harel Boren",
+  "bytes": 97222
+ },
+ "pleiades": {
+  "file": "pleiades.jpg",
+  "page": "Pleiades",
+  "license": "Public domain",
+  "artist": "NASA, ESA, AURA/Caltech, Palomar Observatory The science team consists of: D. Soderblom and E. Nelan",
+  "bytes": 58237
+ },
+ "m13": {
+  "file": "m13.jpg",
+  "page": "Messier 13",
+  "license": "CC0",
+  "artist": "Chuck Ayoub",
+  "bytes": 53800
+ },
+ "omegacen": {
+  "file": "omegacen.jpg",
+  "page": "Omega Centauri",
+  "license": "CC0",
+  "artist": "Chuck Ayoub",
+  "bytes": 73828
+ },
+ "sgrA": {
+  "file": "sgrA.jpg",
+  "page": "Sagittarius A*",
+  "license": "CC BY 4.0",
+  "artist": "EHT Collaboration",
+  "bytes": 23661
+ },
+ "milkyway": {
+  "file": "milkyway.jpg",
+  "page": "Milky Way",
+  "license": "CC BY 4.0",
+  "artist": "ESO/Y. Beletsky",
+  "bytes": 68449
+ },
+ "lmc": {
+  "file": "lmc.jpg",
+  "page": "Large Magellanic Cloud",
+  "license": "CC BY 4.0",
+  "artist": "Robert Gendler/ESO",
+  "bytes": 84983
+ },
+ "smc": {
+  "file": "smc.jpg",
+  "page": "Small Magellanic Cloud",
+  "license": "CC BY 4.0",
+  "artist": "ESA/Hubble and Digitized Sky Survey 2",
+  "bytes": 106470
+ },
+ "andromeda": {
+  "file": "andromeda.jpg",
+  "page": "Andromeda Galaxy",
+  "license": "CC BY-SA 2.5",
+  "artist": "Lviatour",
+  "bytes": 79045
+ },
+ "triangulum": {
+  "file": "triangulum.jpg",
+  "page": "Triangulum Galaxy",
+  "license": "CC BY 4.0",
+  "artist": "ESO",
+  "bytes": 77814
+ },
+ "sombrero": {
+  "file": "sombrero.jpg",
+  "page": "Sombrero Galaxy",
+  "license": "CC BY 4.0",
+  "artist": "ESA/Hubble &amp; NASA, K. Noll",
+  "bytes": 29540
+ },
+ "whirlpool": {
+  "file": "whirlpool.jpg",
+  "page": "Whirlpool Galaxy",
+  "license": "Public domain",
+  "artist": "NASA and European Space Agency",
+  "bytes": 51241
+ },
+ "m87": {
+  "file": "m87.jpg",
+  "page": "Messier 87",
+  "license": "Public domain",
+  "artist": "en:NASA, en:STScI, en:WikiSky",
+  "bytes": 29315
+ },
+ "bode": {
+  "file": "bode.jpg",
+  "page": "Messier 81",
+  "license": "Public domain",
+  "artist": "NASA, ESA and the Hubble Heritage Team (STScI/AURA)",
+  "bytes": 34106
+ },
+ "cigar": {
+  "file": "cigar.jpg",
+  "page": "Messier 82",
+  "license": "Public domain",
+  "artist": "NASA, ESA, and The Hubble Heritage Team (STScI/AURA)",
+  "bytes": 50032
+ },
+ "centaurusA": {
+  "file": "centaurusA.jpg",
+  "page": "Centaurus A",
+  "license": "CC BY 4.0",
+  "artist": "ESO/WFI (Optical); MPIfR/ESO/APEX/A.Weiss et al. (Submillimetre); NASA/CXC/CfA/R.Kraft et al. (X-ray",
+  "bytes": 108106
+ },
+ "virgo": {
+  "file": "virgo.jpg",
+  "page": "Virgo Cluster",
+  "license": "CC BY 4.0",
+  "artist": "Credit: RubinObs/NOIRLab/SLAC/NSF/DOE/AURA",
+  "bytes": 76551
+ },
+ "localgroup": {
+  "file": "localgroup.jpg",
+  "page": "Local Group",
+  "license": "CC BY-SA 4.0",
+  "artist": "Antonio Ciccolella",
+  "bytes": 31469
+ },
+ "laniakea": {
+  "file": "laniakea.jpg",
+  "page": "Laniakea Supercluster",
+  "license": "CC BY-SA 4.0",
+  "artist": "Andrew Z. Colvin",
+  "bytes": 40756
+ },
+ "cosmicweb": {
+  "file": "cosmicweb.jpg",
+  "page": "Observable universe",
+  "license": "CC0",
+  "artist": "Oberorka",
+  "bytes": 59735
+ },
+ "ursamajor": {
+  "file": "ursamajor.jpg",
+  "page": "File:Sidney Hall - Urania's Mirror - Ursa Major.jpg",
+  "license": "Public domain",
+  "artist": "Sidney Hall / Adam Cuerden",
+  "bytes": 69896
+ },
+ "ursaminor": {
+  "file": "ursaminor.jpg",
+  "page": "File:Sidney Hall - Urania's Mirror - Draco and Ursa Minor.jpg",
+  "license": "Public domain",
+  "artist": "Sidney Hall / Adam Cuerden",
+  "bytes": 79946
+ },
+ "cassiopeia": {
+  "file": "cassiopeia.jpg",
+  "page": "File:Sidney Hall - Urania's Mirror - Cassiopeia (image right side up).jpg",
+  "license": "Public domain",
+  "artist": "Sidney Hall / Adam Cuerden",
+  "bytes": 69229
+ },
+ "orion": {
+  "file": "orion.jpg",
+  "page": "File:Sidney Hall - Urania's Mirror - Orion (best currently available version - 2014).jpg",
+  "license": "Public domain",
+  "artist": "Sidney Hall / Adam Cuerden",
+  "bytes": 95681
+ },
+ "taurus": {
+  "file": "taurus.jpg",
+  "page": "File:Taurus - Sidy. Hall, sculpt. LCCN2002695510.jpg",
+  "license": "Public domain",
+  "artist": "Sidney Hall, Urania's Mirror (1824)"
+ },
+ "gemini": {
+  "file": "gemini.jpg",
+  "page": "File:Sidney Hall - Urania's Mirror - Gemini.jpg",
+  "license": "Public domain",
+  "artist": "Sidney Hall / Adam Cuerden",
+  "bytes": 67692
+ },
+ "canismajor": {
+  "file": "canismajor.jpg",
+  "page": "File:Sidney Hall - Urania's Mirror - Canis Major, Lepus, Columba Noachi & Cela Sculptoris.jpg",
+  "license": "Public domain",
+  "artist": "Sidney Hall / Adam Cuerden",
+  "bytes": 81458
+ },
+ "leo": {
+  "file": "leo.jpg",
+  "page": "File:Sidney Hall - Urania's Mirror - Leo Major and Leo Minor.jpg",
+  "license": "Public domain",
+  "artist": "Sidney Hall / Adam Cuerden",
+  "bytes": 78546
+ },
+ "bootes": {
+  "file": "bootes.jpg",
+  "page": "File:Sidney Hall - Urania's Mirror - Bootes, Canes Venatici, Coma Berenices, and Quadrans Muralis.jpg",
+  "license": "Public domain",
+  "artist": "Sidney Hall / Adam Cuerden",
+  "bytes": 94960
+ },
+ "cygnus": {
+  "file": "cygnus.jpg",
+  "page": "File:Sidney Hall - Urania's Mirror - Lacerta, Cygnus, Lyra, Vulpecula and Anser.jpg",
+  "license": "Public domain",
+  "artist": "Sidney Hall / Adam Cuerden",
+  "bytes": 84691
+ },
+ "lyra": {
+  "file": "lyra.jpg",
+  "page": "File:Sidney Hall - Urania's Mirror - Lacerta, Cygnus, Lyra, Vulpecula and Anser.jpg",
+  "license": "Public domain",
+  "artist": "Sidney Hall / Adam Cuerden",
+  "bytes": 84691
+ },
+ "aquila": {
+  "file": "aquila.jpg",
+  "page": "File:Sidney Hall - Urania's Mirror - Delphinus, Sagitta, Aquila, and Antinous.jpg",
+  "license": "Public domain",
+  "artist": "Sidney Hall / Adam Cuerden",
+  "bytes": 81905
+ },
+ "scorpius": {
+  "file": "scorpius.jpg",
+  "page": "File:Sidney Hall - Urania's Mirror - Scorpio.jpg",
+  "license": "Public domain",
+  "artist": "Sidney Hall / Adam Cuerden",
+  "bytes": 69685
+ },
+ "pegasus": {
+  "file": "pegasus.jpg",
+  "page": "File:Sidney Hall - Urania's Mirror - Pegasus and Equuleus (best currently available version - 2014) - original.jpg",
+  "license": "Public domain",
+  "artist": "Sidney Hall",
+  "bytes": 82462
+ },
+ "crux": {
+  "file": "crux.jpg",
+  "page": "File:Johannes Hevelius - Prodromus Astronomia - Volume III \"Firmamentum Sobiescianum, sive uranographia\" - Tavola XX - Centaurus et Crux.jpg",
+  "license": "Public domain",
+  "artist": "Johannes Hevelius, Uranographia (1690)"
+ }
+}

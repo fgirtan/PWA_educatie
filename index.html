@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<title>Universul Nostru</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="description" content="Aplicație educațională interactivă: Sistemul Solar, sateliți, comete, galaxii și structura Universului.">
+<meta name="theme-color" content="#04060f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/style.css?v=3">
+</head>
+<body>
+
+<!-- ============ ECRAN DE PORNIRE ============ -->
+<section id="home">
+  <div class="home-inner">
+    <h1>Universul <span>Nostru</span></h1>
+    <p class="tagline">Explorăm împreună, de la sateliții de deasupra noastră până la marginea Universului.</p>
+
+    <div class="cards">
+      <button class="card" id="start-space">
+        <div class="card-art art-space"></div>
+        <h2>Spațiul</h2>
+        <p>Planete, sateliți, comete, asteroizi, stele, nebuloase și galaxii. Cu zoom de la ISS până la pânza cosmică.</p>
+        <span class="go">Intră →</span>
+      </button>
+
+      <button class="card soon">
+        <div class="card-art art-body"></div>
+        <h2>Corpul omenesc</h2>
+        <p>Oase, mușchi, inimă, plămâni — cum funcționează mașinăria noastră.</p>
+        <span class="go soon-tag">În curând</span>
+      </button>
+
+      <button class="card soon">
+        <div class="card-art art-earth"></div>
+        <h2>Planeta Pământ</h2>
+        <p>Vulcani, plăci tectonice, oceane, vreme și animale.</p>
+        <span class="go soon-tag">În curând</span>
+      </button>
+
+      <button class="card soon">
+        <div class="card-art art-tech"></div>
+        <h2>Cum funcționează</h2>
+        <p>Mașini, avioane, electricitate, calculatoare și roboți.</p>
+        <span class="go soon-tag">În curând</span>
+      </button>
+    </div>
+
+    <p class="foot">Sfat pentru proiector: apasă <kbd>F</kbd> pentru ecran complet. Funcționează și fără internet.</p>
+  </div>
+</section>
+
+<!-- ============ APLICAȚIA ============ -->
+<main id="app" class="hidden">
+  <canvas id="sky"></canvas>
+
+  <!-- bara de sus -->
+  <header class="bar top">
+    <button id="btn-menu-home" class="icon" title="Meniu principal">⌂</button>
+    <div class="titles">
+      <strong id="level">Sistemul Solar</strong>
+      <small id="fov">—</small>
+    </div>
+    <div class="spacer"></div>
+    <div class="date-box"><span class="lbl">Data</span><span id="date">—</span></div>
+    <button id="btn-sky" class="pill" title="Constelațiile văzute de pe Pământ (C)"><span class="ico">✨</span><span class="t">Cerul nopții</span></button>
+    <button id="btn-quiz" class="pill" title="Joc: găsește obiectul (G)"><span class="ico">🎯</span><span class="t">Joc</span></button>
+    <button id="btn-tour" class="pill"><span class="ico">★</span><span class="t">Tur ghidat</span></button>
+    <button id="btn-menu" class="pill"><span class="ico">☰</span><span class="t">Catalog</span></button>
+    <button id="btn-help" class="icon" title="Ajutor">?</button>
+    <button id="btn-full" class="icon" title="Ecran complet (F)">⛶</button>
+  </header>
+
+  <!-- bara de jos -->
+  <footer class="bar bottom">
+    <button id="btn-play" class="icon big" title="Pauză (Space)">⏸</button>
+
+    <div class="ctrl" id="speed-ctrl">
+      <label for="speed">Viteza timpului · <b id="speed-val">—</b></label>
+      <input id="speed" type="range" min="0" max="1000" value="300">
+    </div>
+
+    <div id="sky-hint">Trage cu mouse-ul ca să te plimbi pe cer · rotița schimbă cât de mult cer vezi · click pe o stea sau pe numele unei constelații</div>
+
+    <div class="ctrl" id="zoom-ctrl">
+      <label for="zoom">Zoom <small>(rotița mouse-ului / pinch)</small></label>
+      <div class="zoom-row">
+        <button id="btn-zoom-out" class="icon" title="Zoom out (−)">−</button>
+        <input id="zoom" type="range" min="0" max="1000" value="500">
+        <button id="btn-zoom-in" class="icon" title="Zoom in (+)">+</button>
+      </div>
+    </div>
+
+    <div class="toggles">
+      <button id="btn-orbits" class="pill tgl" title="Arată orbitele (O)">Orbite</button>
+      <button id="btn-labels" class="pill tgl" title="Arată numele (L)">Nume</button>
+      <button id="btn-home-view" class="pill" title="Revino la Sistemul Solar">⟲ Resetează</button>
+    </div>
+  </footer>
+
+  <!-- panoul de informații -->
+  <aside id="info">
+    <div class="sheet-handle"></div>
+    <button id="info-close" class="close">×</button>
+    <figure id="info-photo">
+      <img id="info-photo-img" alt="">
+      <figcaption id="info-photo-cap"></figcaption>
+    </figure>
+    <h2 id="info-name">—</h2>
+    <div id="info-type" class="type">—</div>
+    <p id="info-desc"></p>
+    <div id="info-live" class="facts live-box"></div>
+    <div id="info-facts" class="facts"></div>
+    <div id="info-fun-wrap" class="fun"><span class="fun-i">!</span><span id="info-fun"></span></div>
+    <div id="info-note" class="note"></div>
+    <div class="info-actions">
+      <button id="btn-zoomto" class="pill primary">🔍 Zoom la obiect</button>
+      <button id="btn-follow" class="pill">Urmărește</button>
+    </div>
+  </aside>
+
+  <!-- jocul „Găsește!" -->
+  <div id="quiz">
+    <button id="quiz-close" class="close small">×</button>
+    <div class="quiz-main">
+      <div class="quiz-top"><span class="quiz-tag">JOC</span><span id="quiz-score">0 / 10</span></div>
+      <p id="quiz-q">—</p>
+      <small id="quiz-feedback"></small>
+    </div>
+    <button id="quiz-skip" class="pill">Sari peste ›</button>
+  </div>
+
+  <!-- catalogul -->
+  <aside id="catalog">
+    <div class="sheet-handle"></div>
+    <button id="catalog-close" class="close">×</button>
+    <h2>Catalog</h2>
+    <p class="hint">Apasă pe un nume și camera zboară acolo.</p>
+    <div id="catalog-body"></div>
+  </aside>
+
+  <!-- turul ghidat -->
+  <div id="tour">
+    <button id="tour-close" class="close small">×</button>
+    <div class="tour-body">
+      <span id="tour-count" class="count">1 / 1</span>
+      <p id="tour-text">—</p>
+    </div>
+    <div class="tour-nav">
+      <button id="tour-prev" class="pill">‹ Înapoi</button>
+      <button id="tour-next" class="pill primary">Următorul › <small>(N)</small></button>
+    </div>
+  </div>
+
+  <!-- ajutor -->
+  <div id="help">
+    <button id="help-close" class="close">×</button>
+    <h2>Cum se folosește</h2>
+    <ul>
+      <li><b>Click pe orice obiect</b> → se deschide fișa lui cu informații.</li>
+      <li><b>Dublu-click</b> pe un obiect → camera zboară la el.</li>
+      <li><b>Rotița mouse-ului</b> sau pinch → zoom in / zoom out.</li>
+      <li><b>Trage cu mouse-ul</b> → te plimbi prin spațiu.</li>
+      <li>Dai <b>zoom out</b> mult → ieși din Sistemul Solar, vezi stelele vecine, apoi Calea Lactee, apoi galaxiile și pânza cosmică.</li>
+      <li>Dai <b>zoom in</b> pe Pământ → apar Luna, ISS, Hubble și sateliții.</li>
+      <li><b>Viteza timpului</b> → de la ore pe secundă până la mii de ani pe secundă.</li>
+    </ul>
+    <h3>Pentru copil</h3>
+    <label class="agebox">Vârsta copilului:
+      <input id="kid-age" type="number" min="1" max="120" placeholder="ex. 6">
+      <small>— apoi, în fișa fiecărei planete, apare ce vârstă ar avea acolo.</small>
+    </label>
+    <ul>
+      <li><b>🎯 Joc</b> — „Găsește planeta Marte!" — copilul dă click, aplicația ține scorul.</li>
+      <li><b>✨ Cerul nopții</b> — constelațiile așa cum se văd de pe Pământ, ca să le căutați apoi afară.</li>
+    </ul>
+
+    <h3>Taste</h3>
+    <div class="keys">
+      <span><kbd>Space</kbd> pauză</span><span><kbd>+</kbd> <kbd>−</kbd> zoom</span>
+      <span><kbd>←↑↓→</kbd> deplasare</span><span><kbd>O</kbd> orbite</span>
+      <span><kbd>L</kbd> nume</span><span><kbd>F</kbd> ecran complet</span>
+      <span><kbd>N</kbd> pasul următor din tur</span><span><kbd>C</kbd> cerul nopții</span>
+      <span><kbd>G</kbd> joc</span><span><kbd>Esc</kbd> închide</span>
+    </div>
+    <p class="hint">Distanțele dintre planete sunt reale, dar planetele sunt desenate puțin mai mari ca să poată fi văzute. Orbitele sateliților din jurul Pământului sunt mărite intenționat.</p>
+  </div>
+</main>
+
+<script src="js/data.js?v=3"></script>
+<script src="js/data-extra.js?v=3"></script>
+<script src="js/textures.js?v=3"></script>
+<script src="js/sky.js?v=3"></script>
+<script src="js/app.js?v=3"></script>
+</body>
+</html>
