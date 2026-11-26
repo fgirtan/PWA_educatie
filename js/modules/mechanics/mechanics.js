@@ -116,7 +116,7 @@
         const W = api.freeW, cx = api.cx, cy = api.cy, U = api.unit;
         thA += rpm * TAU * dt; dash += dt;
         const nMax = Math.max(nA, nB, nC);
-        const m = Math.min(U * 0.12, (W - 30) / ((nA + nB + nC) * 0.5 + 8) * 0.5, U * 0.6 / (nMax / 2 + 1));   // „modulul”: raza = m·n/2
+        const m = Math.max(1, Math.min(U * 0.12, (W - 30) / ((nA + nB + nC) * 0.5 + 8) * 0.5, U * 0.6 / (nMax / 2 + 1)));   // „modulul”: raza = m·n/2
         const rA = m * nA / 2, rB = m * nB / 2, rC = m * nC / 2;
         const total = rA * 2 + rB * 2 + rC * 2, x0 = cx - total / 2 + rA, xB = x0 + rA + rB, xC = xB + rB + rC, gy = cy + U * 0.14;
         const thB = Math.PI + Math.PI / nB - thA * nA / nB, thC = Math.PI + Math.PI / nC - thB * nB / nC;
@@ -134,20 +134,20 @@
         gear(xC, gy, nC, rC, m, thC, COLS[2]);
         /* punctele de contact: mică strălucire */
         const w2 = -rpm * nA / nB, w3 = -w2 * nB / nC;
-        const F = Art.fs(U, 0.045, 13);
+        const F = Art.labelSize(U), LB = Art.LABEL_BG;
         [[x0, rA, rpm, 0], [xB, rB, w2, 1], [xC, rC, w3, 2]].forEach(([x, r, w, i]) => turnArrow(x, gy, r + m * 2.4, w, Art.shade(COLS[i], 0.35), U));
-        [[x0, rA, nA, 'Roata 1', 0], [xB, rB, nB, 'Roata 2', 1], [xC, rC, nC, 'Roata 3', 2]].forEach(([x, r, n, lab, i]) => Art.label(ctx, lab + ' · ' + n + ' dinți', x, gy + r + m * 1.2 + F * 1.3, { size: F, color: Art.shade(COLS[i], 0.55) }));
+        [[x0, rA, nA, 'Roata 1', 0], [xB, rB, nB, 'Roata 2', 1], [xC, rC, nC, 'Roata 3', 2]].forEach(([x, r, n, lab, i]) => Art.label(ctx, lab + ' · ' + n + ' dinți', x, gy + r + m * 1.2 + F * 1.3, { size: F, bg: LB, color: Art.shade(COLS[i], 0.55) }));
         /* panou cu vitezele */
         ctx.save(); ctx.font = Art.font(F, 700);
         const pnW = Math.min(W - 24, Math.max(260, U * 1.5)), lh = F * 1.45;
         const note = nB > nA ? 'Roata 2 are mai mulți dinți → merge mai încet, dar mai cu forță.' : nB < nA ? 'Roata 2 are mai puțini dinți → merge mai repede, dar cu mai puțină forță.' : 'Același număr de dinți → aceeași viteză.';
-        ctx.font = Art.font(F * 0.92, 600); const nl = wrap(ctx, note, pnW - 24);
+        ctx.font = Art.font(Math.max(12, F * 0.92), 600); const nl = wrap(ctx, note, pnW - 24);
         ctx.restore();
         const pnH = lh * (3 + nl.length) + 18, pnX = 12, pnY = api.cy - U + 6;
         Art.panel(ctx, pnX, pnY, pnW, pnH, { r: 12 });
         const lines = [['↻ roata 1: ' + fmt(rpm, 2) + ' ture/s', COLS[0]], ['roata 2: ' + fmt(w2, 2) + ' ture/s (' + (w2 * rpm < 0 ? 'sens opus' : 'același sens') + ')', COLS[1]], ['roata 3: ' + fmt(-w3 * -1, 2) + ' ture/s', COLS[2]]];
         lines.forEach(([s, c], i) => { const yy = pnY + 9 + lh * (i + 0.5); ctx.fillStyle = Art.shade(c, 0.2); ctx.beginPath(); ctx.arc(pnX + 16, yy, F * 0.3, 0, TAU); ctx.fill(); Art.text(ctx, s, pnX + 28, yy, { size: F, align: 'left', halo: false }); });
-        nl.forEach((s, i) => Art.text(ctx, s, pnX + 12, pnY + 9 + lh * (3.5 + i), { size: F * 0.92, weight: 600, align: 'left', color: 'rgba(226,234,255,0.82)', halo: false }));
+        nl.forEach((s, i) => Art.text(ctx, s, pnX + 12, pnY + 9 + lh * (3.5 + i), { size: Math.max(12, F * 0.92), weight: 600, align: 'left', color: 'rgba(226,234,255,0.82)', halo: false }));
       }
 
       function weight(x, baseY, mass, col, U) {
@@ -158,7 +158,7 @@
         /* corp turnat (trapez rotunjit) */
         ctx.beginPath(); ctx.moveTo(x - w * 0.36, top); ctx.lineTo(x + w * 0.36, top); ctx.quadraticCurveTo(x + w * 0.44, top, x + w * 0.47, top + h * 0.12); ctx.lineTo(x + w * 0.52, baseY - h * 0.08); ctx.quadraticCurveTo(x + w * 0.53, baseY, x + w * 0.44, baseY); ctx.lineTo(x - w * 0.44, baseY); ctx.quadraticCurveTo(x - w * 0.53, baseY, x - w * 0.52, baseY - h * 0.08); ctx.lineTo(x - w * 0.47, top + h * 0.12); ctx.quadraticCurveTo(x - w * 0.44, top, x - w * 0.36, top); ctx.closePath();
         Art.volumeFill(ctx, x - w / 2, top, x + w / 2, baseY, col, { hi: 0.35, lo: 0.5 });
-        ctx.strokeStyle = Art.shade(col, -0.55); ctx.lineWidth = 1.2; ctx.stroke();
+        ctx.strokeStyle = Art.ink(col); ctx.lineWidth = Art.lineW(U) * 1.2; ctx.stroke();
         ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.fillRect(x - w * 0.4, top + h * 0.1, w * 0.08, h * 0.75);
         Art.text(ctx, mass + ' kg', x, top + h * 0.58, { size: Math.max(12, s * 0.3), weight: 800, haloColor: Art.rgba(Art.shade(col, -0.6), 0.9) });
       }
@@ -183,7 +183,7 @@
         /* reazemul */
         ctx.beginPath(); ctx.moveTo(fx - ph * 0.55, floorY); ctx.quadraticCurveTo(fx - ph * 0.1, py + ph * 0.25, fx - ph * 0.1, py + bt * 0.4); ctx.quadraticCurveTo(fx, py - bt * 0.05, fx + ph * 0.1, py + bt * 0.4); ctx.quadraticCurveTo(fx + ph * 0.1, py + ph * 0.25, fx + ph * 0.55, floorY); ctx.closePath();
         Art.volumeFill(ctx, fx - ph * 0.5, py, fx + ph * 0.5, floorY, '#8a8f99', { hi: 0.4, lo: 0.5 });
-        ctx.strokeStyle = 'rgba(20,24,30,0.6)'; ctx.lineWidth = 1.2; ctx.stroke();
+        ctx.strokeStyle = Art.ink('#8a8f99'); ctx.lineWidth = Art.lineW(U) * 1.2; ctx.stroke();
         /* bara (scândură de lemn) */
         ctx.save(); ctx.translate(fx, py); ctx.rotate(tilt);
         const L = x0 - fx;
@@ -194,23 +194,22 @@
         ctx.fillStyle = 'rgba(90,55,20,0.35)'; ctx.beginPath(); ctx.ellipse(L + bw * 0.31, bt * 0.05, bt * 0.25, bt * 0.12, 0, 0, TAU); ctx.fill();
         ctx.restore();
         ctx.fillStyle = 'rgba(60,35,10,0.65)'; for (let k = 1; k < 10; k++) ctx.fillRect(L + bw * k / 10 - 1, -bt / 2, 2, bt * 0.4);
-        ctx.strokeStyle = 'rgba(70,40,15,0.6)'; ctx.lineWidth = 1; Art.roundRectPath(ctx, L, -bt / 2, bw, bt, bt * 0.3); ctx.stroke();
+        ctx.strokeStyle = Art.ink('#c99a5b'); ctx.lineWidth = Art.lineW(U); Art.roundRectPath(ctx, L, -bt / 2, bw, bt, bt * 0.3); ctx.stroke();
         weight(L + bw * 0.12, -bt / 2, mL, '#c8553a', U); weight(L + bw * 0.88, -bt / 2, mR, '#3a7fc8', U);
         ctx.restore();
         Art.sphere(ctx, fx, py, Math.max(4, bt * 0.32), '#d0d5de', { rim: false });
-        const F = Art.fs(U, 0.045, 13);
-        Art.label(ctx, 'reazem', fx, floorY + F * 1.6, { size: F, color: '#e9edf5' });
+        const F = Art.labelSize(U), LB = Art.LABEL_BG;
+        Art.label(ctx, 'reazem', fx, floorY + F * 1.6, { size: F, bg: LB, color: '#e9edf5' });
         const dL = (fx - (x0 + bw * 0.12)) / bw * 10, dR = ((x0 + bw * 0.88) - fx) / bw * 10;
         const balanced = Math.abs(mL * dL - mR * dR) < 0.5;
         bal = Art.damp(bal, balanced ? 1 : 0, 6, dt);
-        if (bal > 0.02) { ctx.save(); ctx.globalAlpha = bal; Art.label(ctx, 'echilibru!', fx, py - U * 0.45, { size: F * 1.1, color: '#7dffb0' }); ctx.restore(); }
+        if (bal > 0.02) { ctx.save(); ctx.globalAlpha = bal; Art.label(ctx, 'echilibru!', fx, py - U * 0.45, { size: F * 1.1, bg: LB, color: '#7dffb0' }); ctx.restore(); }
         info.innerHTML = 'Stânga: <b>' + mL + ' kg × ' + fmt(dL, 1) + '</b> = ' + fmt(mL * dL, 1) + ' · Dreapta: <b>' + mR + ' kg × ' + fmt(dR, 1) + '</b> = ' + fmt(mR * dR, 1) + (balanced ? ' · ✅ <b>echilibru!</b>' : mL * dL > mR * dR ? ' · se lasă spre stânga' : ' · se lasă spre dreapta');
       }
 
       function frame(dt, t) {
         const cx = api.cx, cy = api.cy, U = api.unit;
-        if (mode === 'gears') Art.backdrop(ctx, api.W, api.H, { top: '#1c2338', bottom: '#0e121e', vignette: false });
-        else Art.backdrop(ctx, api.W, api.H, { top: '#2a2a3a', bottom: '#15141e', vignette: false });
+        Art.scene(ctx, api.W, api.H, 'lab');
         if (mode === 'gears') drawGears(dt, t); else drawLever(dt, t);
       }
       setMode('gears');

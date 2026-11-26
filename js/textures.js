@@ -78,7 +78,7 @@ function texSchedule() {
   setTimeout(texPump, 0);
 }
 function texPump() {
-  const end = performance.now() + 7;
+  const end = performance.now() + 5;          // bucăți mici: cadrul rămâne sub 16 ms
   while (TEX_JOBS.length && performance.now() < end) {
     const j = TEX_JOBS[0];
     if (j.step(end)) TEX_JOBS.shift();
@@ -153,9 +153,11 @@ const MAP_KINDS = {
       } else {
         const m = fbm(n, x * 2.4 + 31, y * 2.4, z * 2.4, 4);
         const e = sstep(sea, 0.72, h);
-        if (al > 0.62) mixInto(o, grass, tundra, sstep(0.62, 0.78, al));
-        else if (m < 0.47 && al < 0.5 && al > 0.1) mixInto(o, grass, desert, sstep(0.47, 0.4, m));
-        else mixInto(o, forest, grass, sstep(0.42, 0.6, m));
+        /* zonele climatice se amestecă lin pe latitudine (fără margini drepte, vizibile pe hărțile mari) */
+        mixInto(o, forest, grass, sstep(0.42, 0.6, m));
+        const dk = sstep(0.05, 0.16, al) * sstep(0.56, 0.44, al);
+        if (dk > 0 && m < 0.47) blendInto(o, desert, sstep(0.47, 0.4, m) * dk);
+        if (al > 0.56) blendInto(o, tundra, sstep(0.58, 0.8, al));
         blendInto(o, rock, e * 0.7);
       }
       const ic = al + (n(x * 6, y * 6, z * 6) - 0.5) * 0.12;
@@ -251,7 +253,8 @@ const MAP_KINDS = {
       const ex = dlon / 0.2, ey = (lat + 0.36) / 0.1, e = ex * ex + ey * ey;
       if (e < 1) blendInto(o, spot, (1 - e) * 0.9);
       const st = fbm(n, x * 4 + 9, y * 4, z * 26, 4);
-      if (Math.abs(lat + 0.25) < 0.2 || Math.abs(lat - 0.5) < 0.12) blendInto(o, white, sstep(0.62, 0.75, st) * 0.85);
+      const wb = Math.max(sstep(0.2, 0.14, Math.abs(lat + 0.25)), sstep(0.12, 0.08, Math.abs(lat - 0.5)));
+      if (wb > 0) blendInto(o, white, sstep(0.62, 0.75, st) * 0.85 * wb);
     };
   },
 
@@ -396,80 +399,126 @@ function mapJob(entry, fn, w, h) {
     fn(cz * cl[x], cz * sl[x], z, lat, lonOf(x), o);
     out[0] = o[0]; out[1] = o[1]; out[2] = o[2];
   }, function (img) {
-    entry.u32 = new Uint32Array(img.data.buffer); entry.w = w; entry.h = h; entry.level++;
+    const u32 = new Uint32Array(img.data.buffer);
+    entry.lv[w] = u32;
+    if (w > entry.w) { entry.u32 = u32; entry.w = w; entry.h = h; }
+    entry.level++;
   });
 }
-function getMap(body, kindOverride, wantHi) {
+/* rezoluțiile hărților: 256 și 512 pentru toate corpurile; 1024 când corpul e mare pe ecran;
+   2048 doar pentru Pământ, Jupiter și Saturn (cele mai bogate în detalii) */
+const MAP_W = [256, 512, 1024, 2048];
+const HUGE_MAPS = { earth: 1, jupiter: 1, saturn: 1 };
+function mapCap(body) { return HUGE_MAPS[body.id] ? 2048 : 1024; }
+function getMap(body, kindOverride, wantW) {
   const kind = mapKindOf(body, kindOverride);
   const key = kind + '|' + body.id;
   let e = MAP_CACHE.get(key);
+  if (wantW === true) wantW = 512; else if (!wantW) wantW = 256;
+  wantW = Math.min(wantW, mapCap(body));
   if (!e) {
     const seed = hashStr(key) || 12345;
     const make = () => (MAP_KINDS[kind] || MAP_KINDS.rock)(makeRng(seed), makeNoise3(seed), body);
-    e = { w: 64, h: 32, u32: buildMapSync(make(), 64, 32), level: 0, jobs: [] };
-    e.jobs.push(mapJob(e, make(), 256, 128));
-    e.jobs.push(mapJob(e, make(), 512, 256));
+    e = { w: 64, h: 32, u32: buildMapSync(make(), 64, 32), level: 0, jobs: {}, lv: {}, make: make };
+    e.lv[64] = e.u32;
     MAP_CACHE.set(key, e);
-    texQueue(e.jobs[0], false);
+    e.jobs[256] = mapJob(e, make(), 256, 128);
+    texQueue(e.jobs[256], false);
   }
-  /* cerem detaliul când e nevoie (urgent = pe ecran și mare) */
-  if (e.level === 0) texQueue(e.jobs[0], true);
-  else if (wantHi && e.level === 1) texQueue(e.jobs[1], true);
+  /* cerem detaliul când e nevoie (urgent = pe ecran și mare), o treaptă pe rând */
+  for (const w of MAP_W) {
+    if (w > wantW) break;
+    if (e.lv[w]) continue;
+    if (!e.jobs[w]) e.jobs[w] = mapJob(e, e.make(), w, w / 2);   // treptele mari se creează doar la cerere
+    texQueue(e.jobs[w], true);
+    break;
+  }
   return e;
 }
 
-/* ---------- globul: proiecție sferică precalculată ---------- */
+/* ---------- globul: proiecție sferică precalculată ----------
+   tabelele (ce pixel din hartă ajunge în fiecare pixel al discului) depind de mărimea globului (S)
+   și de lățimea hărții; cele mari (S > 512) se calculează pe bucăți, în fundal */
 const PROJ_CACHE = new Map();
+function projJob(S, mw, mh) {
+  const c = S / 2, cap = Math.ceil(Math.PI * (c + 2) * (c + 2)) + 8;
+  const idx = new Int32Array(cap), lon = new Int32Array(cap), row = new Int32Array(cap), a = new Uint32Array(cap);
+  let j = 0, n = 0;
+  const p = { ready: false, idx: null, lon: null, row: null, a: null };
+  p.step = function (end) {
+    while (j < S) {
+      for (let i = 0; i < S; i++) {
+        const dx = (i + 0.5 - c) / c, dy = (j + 0.5 - c) / c;
+        const rr = Math.sqrt(dx * dx + dy * dy);
+        if (rr > 1 + 1.2 / c) continue;
+        const k = Math.min(1, rr);
+        const z = Math.sqrt(Math.max(0, 1 - k * k));
+        const ddx = rr > 1 ? dx / rr : dx, ddy = rr > 1 ? dy / rr : dy;
+        const la = Math.asin(Math.max(-1, Math.min(1, -ddy)));
+        const lo = Math.atan2(ddx, z);
+        idx[n] = j * S + i;
+        lon[n] = Math.floor((lo / (Math.PI * 2) + 0.5) * mw) & (mw - 1);
+        row[n] = Math.min(mh - 1, Math.floor((0.5 - la / Math.PI) * mh)) * mw;
+        const cov = Math.max(0, Math.min(1, (1 - rr) * c + 0.5));
+        a[n] = (Math.round(cov * 255) << 24) >>> 0;
+        n++;
+      }
+      j++;
+      if (end && performance.now() > end) return false;
+    }
+    p.idx = idx.subarray(0, n); p.lon = lon.subarray(0, n); p.row = row.subarray(0, n); p.a = a.subarray(0, n);
+    p.ready = true;
+    return true;
+  };
+  return p;
+}
 function projTables(S, mw, mh) {
   const key = S + '|' + mw;
   let p = PROJ_CACHE.get(key);
-  if (p) return p;
-  const idx = [], lon = [], row = [], al = [];
-  const c = S / 2;
-  for (let j = 0; j < S; j++) {
-    for (let i = 0; i < S; i++) {
-      const dx = (i + 0.5 - c) / c, dy = (j + 0.5 - c) / c;
-      const rr = Math.sqrt(dx * dx + dy * dy);
-      if (rr > 1 + 1.2 / c) continue;
-      const k = Math.min(1, rr);
-      const z = Math.sqrt(Math.max(0, 1 - k * k));
-      const ddx = rr > 1 ? dx / rr : dx, ddy = rr > 1 ? dy / rr : dy;
-      const la = Math.asin(Math.max(-1, Math.min(1, -ddy)));
-      const lo = Math.atan2(ddx, z);
-      idx.push(j * S + i);
-      lon.push(Math.floor((lo / (Math.PI * 2) + 0.5) * mw) & (mw - 1));
-      row.push(Math.min(mh - 1, Math.floor((0.5 - la / Math.PI) * mh)) * mw);
-      const cov = Math.max(0, Math.min(1, (1 - rr) * c + 0.5));
-      al.push(Math.round(cov * 255));
-    }
-  }
-  p = { idx: Int32Array.from(idx), lon: Int32Array.from(lon), row: Int32Array.from(row), a: Uint32Array.from(al.map((v) => (v << 24) >>> 0)) };
-  PROJ_CACHE.set(key, p);
+  if (!p) {
+    p = projJob(S, mw, mh); PROJ_CACHE.set(key, p);
+    if (S <= 512) p.step(0);                 // globurile mici: imediat, ca înainte
+    else texQueue(p, true);                  // cele mari: pe bucăți
+  } else if (!p.ready) texQueue(p, true);
   return p;
 }
 
 const GLOBE_CACHE = new Map();
-/* întoarce un canvas S×S cu globul rotit cu `turns` (rotații) */
-function getGlobe(body, S, turns, kindOverride) {
-  const map = getMap(body, kindOverride, S >= 300);
-  const key = mapKindOf(body, kindOverride) + '|' + body.id + '|' + S;
+function globeCanvas(key, S) {
   let g = GLOBE_CACHE.get(key);
   if (!g) {
     const cv = document.createElement('canvas'); cv.width = S; cv.height = S;
     const cx = cv.getContext('2d');
     const img = cx.createImageData(S, S);
-    g = { cv: cv, cx: cx, img: img, u32: new Uint32Array(img.data.buffer), off: -1, map: null, level: -1 };
+    g = { cv: cv, cx: cx, img: img, u32: new Uint32Array(img.data.buffer), off: -1, mw: 0 };
     GLOBE_CACHE.set(key, g);
   }
+  return g;
+}
+/* întoarce un canvas S×S cu globul rotit cu `turns` (rotații); dacă tabelele sau harta mare
+   nu sunt încă gata, întoarce temporar un glob mai mic (se desenează scalat, fără sacadare) */
+function getGlobe(body, S, turns, kindOverride) {
+  const cap = mapCap(body);
+  const wantW = S <= 128 ? 256 : S <= 288 ? 512 : S <= 512 ? 1024 : cap;
+  const map = getMap(body, kindOverride, wantW);
+  let mw = map.w, P = projTables(S, mw, mw / 2), useS = S;
+  if (!P.ready) {
+    /* aceeași mărime cu o hartă mai mică, sau un glob de 512 */
+    let found = false;
+    for (const w of [1024, 512, 256]) if (w < mw && map.lv[w]) { const q = PROJ_CACHE.get(S + '|' + w); if (q && q.ready) { mw = w; P = q; found = true; break; } }
+    if (!found) { useS = Math.min(S, 512); mw = Math.min(map.w, 1024); P = projTables(useS, mw, mw / 2); }
+  }
+  const src = map.lv[mw] || map.u32;
+  const key = mapKindOf(body, kindOverride) + '|' + body.id + '|' + useS;
+  const g = globeCanvas(key, useS);
   const fr = turns - Math.floor(turns);
-  const off = Math.floor(fr * map.w) & (map.w - 1);
-  if (off !== g.off || g.level !== map.level) {
-    const P = projTables(S, map.w, map.h);
-    const src = map.u32, dst = g.u32, mw1 = map.w - 1;
+  const off = Math.floor(fr * mw) & (mw - 1);
+  if (off !== g.off || g.mw !== mw) {
+    const dst = g.u32, mw1 = mw - 1;
     const idx = P.idx, lon = P.lon, row = P.row, a = P.a, n = idx.length;
     for (let i = 0; i < n; i++) dst[idx[i]] = (src[row[i] + ((lon[i] + off) & mw1)] & 0x00ffffff) | a[i];
     g.cx.putImageData(g.img, 0, 0);
-    g.off = off; g.level = map.level;
+    g.off = off; g.mw = mw;
   }
   return g.cv;
 }

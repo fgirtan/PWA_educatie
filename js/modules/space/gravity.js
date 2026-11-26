@@ -1,6 +1,7 @@
 /* MODUL: LABORATOR DE GRAVITAȚIE — lansează planete și vezi orbitele */
 defineModule({
   id: 'gravity',
+  ownZoom: true,                          // are zoomul lui (cadrul comun nu adaugă altul)
   title: 'Laborator de gravitație',
   sub: 'Pune planete pe orbită în jurul unei stele',
   start: function (api) {
@@ -62,8 +63,8 @@ defineModule({
     /* ---------- fundal pre-randat: cer adânc cu nebuloase discrete ---------- */
     /* fundal curat: gradient blând + câteva stele fixe, discrete */
     function background() {
-      return Art.cached('grav-bg2', api.W, api.H, (c, w, h) => {
-        Art.backdrop(c, w, h, { top: '#0b1026', bottom: '#04060f', vignette: false });
+      return Art.cached('grav-bg-space', api.W, api.H, (c, w, h) => {
+        Art.scene(c, w, h, 'space');
         let s = 3; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
         const n = Math.round(w * h / 9000);
         for (let i = 0; i < n; i++) { c.fillStyle = 'rgba(225,232,255,' + (0.25 + rnd() * 0.4).toFixed(2) + ')'; c.beginPath(); c.arc(rnd() * w, rnd() * h, 0.5 + rnd() * 0.9, 0, TAU); c.fill(); }
@@ -191,9 +192,9 @@ defineModule({
         if (len * zoom > 12) Art.arrow(ctx, aim.x0, aim.y0, aim.x1, aim.y1, { color: 'rgba(125,255,176,0.9)', width: 3 / zoom, dash: [8 / zoom, 6 / zoom] });
       }
       ctx.restore();   // camera
-      const fz = Art.fs(api.unit, 0.04, 13);
-      Art.label(ctx, 'Orbite complete: ' + orbits, api.freeW - 14, 80, { size: fz, align: 'right', color: '#ffe8a8' });
-      Art.label(ctx, 'Căzute: ' + fell + ' · Scăpate: ' + lost, api.freeW - 14, 80 + fz * 2.1, { size: fz, align: 'right' });
+      const fz = Art.labelSize(api.unit);
+      Art.label(ctx, 'Orbite complete: ' + orbits, api.freeW - 14, 80, { size: fz, bg: Art.LABEL_BG, align: 'right', color: '#ffe8a8' });
+      Art.label(ctx, 'Căzute: ' + fell + ' · Scăpate: ' + lost, api.freeW - 14, 80 + fz * 2.1, { size: fz, bg: Art.LABEL_BG, align: 'right' });
     }
     return { frame: frame };
   }

@@ -31,7 +31,7 @@
     /* caroserie */
     ctx.beginPath(); Art.smoothPath(ctx, BODY, true, 0.35);
     const bg = ctx.createLinearGradient(0, -134, 0, -14); bg.addColorStop(0, Art.shade(col, 0.35)); bg.addColorStop(0.42, Art.shade(col, 0.12)); bg.addColorStop(0.5, col); bg.addColorStop(1, Art.shade(col, -0.45));
-    ctx.fillStyle = bg; ctx.fill(); ctx.strokeStyle = Art.shade(col, -0.6); ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = bg; ctx.fill(); ctx.strokeStyle = Art.ink(col); ctx.lineWidth = o.lw || 1.5; ctx.stroke();
     ctx.save(); ctx.beginPath(); Art.smoothPath(ctx, BODY, true, 0.35); ctx.clip();
     /* linia de umăr (lumină) */
     ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-210, -82); ctx.quadraticCurveTo(0, -84, 210, -64); ctx.stroke();
@@ -62,7 +62,7 @@
   /* peisaj simplu, desaturat, cu parallax lent */
   function landscape(ctx, api, gy, dist, U) {
     const W = api.W;
-    const g = ctx.createLinearGradient(0, 0, 0, gy); g.addColorStop(0, '#8db7dc'); g.addColorStop(1, '#dbe9f3'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, api.H);
+    const g = ctx.createLinearGradient(0, 0, 0, gy); g.addColorStop(0, Art.SCENE.day[0]); g.addColorStop(1, Art.SCENE.day[1]); ctx.fillStyle = g; ctx.fillRect(0, 0, W, api.H);
     const hills = (base, amp, f, par, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(0, gy + 2); for (let x = 0; x <= W + 20; x += 16) { const X = x + dist * par; ctx.lineTo(x, base - amp * (0.55 + 0.25 * Math.sin(X * f) + 0.2 * Math.sin(X * f * 2.7 + 1.3))); } ctx.lineTo(W, gy + 2); ctx.closePath(); ctx.fill(); };
     hills(gy, U * 0.38, 0.004, 0.6, '#a7bccd');
     hills(gy, U * 0.2, 0.009, 1.6, '#93b08b');
@@ -121,7 +121,7 @@
       };
       function setMode(m) { mode = m; for (const k in bs) bs[k].classList.toggle('on', k === m); rc.style.display = m === 'car' ? '' : 'none'; rmot.style.display = m === 'motor' ? '' : 'none'; api.say(MSG[m], 14000); api.layout(); }
       function frame(dt, t) {
-        const U = api.unit, W = api.freeW, F = Art.fs(U, 0.045, 13);
+        const U = api.unit, W = api.freeW, F = Art.labelSize(U), LB = Art.LABEL_BG;
         if (mode === 'car') {
           /* simplu: viteză ∝ accelerație, frână = recuperare (neschimbat) */
           const target = pedal * 33 * (bat > 0.01 ? 1 : 0);
@@ -143,12 +143,12 @@
             ctx.fillStyle = '#4ade80'; ctx.fillRect(sx - U * 0.035, groundY - sh * 0.73, U * 0.07 * ((t * 0.5) % 1), sh * 0.06);
             ctx.strokeStyle = '#2a2f38'; ctx.lineWidth = U * 0.014; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(sx + U * 0.07, groundY - sh * 0.45); ctx.bezierCurveTo(sx + U * 0.25, groundY - sh * 0.05, cx - carLen * 0.48, groundY - U * 0.02, cx - 214 * s, groundY - 60 * s); ctx.stroke();
             ctx.restore();
-            Art.label(ctx, 'se încarcă', sx, groundY - sh - F, { size: F, color: '#7dffb0' });
+            Art.label(ctx, 'se încarcă', sx, groundY - sh - F, { size: F, bg: LB, color: '#7dffb0' });
           }
           Art.groundShadow(ctx, cx, groundY, carLen * 0.5, U * 0.035, 0.45);
           ctx.save(); ctx.translate(cx, groundY); ctx.scale(s, s);
               drawCarBody(ctx, '#2e8b74', {
-            wheelA: wheelA * 0.5, braking: braking,
+            wheelA: wheelA * 0.5, braking: braking, lw: Art.lineW(U) / s,
             cut: (c) => {
               c.fillStyle = 'rgba(34,40,52,0.9)'; Art.roundRectPath(c, -178, -64, 370, 42, 10); c.fill(); c.strokeStyle = 'rgba(255,255,255,0.25)'; c.lineWidth = 1.5; c.setLineDash([6, 4]); c.stroke(); c.setLineDash([]);
               battery(c, -100, -36, 200, 13, lv);
@@ -163,20 +163,20 @@
           });
           ctx.restore();
           const lx = (x) => cx + x * s, ly = (y) => groundY + y * s;
-          Art.label(ctx, 'baterie', lx(0), groundY + U * 0.1, { size: F, tx: lx(0), ty: ly(-30) });
-          Art.label(ctx, 'controler', lx(-109), ly(-60) - U * 0.2, { size: F, tx: lx(-109), ty: ly(-60) });
-          Art.label(ctx, 'motor', lx(-150), groundY + U * 0.1, { size: F, tx: lx(-150), ty: ly(-34) });
+          Art.label(ctx, 'baterie', lx(0), groundY + U * 0.1, { size: F, bg: LB, tx: lx(0), ty: ly(-30) });
+          Art.label(ctx, 'controler', lx(-109), ly(-60) - U * 0.2, { size: F, bg: LB, tx: lx(-109), ty: ly(-60) });
+          Art.label(ctx, 'motor', lx(-150), groundY + U * 0.1, { size: F, bg: LB, tx: lx(-150), ty: ly(-34) });
           /* panou de bord */
           const pX = 12, pY = api.cy - U + 8, pWd = Math.max(170, F * 12), pHt = F * 5.4;
           Art.panel(ctx, pX, pY, pWd, pHt, { r: 12 });
           Art.text(ctx, Math.round(vS * 3.6) + ' km/h', pX + 14, pY + F * 1.3, { size: F * 1.8, weight: 800, align: 'left', halo: false });
           battery(ctx, pX + 14, pY + F * 2.6, pWd - 40, F * 1.2, lv);
-          Art.text(ctx, 'baterie ' + Math.round(lv * 100) + '%', pX + 14, pY + F * 4.5, { size: F * 0.9, align: 'left', halo: false, color: 'rgba(226,234,255,0.85)' });
-          if (v > 1 && !braking) { leaf(ctx, pX + 22, pY + pHt + F * 1.1, F * 0.55); Art.text(ctx, 'fără fum, fără benzină', pX + 34, pY + pHt + F * 1.1, { size: F * 0.9, align: 'left', color: '#d8f5dc' }); }
+          Art.text(ctx, 'baterie ' + Math.round(lv * 100) + '%', pX + 14, pY + F * 4.5, { size: Math.max(12, F * 0.9), align: 'left', halo: false, color: 'rgba(226,234,255,0.85)' });
+          if (v > 1 && !braking) { leaf(ctx, pX + 22, pY + pHt + F * 1.1, F * 0.55); Art.text(ctx, 'fără fum, fără benzină', pX + 34, pY + pHt + F * 1.1, { size: Math.max(12, F * 0.9), align: 'left', color: '#d8f5dc' }); }
           const range = pw > 0.05 ? bat * 60 / pw * v * 3.6 : Infinity;
           infoC.innerHTML = '<b>Putere:</b> ' + (braking && v > 0.5 ? 'recuperează ' + fmt(Math.abs(pw), 1) + ' kW' : fmt(Math.max(0, pw), 1) + ' kW') + ' · <b>Autonomie:</b> ' + (isFinite(range) ? '~' + fmt(Math.min(range, 999), 0) + ' km la viteza asta' : '—') + ' · <b>Parcurs:</b> ' + fmt(dist / 1000 * 3, 1) + ' km';
         } else {
-          Art.backdrop(ctx, api.W, api.H, { top: '#1c2338', bottom: '#0e121e', vignette: false });
+          Art.scene(ctx, api.W, api.H, 'lab');
           const wide = W > U * 2.4, cx = api.cx - (wide ? U * 0.3 : U * 0.08), cy = api.cy - U * 0.05, R = U * (wide ? 0.62 : 0.48);
           /* controler: polaritatea fiecărui electromagnet (neschimbat) */
           const coils = [0, 1, 2, 3].map((i) => i * Math.PI / 2 + Math.PI / 4);
@@ -207,20 +207,20 @@
           /* lumină fixă pe rotor (volum) */
           const hl = ctx.createRadialGradient(cx - rr * 0.4, cy - rr * 0.45, 1, cx, cy, rr); hl.addColorStop(0, 'rgba(255,255,255,0.35)'); hl.addColorStop(0.6, 'rgba(255,255,255,0)'); hl.addColorStop(1, 'rgba(0,0,0,0.3)'); ctx.fillStyle = hl; ctx.beginPath(); ctx.arc(cx, cy, rr, 0, TAU); ctx.fill();
           Art.sphere(ctx, cx, cy, rr * 0.2, '#c9ced8', { rim: false });
-          Art.label(ctx, 'magnetul din mijloc (rotorul)', cx, cy - R - U * 0.2, { size: F });
+          Art.label(ctx, 'magnetul din mijloc (rotorul)', cx, cy - R - U * 0.2, { size: F, bg: LB });
           /* baterie + controler (jos-stânga) */
           const bx = cx - R - U * 0.05, by = cy + R + U * 0.13;
           if (by + U * 0.1 < api.cy + U) {
             battery(ctx, bx - U * 0.32, by, U * 0.28, U * 0.09, 1);
             ctx.beginPath(); Art.roundRectPath(ctx, bx + U * 0.06, by - U * 0.005, U * 0.14, U * 0.1, U * 0.015); Art.volumeFill(ctx, 0, by, 0, by + U * 0.1, ctrl ? '#e0a23a' : '#6b7280', { hi: 0.3 });
             ctx.strokeStyle = '#c9843a'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(bx - U * 0.02, by + U * 0.045); ctx.lineTo(bx + U * 0.06, by + U * 0.045); ctx.moveTo(bx + U * 0.2, by + U * 0.045); ctx.quadraticCurveTo(cx - R * 0.3, by + U * 0.05, cx + Math.cos(coils[1]) * R * 0.95, cy + Math.sin(coils[1]) * R * 0.95 + U * 0.08); ctx.stroke();
-            Art.text(ctx, 'baterie', bx - U * 0.18, by + U * 0.16, { size: F * 0.9 }); Art.text(ctx, 'controler', bx + U * 0.13, by + U * 0.16, { size: F * 0.9 });
+            Art.text(ctx, 'baterie', bx - U * 0.18, by + U * 0.16, { size: Math.max(12, F * 0.9) }); Art.text(ctx, 'controler', bx + U * 0.13, by + U * 0.16, { size: Math.max(12, F * 0.9) });
           }
           /* roata atașată */
           const wr = U * (wide ? 0.17 : 0.14), rx = Math.min(api.freeW - wr - 16, cx + R + U * 0.35), ry = cy + R * 0.5;
           ctx.strokeStyle = '#8a93a3'; ctx.lineWidth = U * 0.02; ctx.beginPath(); ctx.moveTo(cx + R + U * 0.1, cy); ctx.lineTo(rx, cy); ctx.lineTo(rx, ry - wr); ctx.stroke();
           ctx.save(); ctx.translate(rx, ry + wr); wheel(ctx, 0, wr, th); ctx.restore();
-          Art.label(ctx, 'roata mașinii', rx, ry + wr * 1.5, { size: F });
+          Art.label(ctx, 'roata mașinii', rx, ry + wr * 1.5, { size: F, bg: LB });
           const rpm = Math.abs(w) / (2 * Math.PI) * 60;
           infoM.innerHTML = '<b>Viteza motorului:</b> ' + fmt(rpm, 0) + ' rot/min' + (!ctrl && rpm < 5 ? ' · <i>fără controler s-a oprit</i>' : '') + ' · roșu = pol <b>N</b>, albastru = pol <b>S</b>';
         }

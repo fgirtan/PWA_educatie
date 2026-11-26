@@ -76,7 +76,7 @@
       const surfV = (u, t) => surf(u, t) + 0.12 * N1(u * 38 + 3) * Math.min(1, Math.max(0, surf(u, t)) * 0.5 + 0.2);
 
       function sky(W, H) {
-        return A.cached('rf-sky', W, H, (c, w, h) => { const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#6f9fcf'); g.addColorStop(0.5, '#b8d4ea'); g.addColorStop(1, '#e4eef4'); c.fillStyle = g; c.fillRect(0, 0, w, h); });
+        return A.cached('rf-sky', W, H, (c, w, h) => A.scene(c, w, h, 'day'));
       }
       function frame(dt, t) {
         if (playing && mode !== 'heights') { T = Math.min(60, T + dt * 4.5); sl.set(T); if (T >= 60) { playing = false; bP.innerHTML = '↺'; } }
@@ -86,7 +86,7 @@
         const x0 = 8, x1 = api.freeW - 8, cw = x1 - x0, base = api.cy + api.unit * 0.25, km = api.unit * 1.5 / 22 * 2.2;
         const N = 120;
         const oceanLeft = mode === 'subduction', riftSea = mode === 'rift' && T > 14;
-        const fsz = A.fs(U, 0.042, 13);
+        const fsz = A.labelSize(U), LB = A.LABEL_BG;
         /* nori de fundal, statici și discreți */
         if (mode !== 'erosion') { A.cloud(ctx, x0 + cw * 0.18, base - U * 1.05, U * 0.12, 0.55); A.cloud(ctx, x0 + cw * 0.82, base - U * 1.2, U * 0.09, 0.45); }
 
@@ -132,7 +132,7 @@
         /* umbra versanților din dreapta (lumina vine din stânga) */
         const sh = ctx.createLinearGradient(x0, 0, x1, 0); sh.addColorStop(0, 'rgba(255,240,210,0.06)'); sh.addColorStop(1, 'rgba(20,10,30,0.12)'); ctx.fillStyle = sh; ctx.fillRect(x0, 0, cw, H);
         ctx.restore();
-        ctx.strokeStyle = 'rgba(40,30,24,0.55)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(top[0][0], top[0][1]); for (let i = 1; i <= N; i++) ctx.lineTo(top[i][0], top[i][1]); ctx.stroke();
+        ctx.strokeStyle = A.ink(STRATA[0]); ctx.lineWidth = A.lineW(U) * 1.2; ctx.beginPath(); ctx.moveTo(top[0][0], top[0][1]); for (let i = 1; i <= N; i++) ctx.lineTo(top[i][0], top[i][1]); ctx.stroke();
         ctx.strokeStyle = 'rgba(70,20,10,0.6)'; ctx.beginPath(); ctx.moveTo(bot[0][0], bot[0][1]); for (let i = 1; i <= N; i++) ctx.lineTo(bot[i][0], bot[i][1]); ctx.stroke();
 
         /* subducție: placa oceanică (bazalt) coboară în manta */
@@ -202,10 +202,10 @@
           for (const side of [-1, 1]) { const u = 0.5 + side * (0.2 + 0.08 * (T / 60)); const sx = x0 + cw * u, sy = base - surf(u, T) * km; ctx.fillStyle = A.rgba('#c9a878', 0.85 * sedA); ctx.beginPath(); ctx.ellipse(sx, sy + 2, U * 0.1 * sedA, U * 0.018 * sedA, 0, Math.PI, TAU); ctx.fill(); }
         }
         /* altitudine / etichete */
-        const lab = (txt, u, dy) => A.label(ctx, txt, x0 + u * cw, base - surf(u, T) * km - (dy || 14) - fsz * 0.6, { size: fsz });
+        const lab = (txt, u, dy) => A.label(ctx, txt, x0 + u * cw, base - surf(u, T) * km - (dy || 14) - fsz * 0.6, { size: fsz, bg: LB });
         if (mode === 'collision') { const h = surf(0.5, T) * 1000; lab('Altitudine: ' + fmtN(h) + ' m' + (h >= 8800 ? ' = Everest!' : ''), 0.5, 18); A.text(ctx, 'India', x0 + cw * 0.15, base + 10, { size: fsz }); A.text(ctx, 'Asia', x0 + cw * 0.85, base + 10, { size: fsz }); }
-        if (mode === 'rift') { A.label(ctx, T > 14 ? 'Ocean nou' : 'Vale rift', x0 + cw * 0.5, base - 38 - fsz, { size: fsz }); }
-        if (mode === 'subduction') { A.text(ctx, 'Placa oceanică', x0 + cw * 0.2, base + 70, { size: fsz }); A.label(ctx, 'Șanț', x0 + cw * 0.42, base - 22 - fsz, { size: fsz }); A.label(ctx, 'Anzi (vulcani)', x0 + cw * 0.68, base - surf(0.68, T) * km - U * 0.32, { size: fsz }); }
+        if (mode === 'rift') { A.label(ctx, T > 14 ? 'Ocean nou' : 'Vale rift', x0 + cw * 0.5, base - 38 - fsz, { size: fsz, bg: LB }); }
+        if (mode === 'subduction') { A.text(ctx, 'Placa oceanică', x0 + cw * 0.2, base + 70, { size: fsz }); A.label(ctx, 'Șanț', x0 + cw * 0.42, base - 22 - fsz, { size: fsz, bg: LB }); A.label(ctx, 'Anzi (vulcani)', x0 + cw * 0.68, base - surf(0.68, T) * km - U * 0.32, { size: fsz, bg: LB }); }
         if (mode === 'erosion') { const h = surf(0.5, T) * 1000; lab('Altitudine: ' + fmtN(h) + ' m', 0.5, 16); }
         A.text(ctx, 'Secțiune prin scoarță · timpul curge ×milioane', 14, api.cy + U - fsz * 0.8, { size: A.fs(U, 0.036, 12), align: 'left', weight: 600 });
       }
@@ -234,7 +234,7 @@
             for (let s = steps - 1; s >= 0; s--) { const y0 = base - H * 0.82 * s / steps, y1 = base - H * 0.82 * (s + 1) / steps, ww = w0 * (1 - s / steps * 0.85); ctx.lineTo(p.x + ww, y1); ctx.lineTo(p.x + ww, y0); }
             ctx.closePath();
             const g = ctx.createLinearGradient(p.x - w0, 0, p.x + w0, 0); g.addColorStop(0, '#dfe8f2'); g.addColorStop(0.45, '#9fb2c8'); g.addColorStop(1, '#5a6a80'); ctx.fillStyle = g; ctx.fill();
-            ctx.strokeStyle = 'rgba(40,50,70,0.6)'; ctx.lineWidth = 1; ctx.stroke();
+            ctx.strokeStyle = A.ink('#9fb2c8'); ctx.lineWidth = A.lineW(U); ctx.stroke();
           } else {
             const pts = []; const n = 40; for (let k = 0; k <= n; k++) { const x = -1 + 2 * k / n; pts.push([p.x + x * hw, base - profile(i, x) * H]); }
             const outline = () => { ctx.beginPath(); ctx.moveTo(pts[0][0], base); pts.forEach((q) => ctx.lineTo(q[0], q[1])); ctx.lineTo(pts[n][0], base); ctx.closePath(); };
@@ -260,12 +260,12 @@
             if (i === 4) { const wl = base - H * (5.993 / 10.2); const wg = ctx.createLinearGradient(0, wl, 0, base); wg.addColorStop(0, 'rgba(60,140,200,0.7)'); wg.addColorStop(1, 'rgba(14,52,110,0.85)'); ctx.fillStyle = wg; ctx.fillRect(p.x - hw - 4, wl, hw * 2 + 8, base - wl); }
             ctx.restore();
             if (i === 4) { const wl = base - H * (5.993 / 10.2); ctx.strokeStyle = 'rgba(230,245,255,0.9)'; ctx.lineWidth = 1.5; ctx.beginPath(); for (let x = p.x - hw - 6; x <= p.x + hw + 6; x += 4) { const y = wl + Math.sin(x * 0.2 + t * 1.5) * 1.2; x === p.x - hw - 6 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); } ctx.stroke(); }
-            ctx.strokeStyle = 'rgba(40,30,24,0.45)'; ctx.lineWidth = 1; outline(); ctx.stroke();
+            ctx.strokeStyle = A.ink(rock[0]); ctx.lineWidth = A.lineW(U); outline(); ctx.stroke();
           }
           if (i === compPick) { ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(p.x - p.w * 0.5, base + 3); ctx.lineTo(p.x + p.w * 0.5, base + 3); ctx.stroke(); A.arrow(ctx, p.x, Math.max(api.cy - U + fsz * 3, p.y - fsz * 3.2), p.x, p.y - fsz * 1.6, { color: '#ffd166', width: 3 }); }
           ctx.restore();
           A.text(ctx, fmtN(PEAKS[i][1] * 1000) + ' m', p.x, Math.max(api.cy - U + fsz * 2, p.y - fsz * 0.9), { size: fsz, color: i === compPick ? '#ffe7a0' : '#ffffff' });
-          const words = PEAKS[i][0].split(' '); A.text(ctx, words[0], p.x, base + fsz * 1.2, { size: fsz }); if (words[1]) A.text(ctx, words.slice(1).join(' '), p.x, base + fsz * 2.4, { size: fsz * 0.9, weight: 600 });
+          const words = PEAKS[i][0].split(' '); A.text(ctx, words[0], p.x, base + fsz * 1.2, { size: fsz }); if (words[1]) A.text(ctx, words.slice(1).join(' '), p.x, base + fsz * 2.4, { size: Math.max(12, fsz * 0.9), weight: 600 });
         });
         ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.setLineDash([6, 6]); ctx.lineWidth = 1.5; const ey = L[3].y; ctx.beginPath(); ctx.moveTo(0, ey); ctx.lineTo(api.freeW, ey); ctx.stroke(); ctx.setLineDash([]);
         A.text(ctx, 'nivelul Everestului', 8, ey - fsz * 0.8, { size: fsz, align: 'left' });

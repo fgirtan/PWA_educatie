@@ -111,7 +111,7 @@
       }
 
       function frame(dt, t) {
-        const U = api.unit, F = Art.fs(U, 0.045, 13);
+        const U = api.unit, F = Art.labelSize(U), LB = Art.LABEL_BG;
         if (mode === 'loc') {
           /* fizică simplă (neschimbată) */
           const acc = brake ? -9 : thr * 5.5;
@@ -123,7 +123,7 @@
           const W = api.W, H = api.H, gy = api.cy + U * 0.55;
           const FW = api.freeW, sc = clamp(Math.min(FW / 600, U / 215), 0.5, 1.7), tx = FW * 0.62;
           /* cer + dealuri îndepărtate (parallax lent) */
-          const sg = ctx.createLinearGradient(0, 0, 0, gy); sg.addColorStop(0, '#8db7dc'); sg.addColorStop(1, '#dde9f2'); ctx.fillStyle = sg; ctx.fillRect(0, 0, W, H);
+          const sg = ctx.createLinearGradient(0, 0, 0, gy); sg.addColorStop(0, Art.SCENE.day[0]); sg.addColorStop(1, Art.SCENE.day[1]); ctx.fillStyle = sg; ctx.fillRect(0, 0, W, H);
           const hills = (amp, f, par, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(0, gy); for (let x = 0; x <= W + 20; x += 16) { const X = x + dist * par; ctx.lineTo(x, gy - amp * (0.55 + 0.3 * Math.sin(X * f) + 0.15 * Math.sin(X * f * 3.1 + 2))); } ctx.lineTo(W, gy); ctx.closePath(); ctx.fill(); };
           hills(U * 0.5, 0.004, 0.05, '#a9bdcd'); hills(U * 0.26, 0.009, 0.15, '#93b08b');
           ctx.fillStyle = '#86a874'; ctx.fillRect(0, gy, W, H - gy);
@@ -155,11 +155,11 @@
           ctx.strokeStyle = '#4a5a88'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(nodes[0], ly); ctx.lineTo(nodes[4], ly); ctx.stroke();
           const active = brake ? v > 1 : thr > 0.02;
           if (active) for (let i = 0; i < 14; i++) { const u = (((i / 14 + flow * 0.35) % 1) + 1) % 1; ctx.fillStyle = brake ? '#7dffb0' : '#ffd166'; ctx.beginPath(); ctx.arc(lerp(nodes[0], nodes[4], u), ly, 3.4, 0, TAU); ctx.fill(); }
-          names.forEach((n, i) => { ctx.fillStyle = '#c9d6ff'; ctx.beginPath(); ctx.arc(nodes[i], ly, 6.5, 0, TAU); ctx.fill(); ctx.fillStyle = '#2a3460'; ctx.beginPath(); ctx.arc(nodes[i], ly, 3, 0, TAU); ctx.fill(); Art.text(ctx, n, nodes[i], ly + F * (small && i % 2 ? 2.05 : 1.15), { size: Math.max(11, F * 0.8), halo: false }); });
+          names.forEach((n, i) => { ctx.fillStyle = '#c9d6ff'; ctx.beginPath(); ctx.arc(nodes[i], ly, 6.5, 0, TAU); ctx.fill(); ctx.fillStyle = '#2a3460'; ctx.beginPath(); ctx.arc(nodes[i], ly, 3, 0, TAU); ctx.fill(); Art.text(ctx, n, nodes[i], ly + F * (small && i % 2 ? 2.05 : 1.15), { size: Math.max(12, F * 0.8), halo: false }); });
           Art.text(ctx, Math.round(v) + ' km/h', dx0 + 4, dy0 + bh + F * 1.7, { size: F * 2, weight: 800, align: 'left' });
           info.innerHTML = '<b>Putere:</b> ' + (brake ? 'recuperează ' + fmt(Math.max(0, v * 12), 0) + ' kW (înapoi în rețea)' : fmt(Math.max(0, pw), 0) + ' kW (din rețea)') + ' · <b>Distanță:</b> ' + fmt(dist / 1000 * 3, 1) + ' km';
         } else {
-          Art.backdrop(ctx, api.W, api.H, { top: '#1c2338', bottom: '#0e121e', vignette: false });
+          Art.scene(ctx, api.W, api.H, 'lab');
           const cx = api.cx, cy = api.cy, R0 = U * 0.28, lam = 0.45;
           if (!dragging) { const target = curve ? 0.55 : 0; offV += (-(off - target) * 14 - offV * 3.2) * dt; off += offV * dt; }
           wt += dt;
@@ -170,7 +170,7 @@
           ctx.fillStyle = '#5a5248'; ctx.beginPath(); ctx.moveTo(cx - gauge / 2 - U * 0.45, railY + U * 0.2); ctx.lineTo(cx + gauge / 2 + U * 0.45, railY + U * 0.2); ctx.lineTo(cx + gauge / 2 + U * 0.6, railY + U * 0.42); ctx.lineTo(cx - gauge / 2 - U * 0.6, railY + U * 0.42); ctx.closePath(); ctx.fill();
           ctx.beginPath(); Art.roundRectPath(ctx, cx - gauge / 2 - U * 0.32, railY + U * 0.085, gauge + U * 0.64, U * 0.09, U * 0.015); Art.volumeFill(ctx, 0, railY + U * 0.085, 0, railY + U * 0.175, '#a49e94', { hi: 0.2 });
           /* șinele în secțiune (ciupercă, inimă, talpă) */
-          const rail = (x) => { const hw = U * 0.04; ctx.beginPath(); ctx.moveTo(x - hw, railY + U * 0.005); ctx.quadraticCurveTo(x - hw, railY - U * 0.005, x - hw * 0.7, railY - U * 0.005); ctx.lineTo(x + hw * 0.7, railY - U * 0.005); ctx.quadraticCurveTo(x + hw, railY - U * 0.005, x + hw, railY + U * 0.005); ctx.lineTo(x + hw, railY + U * 0.03); ctx.lineTo(x + hw * 0.3, railY + U * 0.04); ctx.lineTo(x + hw * 0.3, railY + U * 0.07); ctx.lineTo(x + hw * 1.6, railY + U * 0.078); ctx.lineTo(x + hw * 1.6, railY + U * 0.088); ctx.lineTo(x - hw * 1.6, railY + U * 0.088); ctx.lineTo(x - hw * 1.6, railY + U * 0.078); ctx.lineTo(x - hw * 0.3, railY + U * 0.07); ctx.lineTo(x - hw * 0.3, railY + U * 0.04); ctx.lineTo(x - hw, railY + U * 0.03); ctx.closePath(); Art.volumeFill(ctx, x - hw, railY, x + hw, railY + U * 0.09, '#9aa1ab', { hi: 0.4 }); ctx.strokeStyle = '#3e434b'; ctx.lineWidth = 1; ctx.stroke(); ctx.fillStyle = '#e2e6ec'; ctx.fillRect(x - hw * 0.7, railY - U * 0.005, hw * 1.4, 2); };
+          const rail = (x) => { const hw = U * 0.04; ctx.beginPath(); ctx.moveTo(x - hw, railY + U * 0.005); ctx.quadraticCurveTo(x - hw, railY - U * 0.005, x - hw * 0.7, railY - U * 0.005); ctx.lineTo(x + hw * 0.7, railY - U * 0.005); ctx.quadraticCurveTo(x + hw, railY - U * 0.005, x + hw, railY + U * 0.005); ctx.lineTo(x + hw, railY + U * 0.03); ctx.lineTo(x + hw * 0.3, railY + U * 0.04); ctx.lineTo(x + hw * 0.3, railY + U * 0.07); ctx.lineTo(x + hw * 1.6, railY + U * 0.078); ctx.lineTo(x + hw * 1.6, railY + U * 0.088); ctx.lineTo(x - hw * 1.6, railY + U * 0.088); ctx.lineTo(x - hw * 1.6, railY + U * 0.078); ctx.lineTo(x - hw * 0.3, railY + U * 0.07); ctx.lineTo(x - hw * 0.3, railY + U * 0.04); ctx.lineTo(x - hw, railY + U * 0.03); ctx.closePath(); Art.volumeFill(ctx, x - hw, railY, x + hw, railY + U * 0.09, '#9aa1ab', { hi: 0.4 }); ctx.strokeStyle = Art.ink('#9aa1ab'); ctx.lineWidth = Art.lineW(U); ctx.stroke(); ctx.fillStyle = '#e2e6ec'; ctx.fillRect(x - hw * 0.7, railY - U * 0.005, hw * 1.4, 2); };
           rail(cx - gauge / 2); rail(cx + gauge / 2);
           /* osie + roți conice: raza crește spre buză (spre interior) */
           const rL = R0 * (1 + lam * (-ox / U) * 0.9), rR = R0 * (1 + lam * (ox / U) * 0.9);
@@ -179,7 +179,7 @@
             const ay = railY - r, xi = x + dir * wW * 0.55, xo = x - dir * wW * 0.45;
             const rOut = r * 0.86;               // marginea exterioară are rază mai mică (con)
             ctx.beginPath(); ctx.moveTo(xo, ay - rOut); ctx.lineTo(xi, ay - r); ctx.lineTo(xi, ay - r - U * 0.0); ctx.lineTo(xi + dir * U * 0.025, ay - r * 1.0); ctx.lineTo(xi + dir * U * 0.025, railY + U * 0.03); ctx.quadraticCurveTo(xi, railY + U * 0.035, xi, railY); ctx.lineTo(xo, ay + rOut); ctx.closePath();
-            const g = ctx.createLinearGradient(0, ay - r, 0, ay + r); g.addColorStop(0, '#6f7782'); g.addColorStop(0.3, '#d4d9e0'); g.addColorStop(0.55, '#a3abb6'); g.addColorStop(1, '#4a515b'); ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = '#30353c'; ctx.lineWidth = 1.2; ctx.stroke();
+            const g = ctx.createLinearGradient(0, ay - r, 0, ay + r); g.addColorStop(0, '#6f7782'); g.addColorStop(0.3, '#d4d9e0'); g.addColorStop(0.55, '#a3abb6'); g.addColorStop(1, '#4a515b'); ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = Art.ink('#a3abb6'); ctx.lineWidth = Art.lineW(U) * 1.2; ctx.stroke();
             ctx.save(); ctx.clip(); ctx.strokeStyle = 'rgba(30,34,40,0.3)'; ctx.lineWidth = 1; for (let k = 0; k < 8; k++) { const ph = (k / 8 + wt * 0.4) % 1, yy = ay - Math.cos(ph * Math.PI) * r; ctx.beginPath(); ctx.moveTo(xo, yy); ctx.lineTo(xi + dir * U * 0.03, yy); ctx.stroke(); } ctx.restore();
             ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(lerp(xo, xi, 0.5), railY, U * 0.008, 0, TAU); ctx.fill();
             return { x: (xo + xi) / 2, ay: ay, top: ay - r };
@@ -191,8 +191,8 @@
           const ag = ctx.createLinearGradient(0, Math.min(aL, aR) - U * 0.03, 0, Math.max(aL, aR) + U * 0.03); ag.addColorStop(0, '#e6ebf1'); ag.addColorStop(0.5, '#9aa3af'); ag.addColorStop(1, '#4d545f'); ctx.strokeStyle = ag; ctx.lineWidth = U * 0.06; ctx.beginPath(); ctx.moveTo(wl - wW * 0.6, aL); ctx.lineTo(wr + wW * 0.6, aR); ctx.stroke();
           ctx.restore();
           const WL = wheel(wl, rL, 1), WR = wheel(wr, rR, -1);
-          Art.label(ctx, 'osie', cx + ox, (aL + aR) / 2 - U * 0.09, { size: F });
-          Art.label(ctx, 'roată', WL.x - wW, WL.ay, { size: F, align: 'right' }); Art.label(ctx, 'roată', WR.x + wW, WR.ay, { size: F, align: 'left' });
+          Art.label(ctx, 'osie', cx + ox, (aL + aR) / 2 - U * 0.09, { size: F, bg: LB });
+          Art.label(ctx, 'roată', WL.x - wW, WL.ay, { size: F, bg: LB, align: 'right' }); Art.label(ctx, 'roată', WR.x + wW, WR.ay, { size: F, bg: LB, align: 'left' });
           /* diametre */
           const topMin = Math.min(WL.top, WR.top);
           Art.text(ctx, 'diametru: ' + fmt(rL / R0 * 100, 0) + '%', WL.x, topMin - U * 0.06, { size: F });
@@ -203,7 +203,7 @@
           Art.arrow(ctx, WR.x, ab, WR.x, ab - U * 0.11 * rR / R0, { color: '#7dffb0', width: Math.max(4, U * 0.018) });
           const steer = rR - rL;
           Art.text(ctx, Math.abs(off) < 0.03 ? 'osia e centrată: roți egale ✓' : (steer > 0 ? 'roata dreaptă e mai rapidă → osia virează la stânga' : 'roata stângă e mai rapidă → osia virează la dreapta'), cx, cy - U * 0.85, { size: api.W < 500 ? Math.max(13, F * 0.9) : F * 1.05, color: '#ffd166' });
-          Art.text(ctx, curve ? 'în curbă: osia se ia singură după șine' : 'trage osia lateral cu degetul', cx, cy - U * 0.85 + F * 1.6, { size: F * 0.9, color: 'rgba(255,255,255,0.75)' });
+          Art.text(ctx, curve ? 'în curbă: osia se ia singură după șine' : 'trage osia lateral cu degetul', cx, cy - U * 0.85 + F * 1.6, { size: Math.max(12, F * 0.9), color: 'rgba(255,255,255,0.75)' });
         }
       }
       return { frame: frame };

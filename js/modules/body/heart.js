@@ -111,13 +111,13 @@
           ctx.bezierCurveTo(0.09 * U, 0.1 * U, 0.1 * U, 0.03 * U, 0.08 * U, -0.03 * U);
           ctx.bezierCurveTo(0.06 * U, -0.1 * U, 0.04 * U, -0.12 * U, -0.02 * U, -0.13 * U); ctx.closePath();
           A.volumeFill(ctx, -0.27 * U, -0.17 * U, 0.1 * U, 0.15 * U, '#e48a9c', { hi: 0.22, lo: 0.35 });
-          ctx.strokeStyle = 'rgba(120,30,55,0.55)'; ctx.lineWidth = 1.5; ctx.stroke();
+          ctx.strokeStyle = A.ink('#e48a9c'); ctx.lineWidth = A.lineW(U); ctx.stroke();
           /* textură spongioasă: alveole */
           ctx.clip(); ctx.fillStyle = 'rgba(255,230,236,0.22)';
           for (let i = 0; i < 22; i++) { const ax = (-0.24 + ((i * 0.37) % 1) * 0.3) * U, ay = (-0.12 + ((i * 0.61) % 1) * 0.25) * U; ctx.beginPath(); ctx.arc(ax, ay, U * (0.012 + (i % 3) * 0.004), 0, TAU); ctx.fill(); }
           ctx.restore();
         }
-        A.label(ctx, 'Plămâni', X(0.74), Y(-0.88), { size: A.fs(U, 0.05, 13), bg: 'rgba(60,18,40,0.82)', color: '#ffd3de' });
+        A.label(ctx, 'Plămâni', X(0.74), Y(-0.88), { size: A.labelSize(U), bg: A.LABEL_BG, color: '#ffd3de' });
       }
 
       function frame(dt, t) {
@@ -129,14 +129,14 @@
         const U = api.unit, cx = api.cx, cy = api.cy;
         const X = (x) => cx + x * U, Y = (y) => cy + y * U;
 
-        /* fundal: întuneric cald, lumină roșiatică în spatele inimii */
-        A.backdrop(ctx, api.W, api.H, { top: '#22131d', bottom: '#0e0910', vignette: false });
+        /* fundal: cel comun al secțiunii Corpul omenesc */
+        A.scene(ctx, api.W, api.H, 'body');
 
         /* rețeaua de capilare (corp + plămâni) */
         drawLungs(X, Y, U, t);
         capillaryBed(X, Y, U, SEG[5], t, 1);
         capillaryBed(X, Y, U, SEG[0], t, -1);
-        A.label(ctx, 'Restul corpului', X(0), Y(0.96), { size: A.fs(U, 0.05, 13), bg: 'rgba(40,12,28,0.85)' });
+        A.label(ctx, 'Restul corpului', X(0), Y(0.96), { size: A.labelSize(U), bg: A.LABEL_BG });
 
         /* vasele mari: tuburi curbe cu luciu; artera pulmonară sub aortă */
         const vw = (w) => w * U * (1 + 0.06 * squeeze);
@@ -171,7 +171,7 @@
           ctx.save(); ctx.translate(ax * hsx, ay * hsy); ctx.rotate(rot);
           A.blob(ctx, 0, 0, hsx * 0.2, t * 0.3, { sx: 1.25, sy: 0.75, amp: 0.1, seed: ax * 3 });
           A.volumeFill(ctx, -hsx * 0.2, -hsx * 0.2, hsx * 0.2, hsx * 0.2, col, { hi: 0.25, lo: 0.4 });
-          ctx.strokeStyle = 'rgba(50,5,20,0.6)'; ctx.lineWidth = 2; ctx.stroke(); ctx.restore();
+          ctx.strokeStyle = A.ink(col); ctx.lineWidth = A.lineW(U); ctx.stroke(); ctx.restore();
         }
         /* mușchiul (miocardul) cu volum */
           heartPath();
@@ -227,7 +227,7 @@
         /* luciu umed și lumină de contur */
         const shg = ctx.createRadialGradient(-0.45 * hsx, -0.55 * hsy, 2, -0.35 * hsx, -0.4 * hsy, hsx * 0.75); shg.addColorStop(0, 'rgba(255,240,230,0.2)'); shg.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = shg; ctx.fillRect(-hsx, -hsy, hsx * 2, hsy * 2.2);
         ctx.restore();
-        heartPath(); ctx.strokeStyle = 'rgba(60,4,18,0.85)'; ctx.lineWidth = Math.max(2, U * 0.012); ctx.stroke();
+        heartPath(); ctx.strokeStyle = A.ink('#80283a'); ctx.lineWidth = A.lineW(U) * 2; ctx.stroke();
         ctx.restore();
 
         /* globule în interiorul camerelor */
@@ -239,8 +239,8 @@
         const fsm = A.fs(U, 0.04, 12);
         A.text(ctx, 'sept', X(0.02), Y(0.56), { size: fsm, color: '#ffd6dc' });
         A.text(ctx, 'valve', X(0.02), Y(0.14), { size: fsm, color: '#fff0e0' });
-        A.label(ctx, 'din corp', X(-0.82), Y(-0.3), { size: fsm, bg: 'rgba(20,30,80,0.85)', color: '#c8d6ff' });
-        A.label(ctx, 'spre corp', X(0.82), Y(-0.08), { size: fsm, bg: 'rgba(80,15,30,0.85)', color: '#ffd0d6' });
+        A.label(ctx, 'din corp', X(-0.82), Y(-0.3), { size: A.labelSize(U), bg: A.LABEL_BG, color: '#c8d6ff' });
+        A.label(ctx, 'spre corp', X(0.82), Y(-0.08), { size: A.labelSize(U), bg: A.LABEL_BG, color: '#ffd0d6' });
 
         /* EKG într-un panou curat */
         const ev = bump(phase, 0.03, 0.10) * 0.2 + (phase > 0.14 && phase < 0.2 ? Math.sin(Math.PI * (phase - 0.14) / 0.06) * 1.0 : 0) - (phase > 0.2 && phase < 0.24 ? 0.25 : 0) + bump(phase, 0.32, 0.46) * 0.3;

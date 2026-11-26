@@ -275,8 +275,8 @@
 
       /* fundal: placă de montaj (cache pe mărime) */
       function board() {
-        return A.cached('circ-board', api.W, api.H, (c, w, h) => {
-          A.backdrop(c, w, h, { top: '#1a2444', bottom: '#0e1428', vignette: false });
+        return A.cached('circ-board-lab', api.W, api.H, (c, w, h) => {
+          A.scene(c, w, h, 'lab');
         });
       }
       const elecCol = '#7ec8ff', hotCol = '#ffb067';
@@ -327,7 +327,7 @@
         swAng = A.damp(swAng, on ? 0 : -0.75, 10, dt);
         ctx.save(); ctx.translate(sx, sy); ctx.scale(big(), big());
         A.softShadow(ctx, () => { A.roundRectPath(ctx, -36, -11, 72, 22, 9); const pg = ctx.createLinearGradient(0, -11, 0, 11); pg.addColorStop(0, '#f1ebe0'); pg.addColorStop(1, '#bdb2a0'); ctx.fillStyle = pg; ctx.fill(); }, { blur: 8, dy: 3 });
-        A.roundRectPath(ctx, -36, -11, 72, 22, 9); ctx.strokeStyle = 'rgba(80,60,40,0.4)'; ctx.lineWidth = 1; ctx.stroke();
+        A.roundRectPath(ctx, -36, -11, 72, 22, 9); ctx.strokeStyle = A.ink('#bdb2a0'); ctx.lineWidth = A.lineW(U) / big(); ctx.stroke();
         screw(ctx, 26, 0, 5);
         ctx.save(); ctx.translate(-26, 0); ctx.rotate(swAng);
         ctx.lineCap = 'round'; ctx.strokeStyle = '#5b6577'; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(54, 0); ctx.stroke();
@@ -356,18 +356,18 @@
           A.roundRectPath(ctx, wx, wy, ww, wh, ww / 2); ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fill();
           const lc = S.short ? '#ff5a3a' : lv > 0.5 ? '#3ee07a' : lv > 0.2 ? '#f2cf3a' : '#ff5a3a';
           if (lv > 0.01) { ctx.save(); A.roundRectPath(ctx, wx, wy, ww, wh, ww / 2); ctx.clip(); const lg = ctx.createLinearGradient(wx, 0, wx + ww, 0); lg.addColorStop(0, A.shade(lc, -0.3)); lg.addColorStop(0.4, A.shade(lc, 0.3)); lg.addColorStop(1, A.shade(lc, -0.35)); ctx.fillStyle = lg; ctx.fillRect(wx, wy + wh * (1 - lv), ww, wh * lv); ctx.restore(); }
-          txt(ctx, '+', g.x0, top + bH * 0.15, { size: Math.max(11, 15 * bf), color: '#2a1a08', halo: false, weight: 900 });
-          txt(ctx, '−', g.x0, top + bH * 0.94 - 6 * bf, { size: Math.max(10, 13 * bf), color: '#e8ecf4', halo: false, weight: 900 });
+          txt(ctx, '+', g.x0, top + bH * 0.15, { size: Math.max(12, 15 * bf), color: '#2a1a08', halo: false, weight: 900 });
+          txt(ctx, '−', g.x0, top + bH * 0.94 - 6 * bf, { size: Math.max(12, 13 * bf), color: '#e8ecf4', halo: false, weight: 900 });
           txt(ctx, Math.round(lv * 100) + '%', g.x0 + bw / 2 + 6, cy2, { size: pctSize, align: 'left', color: lv > 0.2 ? '#7dffb0' : '#ff8a7a', halo: false });
           if (S.short && Math.random() < dt * 6) { const a = -Math.random() * Math.PI; sparks.emit({ x: g.x0 + (Math.random() - 0.5) * bw, y: top + Math.random() * bH, vx: Math.cos(a) * 160, vy: Math.sin(a) * 160, g: 420, drag: 1.5, life: 0.4 + Math.random() * 0.4, size: 5, color: Math.random() < 0.5 ? '#fff1a8' : '#ffb347' }); }
         });
         const topY = by - ((kB - 1) / 2) * bStep - bH / 2 - 14 * bf - 12;
-        A.label(ctx, fmt(V) + ' V' + (kB > 1 ? ' · ' + kB + ' baterii' : ''), Math.max(6, g.x0 - bw / 2 - 4), topY, { size: Math.max(12, A.fs(U, 0.045, 12)), align: 'left', color: '#ffe08a' });
+        A.label(ctx, fmt(V) + ' V' + (kB > 1 ? ' · ' + kB + ' baterii' : ''), Math.max(6, g.x0 - bw / 2 - 4), topY, { size: A.labelSize(U), bg: A.LABEL_BG, align: 'left', color: '#ffe08a' });
 
         /* componente */
-        const lblSize = Math.max(12, A.fs(U, 0.042, 12));
+        const lblSize = A.labelSize(U);
         comps.forEach((c, i) => { const q = Lc[i]; drawComp(c, q.x, q.y, S.P[i], S.I_k[i], tm, dt, q.s); });
-        comps.forEach((c, i) => { const q = Lc[i]; if (q.s > 0.55) txt(ctx, TYPES[c.type].n + (c.burnt ? ' (ars!)' : ''), q.x, q.y + 46 * q.s, { size: lblSize, color: c.burnt ? '#ff8a7a' : 'rgba(235,242,255,0.92)', halo: false }); });
+        comps.forEach((c, i) => { const q = Lc[i]; if (q.s > 0.55) A.label(ctx, TYPES[c.type].n + (c.burnt ? ' (ars!)' : ''), q.x, q.y + 46 * q.s, { size: lblSize, bg: A.LABEL_BG, color: c.burnt ? '#ff8a7a' : 'rgba(235,242,255,0.92)' }); });
 
         /* scântei + fum */
         sparks.update(dt); smoke.update(dt);
@@ -385,7 +385,7 @@
           const tx = b.x - ls * 1.1, ty = ly, ts = ls * 0.85;
           ctx.save(); ctx.beginPath(); ctx.moveTo(tx, ty - ts); ctx.lineTo(tx + ts * 1.05, ty + ts * 0.75); ctx.lineTo(tx - ts * 1.05, ty + ts * 0.75); ctx.closePath(); ctx.fillStyle = '#ffcf4a'; ctx.strokeStyle = '#7a4a00'; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.fill(); ctx.stroke();
           ctx.fillStyle = '#3a2000'; ctx.fillRect(tx - ts * 0.08, ty - ts * 0.45, ts * 0.16, ts * 0.65); ctx.beginPath(); ctx.arc(tx, ty + ts * 0.45, ts * 0.1, 0, TAU); ctx.fill(); ctx.restore();
-          txt(ctx, 'curentul nu trece prin nimic și bateria se încinge!', g.W / 2, ly + ls * 1.9, { size: ls * 0.9, color: '#ffb8a8', halo: false });
+          txt(ctx, 'curentul nu trece prin nimic și bateria se încinge!', g.W / 2, ly + ls * 1.9, { size: Math.max(12, ls * 0.9), color: '#ffb8a8', halo: false });
         }
         /* sonerie: sunet proporțional cu puterea */
         let lvl = 0; comps.forEach((c, i) => { if (c.type === 'buz' && !c.burnt) lvl = Math.max(lvl, clamp(S.P[i] / 4, 0, 1)); });

@@ -92,7 +92,7 @@
       }
       /* fundalul scenei */
       function scene(P, sx, sy, sw, sh, gy, seaW, t) {
-        const sk = ctx.createLinearGradient(0, sy, 0, gy); sk.addColorStop(0, P.top); sk.addColorStop(1, P.hz); ctx.fillStyle = sk; ctx.fillRect(sx, sy, sw, gy - sy + 2);
+        const sk = ctx.createLinearGradient(0, sy, 0, gy); sk.addColorStop(0, Art.mix(Art.SCENE.day[0], P.top, 0.45)); sk.addColorStop(1, Art.mix(Art.SCENE.day[1], P.hz, 0.45)); ctx.fillStyle = sk; ctx.fillRect(sx, sy, sw, gy - sy + 2);
         /* soare discret */
         ctx.fillStyle = idx === 0 ? 'rgba(255,214,170,0.85)' : 'rgba(255,248,225,0.9)'; ctx.beginPath(); ctx.arc(sx + sw * 0.82, sy + sh * 0.16, sh * 0.05, 0, 7); ctx.fill();
         /* dealuri / munți în depărtare */
@@ -163,13 +163,13 @@
         /* contur fin al scenei */
         Art.roundRectPath(ctx, sx, sy, sw, sh, 14); ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1; ctx.stroke();
         /* eticheta perioadei */
-        const lfs = Art.fs(U, 0.04, 13);
-        const lb = Art.label(ctx, P.n + ' · ' + fmt(P.a, P.a < 10 ? 1 : 0) + '–' + fmt(P.b, P.b < 10 ? 1 : 0) + ' mil. ani', sx + 10, sy + 10 + lfs, { size: lfs, align: 'left', bg: 'rgba(10,15,35,0.72)' });
+        const lfs = Art.labelSize(U);
+        const lb = Art.label(ctx, P.n + ' · ' + fmt(P.a, P.a < 10 ? 1 : 0) + '–' + fmt(P.b, P.b < 10 ? 1 : 0) + ' mil. ani', sx + 10, sy + 10 + lfs, { size: lfs, align: 'left', bg: Art.LABEL_BG });
         if (P.ev) {
-          let s = noEmoji(P.ev); const maxW = sw - 24; ctx.font = Art.font(lfs * 0.92, 700);
+          let s = noEmoji(P.ev); const maxW = sw - 24; ctx.font = Art.font(Math.max(12, lfs * 0.92), 700);
           while (ctx.measureText(s).width + lfs * 2 > maxW && s.length > 12) s = s.slice(0, -2);
           if (s !== noEmoji(P.ev)) s = s.trim() + '…';
-          Art.label(ctx, s, sx + 10, lb.y + lb.h + 6 + lfs * 0.9, { size: lfs * 0.92, align: 'left', bg: 'rgba(150,32,40,0.85)', border: 'rgba(255,160,160,0.4)' });
+          Art.label(ctx, s, sx + 10, lb.y + lb.h + 6 + lfs * 0.9, { size: Math.max(12, lfs * 0.92), align: 'left', bg: 'rgba(150,32,40,0.85)', border: 'rgba(255,160,160,0.4)' });
         }
         /* grupe de viețuitoare: devin „aprinse” când au apărut */
         let y = sy + sh + 12 + hfs * 0.7;

@@ -74,8 +74,8 @@
       /* fundal: cer blând, oraș discret în depărtare, câmp (cache pe mărime) */
       function scene() {
         const U = api.unit, gy = api.cy + U * 0.2;
-        return A.cached('ph-scene-' + Math.round(gy), api.W, api.H, (c, w, h) => {
-          const sky = c.createLinearGradient(0, 0, 0, gy); sky.addColorStop(0, '#5e86b8'); sky.addColorStop(1, '#c4d6e6'); c.fillStyle = sky; c.fillRect(0, 0, w, gy + 2);
+        return A.cached('ph-scene-day-' + Math.round(gy), api.W, api.H, (c, w, h) => {
+          const sky = c.createLinearGradient(0, 0, 0, gy); sky.addColorStop(0, A.SCENE.day[0]); sky.addColorStop(1, A.SCENE.day[1]); c.fillStyle = sky; c.fillRect(0, 0, w, gy + 2);
           /* dealuri și oraș, desaturate */
           c.fillStyle = '#a9b9c8'; c.beginPath(); c.moveTo(0, gy); const pts = []; for (let x = 0; x <= w; x += w / 10) pts.push([x, gy - U * (0.08 + 0.05 * Math.sin(x / w * 7 + 1))]); c.lineTo(0, pts[0][1]); A.smoothPath(c, pts, false); c.lineTo(w, gy); c.closePath(); c.fill();
           let s = 5; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
@@ -105,7 +105,7 @@
         ctx.restore();
         /* acoperire (celulă) */
         ctx.strokeStyle = 'rgba(40,70,130,' + (active ? 0.35 : 0.14) + ')'; ctx.lineWidth = 1.6; ctx.setLineDash([5, 7]); ctx.beginPath(); ctx.arc(T.x, T.y + 40, api.unit * 0.62, Math.PI, 0); ctx.stroke(); ctx.setLineDash([]);
-        A.label(ctx, 'Turn ' + (i + 1), T.x, top - 48, { size: Math.max(12, A.fs(api.unit, 0.042, 12)), bg: active ? 'rgba(30,50,90,0.85)' : 'rgba(30,40,60,0.6)', color: active ? '#ffe08a' : '#e6ecf5' });
+        A.label(ctx, 'Turn ' + (i + 1), T.x, top - 48, { size: A.labelSize(api.unit), bg: A.LABEL_BG, color: active ? '#ffe08a' : '#e6ecf5' });
         /* unde radio din antenele turnului activ — arcuri care se extind lin */
         if (active) for (let k = 0; k < 3; k++) { const ph = ((t * 0.5 + k / 3) % 1); ctx.strokeStyle = 'rgba(255,200,70,' + Math.sin(ph * Math.PI) * 0.7 + ')'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(T.x, top + ah * 0.4, 10 + ph * 34, -2.3, -0.85); ctx.stroke(); ctx.beginPath(); ctx.arc(T.x, top + ah * 0.4, 10 + ph * 34, Math.PI + 0.85, Math.PI + 2.3); ctx.stroke(); }
       }
@@ -139,15 +139,15 @@
           ctx.strokeStyle = '#26303f'; ctx.lineWidth = 6; ctx.stroke(); ctx.strokeStyle = '#4fb3e0'; ctx.lineWidth = 1.6; ctx.stroke();
           T.forEach((q) => { ctx.strokeStyle = '#26303f'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(q.x, gy - 2); ctx.lineTo(q.x, fy); ctx.stroke(); });
           ctx.restore();
-          txt(ctx, 'fibră optică (lumină în cablu)', T[1].x, fy + Math.max(14, A.fs(U, 0.05, 13)), { size: Math.max(12, A.fs(U, 0.04, 12)), color: '#eef6e6', weight: 600 });
+          A.label(ctx, 'fibră optică (lumină în cablu)', T[1].x, fy + A.labelSize(U) * 1.4, { size: A.labelSize(U), bg: A.LABEL_BG, color: '#eef6e6', weight: 600 });
           T.forEach((q, i) => drawTower(q, i === best && nb > 0, i, gy, t));
           /* prieten (dreapta) și telefonul tău */
-          const FR = { x: W * 0.93, y: api.cy + U * 0.42 }, pw = phoneW(), lab = Math.max(12, A.fs(U, 0.045, 12));
+          const FR = { x: W * 0.93, y: api.cy + U * 0.42 }, pw = phoneW(), lab = A.labelSize(U);
           const ph1 = (() => { ctx.save(); ctx.translate(FR.x, FR.y); const h = smartphone(ctx, pw * 0.9, { on: nb > 0 }); ctx.restore(); return h; })();
-          A.label(ctx, 'Prietenul', Math.min(FR.x, W - lab * 3.6), FR.y + ph1 / 2 + lab * 1.2, { size: lab });
+          A.label(ctx, 'Prietenul', Math.min(FR.x, W - lab * 3.6), FR.y + ph1 / 2 + lab * 1.2, { size: lab, bg: A.LABEL_BG });
           const tilt = drag ? 0.08 : 0;
           ctx.save(); ctx.translate(P.x, P.y); ctx.rotate(tilt); const ph2 = smartphone(ctx, pw, { on: nb > 0 }); ctx.restore();
-          A.label(ctx, 'Tu', P.x, P.y + ph2 / 2 + lab * 1.2, { size: lab, color: '#ffe08a' });
+          A.label(ctx, 'Tu', P.x, P.y + ph2 / 2 + lab * 1.2, { size: lab, bg: A.LABEL_BG, color: '#ffe08a' });
           /* unde radio + pachete de date */
           const pTop = P.y - ph2 / 2, fTop = FR.y - ph1 / 2;
           if (nb > 0) {
@@ -160,13 +160,13 @@
             packets = packets.filter((p) => { p.u += dt * 280 / L; return p.u < 1; });
             ctx.fillStyle = '#3ee07a'; ctx.strokeStyle = '#11663a'; ctx.lineWidth = 1;
             for (const p of packets) { let d = p.u * L, i = 0; while (i < segs.length - 1 && d > segs[i]) { d -= segs[i]; i++; } const k = d / segs[i]; ctx.beginPath(); ctx.arc(lerp(route[i][0], route[i + 1][0], k), lerp(route[i][1], route[i + 1][1], k), 3.6, 0, TAU); ctx.fill(); ctx.stroke(); }
-          } else A.label(ctx, 'Fără semnal! Apropie-te de un turn.', W / 2, api.cy + U * 0.1, { size: Math.max(14, A.fs(U, 0.05, 14)), color: '#ffb0a0', bg: 'rgba(60,20,20,0.85)' });
+          } else A.label(ctx, 'Fără semnal! Apropie-te de un turn.', W / 2, api.cy + U * 0.1, { size: A.labelSize(U), color: '#ffb0a0', bg: A.LABEL_BG });
           /* bare de semnal */
           ctx.save(); rrect(ctx, P.x - 19, pTop - 40, 38, 30, 8); ctx.fillStyle = 'rgba(20,30,50,0.75)'; ctx.fill(); ctx.restore();
           bars(P.x + 1, pTop - 15, nb, 1);
           info.innerHTML = '<b>Semnal:</b> ' + nb + '/4 · <b>Conectat la:</b> ' + (nb ? 'Turnul ' + (best + 1) : 'nimic') + ' · Undele radio merg cu viteza luminii: 300.000 km/s';
         } else {
-          A.backdrop(ctx, api.W, api.H, { top: '#1d2746', bottom: '#111830', vignette: false });
+          A.scene(ctx, api.W, api.H, 'lab');
           /* ecran capacitiv */
           const cols = 8, rows = 12, gw = Math.min(W - 24, U * 1.5, (U * 2 - 56) / 1.35), gh = gw * rows / cols * 0.9;
           const gx = (W - gw) / 2, gy = api.cy - gh / 2 + 6, cw = gw / cols, ch = gh / rows;

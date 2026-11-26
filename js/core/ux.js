@@ -43,9 +43,12 @@
     bar.innerHTML = '<label class="ux-search"><svg class="i" aria-hidden="true"><use href="#i-search"/></svg><input id="ux-q" type="search" placeholder="Caută: inimă, avion, vulcan, dinozauri…" aria-label="Caută o activitate" autocomplete="off"></label>' +
       '<button id="ux-resume" class="pill primary hidden" aria-label="Continuă de unde ai rămas"><svg class="i" aria-hidden="true"><use href="#i-play"/></svg>Continuă: <span></span></button>' +
       '<div id="ux-progress" aria-label="Progres"><span>⭐ Ai explorat <b></b></span><div class="pbar"><i></i></div></div>' +
-      '<div class="ux-tools"><button id="ux-minus" class="icon" aria-label="Text mai mic" title="Text mai mic">A−</button><span id="ux-size-val"></span><button id="ux-plus" class="icon" aria-label="Text mai mare" title="Text mai mare">A+</button><button id="ux-install" class="pill hidden" aria-label="Instalează aplicația">Instalează</button></div>';
+      '<div class="ux-tools"><button id="ux-minus" class="icon" aria-label="Text mai mic" title="Text mai mic">A−</button><span id="ux-size-val"></span><button id="ux-plus" class="icon" aria-label="Text mai mare" title="Text mai mare">A+</button><button id="ux-bright" class="pill" aria-pressed="false" title="Pentru proiector într-o cameră luminată: desene mai luminoase și contrast mai mare">Cameră luminoasă</button><button id="ux-install" class="pill hidden" aria-label="Instalează aplicația">Instalează</button></div>';
     tag.after(bar);
     const sv = document.createElement('div'); sv.id = 'ux-res-wrap'; sv.className = 'hidden'; sv.innerHTML = '<div class="ux-res-head"><h2 id="ux-res-title"></h2><button class="pill" id="ux-clear">Șterge căutarea</button></div><div id="ux-results" class="res-list"></div>'; $('.sec-tiles', hub).after(sv);
+    const setBright = (on) => { document.body.classList.toggle('bright', on); const b = $('#ux-bright'); if (b) { b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.classList.toggle('on', on); } store.set('bright', on); };
+    setBright(!!store.get('bright', false));
+    $('#ux-bright').addEventListener('click', () => setBright(!document.body.classList.contains('bright')));
     $('#ux-q').addEventListener('input', (e) => search(e.target.value));
     $('#ux-clear').addEventListener('click', () => { $('#ux-q').value = ''; search(''); });
     $('#ux-resume').addEventListener('click', () => { const el = last === 'start-space' ? $('#start-space') : $('[data-module="' + last + '"]'); if (el) el.click(); });

@@ -56,7 +56,7 @@
       /* fundalul static: cer, dealuri îndepărtate, sol în secțiune cu straturi de rocă */
       function scene(W, H, gy, U) {
         return A.cached('vo-scene-' + Math.round(gy) + '-' + Math.round(U), W, H, (c, w, h) => {
-          const g = c.createLinearGradient(0, 0, 0, gy); g.addColorStop(0, '#6c9ccc'); g.addColorStop(0.7, '#b6d2e6'); g.addColorStop(1, '#dbe6ea'); c.fillStyle = g; c.fillRect(0, 0, w, gy + 2);
+          const g = c.createLinearGradient(0, 0, 0, gy); g.addColorStop(0, A.SCENE.day[0]); g.addColorStop(1, A.SCENE.day[1]); c.fillStyle = g; c.fillRect(0, 0, w, gy + 2);
           /* dealuri îndepărtate, desaturate */
           for (const [k, col, amp] of [[0, '#a9b8b4', 0.22], [1, '#8fa294', 0.13]]) {
             c.fillStyle = col; c.beginPath(); c.moveTo(0, gy);
@@ -129,7 +129,7 @@
         const lc = ['#5a4238', '#8a7060', '#4a3a34', '#9a8270', '#3e302c', '#7a6052'];
         for (let k = 0; k <= 16; k++) { const off = k * U * 0.045; ctx.fillStyle = lc[k % lc.length]; ctx.beginPath(); ctx.moveTo(cx - vw * 1.2, prof(cx - vw * 1.2) + off); for (let q = 0; q <= 30; q++) { const x = cx - vw + 2 * vw * q / 30; ctx.lineTo(x, prof(x) + off + N1(q * 0.7 + k) * 2); } ctx.lineTo(cx + vw * 1.2, gy + 10); ctx.lineTo(cx - vw * 1.2, gy + 10); ctx.closePath(); ctx.fill(); }
         ctx.restore();
-        ctx.strokeStyle = 'rgba(30,20,16,0.5)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(cx - craterW * 1.4, topY + 2); ctx.lineTo(cx - U * 0.55, gy); ctx.moveTo(cx + craterW * 1.4, topY + 2); ctx.lineTo(cx + U * 0.55, gy); ctx.stroke();
+        ctx.strokeStyle = A.ink('#6e5c50'); ctx.lineWidth = A.lineW(U) * 1.2; ctx.beginPath(); ctx.moveTo(cx - craterW * 1.4, topY + 2); ctx.lineTo(cx - U * 0.55, gy); ctx.moveTo(cx + craterW * 1.4, topY + 2); ctx.lineTo(cx + U * 0.55, gy); ctx.stroke();
 
         /* camera magmatică și coșul */
         const chY = gy + U * 0.5, chR = U * 0.3, erx = chR * 1.8 * (0.92 + press * 0.08), ery = chR * 0.78 * (0.92 + press * 0.08);
@@ -200,11 +200,11 @@
         for (const [f0, f1, col] of [[0, 0.55, '#4ade80'], [0.55, 0.8, '#ffcf4a'], [0.8, 1, '#ff5a6a']]) { ctx.strokeStyle = col; ctx.lineWidth = Math.max(3, mr * 0.12); ctx.beginPath(); ctx.arc(mx, my, mr * 0.78, a0 + span * f0, a0 + span * f1); ctx.stroke(); }
         const ang = a0 + clamp(needle, 0, 1) * span; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(mx + Math.cos(ang) * mr * 0.7, my + Math.sin(ang) * mr * 0.7); ctx.stroke();
         ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(mx, my, 3.5, 0, TAU); ctx.fill();
-        const fsz = A.fs(U, 0.04, 13);
+        const fsz = A.labelSize(U), LB = A.LABEL_BG;
         A.text(ctx, 'presiune', mx, my + mr + fsz, { size: fsz });
-        A.label(ctx, 'cameră magmatică', cx, chY + ery + fsz * 1.4 > api.cy + U - fsz ? chY : chY + ery + fsz * 1.4, { size: fsz });
-        A.label(ctx, 'coș', cx + U * 0.2, gy + U * 0.16, { size: fsz, align: 'left', tx: cx + cwid, ty: gy + U * 0.16 });
-        A.label(ctx, 'crater', cx, topY - fsz * 1.6, { size: fsz });
+        A.label(ctx, 'cameră magmatică', cx, chY + ery + fsz * 1.4 > api.cy + U - fsz ? chY : chY + ery + fsz * 1.4, { size: fsz, bg: LB });
+        A.label(ctx, 'coș', cx + U * 0.2, gy + U * 0.16, { size: fsz, bg: LB, align: 'left', tx: cx + cwid, ty: gy + U * 0.16 });
+        A.label(ctx, 'crater', cx, topY - fsz * 1.6, { size: fsz, bg: LB });
       }
       return { frame: frame };
     }

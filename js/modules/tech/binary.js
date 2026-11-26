@@ -55,8 +55,8 @@
 
       /* fundal: placă de circuit (cache pe mărime) */
       function boardBg() {
-        return A.cached('bin-board', api.W, api.H, (c, w, h) => {
-          A.backdrop(c, w, h, { top: '#18213f', bottom: '#0c1226', vignette: false });
+        return A.cached('bin-board-lab', api.W, api.H, (c, w, h) => {
+          A.scene(c, w, h, 'lab');
           if (false) { let s = 11; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
           c.lineCap = 'round'; c.lineJoin = 'round';
           for (let i = 0; i < 46; i++) {
@@ -124,7 +124,7 @@
             bitCell(bx, by, L.cell, lv[r * 8 + i], tint, on, pop[r * 8 + i], false);
             if (mode !== 'col' || r === 0) txt(ctx, String(val), bx + L.cell / 2, by - lblSize * (mode === 'col' ? 2.5 : 0.75), { size: lblSize, color: on ? '#ffffff' : 'rgba(200,215,255,0.55)', weight: 700, halo: false });
           }
-          if (mode === 'col') A.label(ctx, ['Roșu', 'Verde', 'Albastru'][r] + ' = ' + byte(r), L.x0, L.y0 + r * L.rh + L.cell * 0.3 - lblSize * 1.05, { size: lblSize, align: 'left', color: '#fff', bg: A.rgba(A.shade(tint, -0.55), 0.9), border: A.rgba(tint, 0.6) });
+          if (mode === 'col') A.label(ctx, ['Roșu', 'Verde', 'Albastru'][r] + ' = ' + byte(r), L.x0, L.y0 + r * L.rh + L.cell * 0.3 - lblSize * 1.05, { size: A.labelSize(U), align: 'left', color: '#fff', bg: A.LABEL_BG, border: A.rgba(tint, 0.6) });
         }
         if (mode === 'num') {
           shown = A.damp(shown, v, 9, dt); const sv = Math.abs(shown - v) < 0.5 ? v : Math.round(shown);

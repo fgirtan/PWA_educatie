@@ -105,6 +105,19 @@ Deschide `http://localhost:8787/tests/smoke.html`: aplicația se încarcă în d
 secțiunile, toate modulele și harta (nicio eroare, desenul nu e gol). Același test rulează automat pe GitHub
 la fiecare push (`.github/workflows/smoke.yml`).
 
+### Unelte în module (bara din stânga)
+
+| Unealtă | Buton | Tastă |
+| --- | --- | --- |
+| Pauză / pornește animația | ⏸ | <kbd>Space</kbd> |
+| Încetinire: 1× → ½× → ¼× | 1× | <kbd>S</kbd> |
+| Zoom (până la ×4) și deplasare | + / − / ⟲ · rotița mouse-ului (mărește spre cursor) · două degete | <kbd>+</kbd> <kbd>−</kbd> <kbd>0</kbd> |
+| Indicator pentru proiector (punct roșu care urmărește mouse-ul) | ◎ | <kbd>P</kbd> |
+
+Când schimbi vederea dintr-un modul (butoanele din panoul de jos), imaginea trece lin de la una la alta,
+iar fiecare atingere pe desen lasă un cerc scurt. Pe ecranul de start, **Cameră luminoasă** face desenele
+mai luminoase și interfața mai contrastantă — pentru proiector într-o cameră cu lumină.
+
 ### Textele explicative
 
 În fiecare modul, butonul **Text** din dreapta-sus (sau tasta <kbd>T</kbd>) ascunde bulele cu explicații —

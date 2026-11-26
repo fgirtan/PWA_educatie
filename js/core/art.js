@@ -248,7 +248,28 @@
     ctx.save(); ctx.globalAlpha = a === undefined ? 0.035 : a; ctx.globalCompositeOperation = 'overlay'; ctx.fillStyle = ctx.createPattern(tex, 'repeat'); ctx.fillRect(0, 0, W, H); ctx.restore();
   }
 
+  /* ---------- stil unitar pe secțiuni (folosește-le în loc de culori alese local) ---------- */
+  /* fundalul unei scene, după tipul ei:
+     'space' = spațiu (Spațiul, vederi din cosmos) · 'body' = Corpul omenesc · 'lab' = obiecte tehnice în interior
+     'day' = scenă în aer liber, ziua · 'dusk' = în aer liber, seara · 'night' = în aer liber, noaptea */
+  const SCENE = {
+    space: ['#0b1026', '#04060f'], body: ['#1b1828', '#0d0b16'], lab: ['#18213f', '#0c1226'],
+    day: ['#5aa0e6', '#d6ecfb'], dusk: ['#3b4a86', '#f0b48a'], night: ['#0b1433', '#1c2650']
+  };
+  function scene(ctx, W, H, kind) {
+    const c = SCENE[kind] || SCENE.lab;
+    ctx.save(); const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, c[0]); g.addColorStop(1, c[1]);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.restore();
+  }
+  /* etichete: aceeași mărime și același fundal peste tot */
+  const labelSize = (U) => fs(U, 0.04, 13);
+  const LABEL_BG = 'rgba(10,15,35,0.82)';
+  /* conturul unei forme: culoarea ei, mai închisă (nu negru) — și grosimea, proporțională cu ecranul */
+  const ink = (color) => shade(color, -0.45);
+  const lineW = (U) => Math.max(1, U * 0.006);
+
   window.Art = {
+    SCENE, scene, labelSize, LABEL_BG, ink, lineW,
     TAU, C, clamp, lerp, ease, damp, spring, noise1, noise2, wobble,
     hex, rgba, mix, shade,
     backdrop, vignette, daySky, stars, cloud,

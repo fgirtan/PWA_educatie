@@ -113,10 +113,10 @@
         ctx.fillStyle = '#d24a2a'; ctx.beginPath(); ctx.moveTo(-28, -6); ctx.lineTo(-38, -14); ctx.lineTo(-36, -2); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(-28, 6); ctx.lineTo(-38, 14); ctx.lineTo(-36, 2); ctx.closePath(); ctx.fill();
         /* corp */
         ctx.beginPath(); Art.smoothPath(ctx, [[30, 2], [24, -12], [4, -16], [-20, -14], [-32, -6], [-34, 2], [-28, 10], [-6, 15], [18, 13]], true);
-        ctx.fillStyle = hull; ctx.fill(); ctx.strokeStyle = '#6a706c'; ctx.lineWidth = 1.2; ctx.stroke();
+        ctx.fillStyle = hull; ctx.fill(); ctx.strokeStyle = Art.ink('#e4e4dc'); ctx.lineWidth = 1.2; ctx.stroke();
         ctx.save(); ctx.clip(); ctx.fillStyle = '#d24a2a'; ctx.fillRect(-40, 5, 80, 4); ctx.restore();
         /* turelă */
-        ctx.beginPath(); Art.roundRectPath(ctx, -12, -24, 20, 10, 4); ctx.fillStyle = '#ecece4'; ctx.fill(); ctx.strokeStyle = '#6a706c'; ctx.stroke();
+        ctx.beginPath(); Art.roundRectPath(ctx, -12, -24, 20, 10, 4); ctx.fillStyle = '#ecece4'; ctx.fill(); ctx.strokeStyle = Art.ink('#e4e4dc'); ctx.stroke();
         ctx.fillStyle = '#2a3440'; ctx.fillRect(-6, -21, 8, 3);
         /* hublou */
         const gl = ctx.createLinearGradient(14, -8, 22, 2); gl.addColorStop(0, '#6ab0d8'); gl.addColorStop(1, '#1a4a6a');
@@ -139,7 +139,7 @@
         /* suprafața și cerul */
         const sy = yOf(0);
         if (sy > -40) {
-          const sk = ctx.createLinearGradient(0, 0, 0, Math.max(1, sy)); sk.addColorStop(0, '#5aa4e0'); sk.addColorStop(1, '#cfe8f8'); ctx.fillStyle = sk; ctx.fillRect(0, 0, W, Math.max(0, sy + 2));
+          const sk = ctx.createLinearGradient(0, 0, 0, Math.max(1, sy)); sk.addColorStop(0, Art.SCENE.day[0]); sk.addColorStop(1, Art.SCENE.day[1]); ctx.fillStyle = sk; ctx.fillRect(0, 0, W, Math.max(0, sy + 2));
           if (sy > 60) { ctx.fillStyle = '#fff8e0'; ctx.beginPath(); ctx.arc(api.freeW * 0.8, sy * 0.35, Math.min(26, sy * 0.15), 0, 7); ctx.fill(); }
           const wy = (x) => sy + Math.sin(x * 0.03 + t * 1.2) * 2.5 + Math.sin(x * 0.011 - t * 0.7) * 2;
                     const sg = ctx.createLinearGradient(0, sy - 4, 0, sy + 60); sg.addColorStop(0, '#5ec0ea'); sg.addColorStop(1, rgb(waterColor(140))); ctx.fillStyle = sg;
@@ -176,11 +176,11 @@
         if (depth > 150) { const a = clamp((depth - 150) / 500, 0, 1) * 0.16, lx = sx + 32 * k, ly = sY - 11 * k, R = U * 0.95; const bg = ctx.createRadialGradient(lx, ly, 0, lx, ly, R); bg.addColorStop(0, 'rgba(255,246,214,' + a + ')'); bg.addColorStop(1, 'rgba(255,246,214,0)'); ctx.fillStyle = bg; ctx.beginPath(); ctx.moveTo(lx, ly - 3); ctx.lineTo(lx + R, ly - R * 0.5); ctx.quadraticCurveTo(lx + R * 1.12, ly, lx + R, ly + R * 0.5); ctx.lineTo(lx, ly + 3); ctx.closePath(); ctx.fill(); }
         drawSub(sx, sY, t, k);
         /* repere de adâncime (în dreapta) */
-        const mfs = Art.fs(U, 0.036, 13);
+        const mfs = Art.labelSize(U);
         for (const m of MARK) {
           const y = yOf(m[0]); if (y > 70 && y < H - 4) {
             ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1; ctx.setLineDash([5, 6]); ctx.beginPath(); ctx.moveTo(api.freeW * 0.55, y); ctx.lineTo(api.freeW - 6, y); ctx.stroke(); ctx.setLineDash([]);
-            Art.text(ctx, m[1] + ' · ' + fmtN(m[0]) + ' m', api.freeW - 10, y - mfs * 0.75, { size: mfs, align: 'right', weight: 600, haloColor: 'rgba(5,10,25,0.6)' });
+            Art.label(ctx, m[1] + ' · ' + fmtN(m[0]) + ' m', api.freeW - 10, y - mfs * 1.05, { size: mfs, align: 'right', weight: 600, bg: Art.LABEL_BG });
           }
         }
         /* tablou de bord */

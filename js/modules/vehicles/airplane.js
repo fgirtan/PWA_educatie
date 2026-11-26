@@ -49,7 +49,7 @@
         ctx.bezierCurveTo(nose - fh * 0.4, fh * 0.5, nose - fh * 0.05, fh * 0.42, nose, fh * 0.12);
         ctx.closePath();
         const fg = ctx.createLinearGradient(0, -fh * 0.6, 0, fh * 0.5); fg.addColorStop(0, '#ffffff'); fg.addColorStop(0.45, '#e9eef5'); fg.addColorStop(0.8, '#b8c4d4'); fg.addColorStop(1, '#8b99ad');
-        ctx.fillStyle = fg; ctx.fill(); ctx.strokeStyle = 'rgba(60,75,100,0.55)'; ctx.lineWidth = 1.2; ctx.stroke();
+        ctx.fillStyle = fg; ctx.fill(); ctx.strokeStyle = Art.ink('#b8c4d4'); ctx.lineWidth = Art.lineW(api.unit); ctx.stroke();
         ctx.save(); ctx.clip();
         /* dungă colorată */
         ctx.fillStyle = '#2b7bd6'; ctx.beginPath(); ctx.moveTo(nose, fh * 0.18); ctx.lineTo(tail, fh * 0.02); ctx.lineTo(tail, fh * 0.12); ctx.lineTo(nose, fh * 0.3); ctx.closePath(); ctx.fill();
@@ -83,7 +83,7 @@
         for (let i = 0; i <= 40; i++) { const x = -chord / 2 + chord * i / 40, y = foilT(x, chord) * 0.55 - foilCamber(x, chord); ctx.lineTo(wingX + x, wingY + y); }
         ctx.closePath();
         const ag = ctx.createLinearGradient(0, wingY - chord * 0.1, 0, wingY + chord * 0.06); ag.addColorStop(0, stall ? '#ffd2c8' : '#fff8e6'); ag.addColorStop(0.6, stall ? '#f0a090' : '#ffd98a'); ag.addColorStop(1, stall ? '#b06050' : '#c7923a');
-        ctx.fillStyle = ag; ctx.fill(); ctx.strokeStyle = 'rgba(90,60,20,0.8)'; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.fillStyle = ag; ctx.fill(); ctx.strokeStyle = Art.ink(stall ? '#f0a090' : '#ffd98a'); ctx.lineWidth = Art.lineW(api.unit) * 1.3; ctx.stroke();
         ctx.save(); ctx.clip(); ctx.strokeStyle = 'rgba(120,80,30,0.35)'; ctx.lineWidth = 1; for (let k = 1; k < 6; k++) { const x = wingX + chord / 2 - chord * k / 6; ctx.beginPath(); ctx.moveTo(x, wingY - chord * 0.12); ctx.lineTo(x, wingY + chord * 0.1); ctx.stroke(); } ctx.restore();
         ctx.fillStyle = 'rgba(120,80,30,0.55)'; ctx.beginPath(); ctx.arc(wingX + chord * 0.2, wingY - foilCamber(chord * 0.2, chord) - foilT(chord * 0.2, chord) * 0.2, chord * 0.025, 0, TAU); ctx.fill();
       }
@@ -101,7 +101,7 @@
         flowT += dt * (0.3 + v * 1.3); scroll += dt * v;
 
         /* ---------- cerul (se închide la culoare cu altitudinea) ---------- */
-        const top = Art.mix('#3d85c8', '#123068', clamp((alt - 0.3) / 0.7, 0, 1)), bot = Art.mix('#cfe8fb', '#5b8fd0', clamp((alt - 0.3) / 0.7, 0, 1));
+        const top = Art.mix(Art.SCENE.day[0], '#123068', clamp((alt - 0.3) / 0.7, 0, 1)), bot = Art.mix(Art.SCENE.day[1], '#5b8fd0', clamp((alt - 0.3) / 0.7, 0, 1));
         Art.daySky(ctx, api.W, api.H, { top: top, bottom: bot });
 
         /* ---------- nori în parallax (3 straturi) ---------- */
@@ -182,14 +182,14 @@
         ctx.restore();
 
         /* ---------- săgeți de forță ---------- */
-        const F = Art.fs(U, 0.05, 13);
-        const fa = (x, y, len, col, txt) => { Art.arrow(ctx, x, y, x, y + len, { color: col, width: Math.max(4, U * 0.022) }); Art.label(ctx, txt, x + U * 0.06, y + len * 0.6, { size: F, align: 'left', color: col }); };
+        const F = Art.labelSize(U), LB = Art.LABEL_BG;
+        const fa = (x, y, len, col, txt) => { Art.arrow(ctx, x, y, x, y + len, { color: col, width: Math.max(4, U * 0.022) }); Art.label(ctx, txt, x + U * 0.06, y + len * 0.6, { size: F, bg: LB, align: 'left', color: col }); };
         fa(wcx + U * 0.06, wcy - U * 0.03, -lift * U * 0.9, '#7dffb0', 'Portanță');
         fa(cx - Lp * 0.12, py + U * 0.05, MASS * U * 0.9, '#ff8a9a', 'Greutate');
         if (buffet > 0.3) Art.label(ctx, 'angajare!', wcx - chord * 0.6, wcy - chord * 0.55, { size: F, color: '#ffb0a0', bg: 'rgba(80,10,10,0.8)' });
 
         /* ---------- instrumente ---------- */
-        Art.label(ctx, 'avionul zboară spre dreapta →', cx, cy - U + F * 1.2, { size: F });
+        Art.label(ctx, 'avionul zboară spre dreapta →', cx, cy - U + F * 1.2, { size: F, bg: LB });
         const pw = Math.max(150, F * 11), pX = 12, pY = cy - U + F * 2.6;
         Art.panel(ctx, pX, pY, pw, F * 3.4, { r: 12 });
         Art.text(ctx, 'Altitudine: ' + fmt(alt * 12000, 0) + ' m', pX + 12, pY + F * 1.05, { size: F, align: 'left', halo: false });

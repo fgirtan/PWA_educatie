@@ -18,8 +18,8 @@ defineModule({
 
     /* ---------- fundal: cer adânc cu nebuloase (pre-randat) ---------- */
     function bg() {
-      const tex = Art.cached('expl-bg2', api.W, api.H, (c, w, h) => {
-        Art.backdrop(c, w, h, { top: '#0b0d24', bottom: '#03040c', vignette: false });
+      const tex = Art.cached('expl-bg-space', api.W, api.H, (c, w, h) => {
+        Art.scene(c, w, h, 'space');
         let s = 5; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
         const n = Math.round(w * h / 9000);
         for (let i = 0; i < n; i++) { c.fillStyle = 'rgba(225,232,255,' + (0.25 + rnd() * 0.4).toFixed(2) + ')'; c.beginPath(); c.arc(rnd() * w, rnd() * h, 0.5 + rnd() * 0.9, 0, TAU); c.fill(); }
@@ -388,8 +388,8 @@ defineModule({
         ctx.globalCompositeOperation = 'source-over';
         sparksDraw();
         booms = booms.filter((b) => b.age < b.dur);
-        const fz = Art.fs(api.unit, 0.04, 13);
-        Art.label(ctx, 'Explozii: ' + count, api.freeW - 14, 80, { size: fz, align: 'right', color: '#ffd9a8' });
+        const fz = Art.labelSize(api.unit);
+        Art.label(ctx, 'Explozii: ' + count, api.freeW - 14, 80, { size: fz, bg: Art.LABEL_BG, align: 'right', color: '#ffd9a8' });
         if (!count) Art.text(ctx, 'Atinge cerul!', api.cx, api.cy, { size: Art.fs(api.unit, 0.06, 18), color: 'rgba(235,240,255,0.8)', halo: false });
       }
     }

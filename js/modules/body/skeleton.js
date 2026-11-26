@@ -65,7 +65,7 @@
       api.pointer({ down: (x, y) => { const b = hit(x, y); if (!b) return; if (sel !== b) selT = 0; sel = b; if (quiz) { tries++; if (b.n === quiz.n) { score++; api.say('✅ <b>Corect!</b> ' + b.n + '. ' + b.t, 6000); quiz = pick(); setTimeout(() => api.say('Acum: <b>' + quiz.n + '</b>', 3000), 2500); } else api.say('❌ Asta e <b>' + b.n + '</b>. Încearcă din nou: <b>' + quiz.n + '</b>', 4000); } else api.say('<b>' + b.n + '.</b> ' + b.t, 14000); } });
 
       /* ---------- ajutoare de desen pentru oase ---------- */
-      const OUT = '#6f6450', OUT_ON = '#d98a10';
+      const OUT = A.ink(C.boneShade), OUT_ON = '#d98a10';
       let ON = false;
       function boneFill(x0, y0, x1, y1) {
         const g = ctx.createLinearGradient(x0, y0, x1, y1);
@@ -76,7 +76,7 @@
       /* desenează subdrumurile din fn() ca o singură formă: contur, umplere cu volum */
       function solid(fn, gx0, gy0, gx1, gy1, lw) {
         ctx.save(); ctx.lineJoin = 'round';
-        ctx.beginPath(); fn(); ctx.strokeStyle = ON ? OUT_ON : OUT; ctx.lineWidth = (lw || 2.2) * (ON ? 1.8 : 1); ctx.stroke();
+        ctx.beginPath(); fn(); ctx.strokeStyle = ON ? OUT_ON : OUT; ctx.lineWidth = (lw || 2.2) * A.lineW(api.unit) / 2 * (ON ? 1.8 : 1); ctx.stroke();
         ctx.beginPath(); fn(); ctx.fillStyle = boneFill(gx0, gy0, gx1, gy1); ctx.fill();
         ctx.restore();
       }
@@ -223,7 +223,7 @@
       function frame(dt, t) {
         selT += dt;
         const U = api.unit * 0.88, cx = api.cx, cy = api.cy - api.unit * 0.04;
-        A.backdrop(ctx, api.W, api.H, { top: '#18223f', bottom: '#0b1020', vignette: false });
+        A.scene(ctx, api.W, api.H, 'body');
         silhouette(U, cx, cy);
         A.groundShadow(ctx, cx, cy + 1.02 * U, U * 0.32, U * 0.05, 0.5);
         const appear = A.ease.back(clamp(selT / 0.35, 0, 1));
@@ -262,7 +262,7 @@
           const lx = selAnchor[0] < cx ? Math.max(14, cx - 0.95 * U) : Math.min(api.freeW - 14, cx + 0.95 * U);
           const ly = clamp(selAnchor[1], cy - U + 20, cy + U - 20);
           ctx.save(); ctx.globalAlpha = clamp(selT / 0.25, 0, 1);
-          A.label(ctx, sel.n, lx, ly, { size: A.fs(api.unit, 0.05, 14), align: selAnchor[0] < cx ? 'left' : 'right', tx: selAnchor[0], ty: selAnchor[1], bg: 'rgba(40,28,6,0.88)', border: 'rgba(255,200,80,0.6)', color: '#ffe7a3', lineColor: 'rgba(255,200,80,0.85)' });
+          A.label(ctx, sel.n, lx, ly, { size: A.labelSize(api.unit), align: selAnchor[0] < cx ? 'left' : 'right', tx: selAnchor[0], ty: selAnchor[1], bg: A.LABEL_BG, border: 'rgba(255,200,80,0.6)', color: '#ffe7a3', lineColor: 'rgba(255,200,80,0.85)' });
           ctx.restore();
         }
         info.innerHTML = quiz ? '🎯 Găsește: <b>' + quiz.n + '</b> · scor: <b>' + score + '/' + tries + '</b>' : 'Atinge un os ca să afli cum se numește.';

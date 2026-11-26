@@ -89,7 +89,7 @@
         const prevVol = vol; vol = v; const inhaling = !hold && (v - prevVol) >= 0;
         const d = deepS, s = 0.88 + 0.22 * v * d * 1.6;
 
-        A.backdrop(ctx, api.W, api.H, { top: '#17233d', bottom: '#0b1222', vignette: false });
+        A.scene(ctx, api.W, api.H, 'body');
         torso(X, Y, U, v * d);
         /* coloana și coastele din spate */
         ctx.save(); ctx.globalAlpha = 0.55;
@@ -101,7 +101,7 @@
         ctx.save(); ctx.translate(X(0.05), Y(0.15)); ctx.rotate(-0.25); const hb = 1 + 0.04 * Math.max(0, Math.sin(t * 7.3));
         ctx.scale(hb, hb); const hr = U * 0.16;
         ctx.beginPath(); A.smoothPath(ctx, [[-0.3, -0.66], [-0.62, -0.6], [-0.86, -0.34], [-0.92, 0.02], [-0.8, 0.36], [-0.5, 0.64], [-0.1, 0.86], [0.28, 1.0], [0.6, 0.8], [0.84, 0.4], [0.93, -0.02], [0.84, -0.4], [0.58, -0.62], [0.26, -0.64], [0.0, -0.56]].map((p) => [p[0] * hr, p[1] * hr]), true);
-        A.volumeFill(ctx, -hr, -hr, hr, hr, '#b8364a'); ctx.strokeStyle = 'rgba(60,5,20,0.6)'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.restore();
+        A.volumeFill(ctx, -hr, -hr, hr, hr, '#b8364a'); ctx.strokeStyle = A.ink('#b8364a'); ctx.lineWidth = A.lineW(U); ctx.stroke(); ctx.restore();
         /* plămânii */
         for (const sg of [-1, 1]) {
           const lx = X(sg * 0.3), ly = Y(-0.02), shape = sg > 0 ? LUNG_L : LUNG_R;
@@ -128,7 +128,7 @@
             if (pass === 1 && b.leaf) { const r = U * (0.018 + 0.006 * v * d); ctx.fillStyle = 'rgba(255,180,200,0.9)'; for (const [ox, oy] of [[0, 0], [0.6, 0.5], [-0.5, 0.6]]) { ctx.beginPath(); ctx.arc(p1[0] + ox * r, p1[1] + oy * r, r * 0.7, 0, TAU); ctx.fill(); } ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.beginPath(); ctx.arc(p1[0] - r * 0.25, p1[1] - r * 0.25, r * 0.22, 0, TAU); ctx.fill(); }
           }
           ctx.restore();
-          lungPath(lx, ly, sg, U, s, shape); ctx.strokeStyle = 'rgba(110,25,50,0.7)'; ctx.lineWidth = Math.max(1.5, U * 0.008); ctx.stroke();
+          lungPath(lx, ly, sg, U, s, shape); ctx.strokeStyle = A.ink('#e48a9c'); ctx.lineWidth = A.lineW(U) * 1.3; ctx.stroke();
         }
         /* coastele din față, transparente, peste plămâni */
         ribs(X, Y, U, v, d, 0.16, 0.8);
@@ -166,11 +166,11 @@
         }
 
         /* etichete */
-        const fsz = A.fs(U, 0.045, 13);
-        A.label(ctx, 'trahee', X(0.2), Y(-0.72), { size: fsz, tx: X(0.03), ty: Y(-0.72), bg: 'rgba(14,24,48,0.85)' });
-        A.label(ctx, 'plămân', X(-0.36), Y(-0.02), { size: fsz, bg: 'rgba(90,20,45,0.72)' });
-        A.label(ctx, 'plămân', X(0.36), Y(-0.02), { size: fsz, bg: 'rgba(90,20,45,0.72)' });
-        A.label(ctx, 'diafragma', X(0), dy + 0.3 * U, { size: fsz, bg: 'rgba(80,24,22,0.85)', color: '#ffe0d6' });
+        const fsz = A.labelSize(U);
+        A.label(ctx, 'trahee', X(0.2), Y(-0.72), { size: fsz, tx: X(0.03), ty: Y(-0.72), bg: A.LABEL_BG });
+        A.label(ctx, 'plămân', X(-0.36), Y(-0.02), { size: fsz, bg: A.LABEL_BG });
+        A.label(ctx, 'plămân', X(0.36), Y(-0.02), { size: fsz, bg: A.LABEL_BG });
+        A.label(ctx, 'diafragma', X(0), dy + 0.3 * U, { size: fsz, bg: A.LABEL_BG, color: '#ffe0d6' });
         if (!hold) A.text(ctx, inhaling ? 'inspiră…' : 'expiră…', X(-0.2), Y(-0.9), { size: A.fs(U, 0.04, 12), color: inhaling ? '#bfe6ff' : '#ffd0a0', align: 'right' });
 
         /* alveolă (mărită) într-un medalion */

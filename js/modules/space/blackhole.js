@@ -148,7 +148,7 @@ defineModule({
     const R_IN = 1.5, R_OUT = 6.3;       // discul de acreție, în raze ale orizontului
     /* cer adânc cu nebuloase (pre-randat) */
     function skyTex() {
-      return Art.cached('bh-sky2', api.W, api.H, (c, w, h) => { Art.backdrop(c, w, h, { top: '#080a1c', bottom: '#020309', vignette: false }); });
+      return Art.cached('bh-sky-space', api.W, api.H, (c, w, h) => { Art.scene(c, w, h, 'space'); });
     }
     /* textura discului, văzut de sus (o singură dată, scalată apoi) */
     const diskTex = () => Art.cached('bh-disk', 640, 640, (c, w) => {
@@ -293,7 +293,7 @@ defineModule({
 
       /* cercuri educative */
       if (showGuides) {
-        const fz = Art.fs(U, 0.032, 12);
+        const fz = Art.labelSize(U);
         const ring = (k, col, text, ang) => {
           ctx.save(); ctx.setLineDash([4, 6]); ctx.lineWidth = 1.2; ctx.strokeStyle = col;
           ctx.beginPath(); ctx.arc(cx, cy, hr * k, 0, TAU); ctx.stroke(); ctx.restore();
@@ -301,7 +301,7 @@ defineModule({
           const lx = cx + Math.cos(ang) * (hr * 3 + fz * 1.5), ly = cy + Math.sin(ang) * (hr * 3 + fz * 1.5);
           ctx.font = Art.font(fz, 700); const lw = ctx.measureText(text).width + fz * 1.1;
           let ax = right ? Math.min(lx, api.freeW - 8 - lw) : Math.max(lx, 8 + lw);
-          Art.label(ctx, text, ax, ly, { size: fz, align: right ? 'left' : 'right', color: col, tx: tx, ty: ty, lineColor: col, bg: 'rgba(8,10,25,0.72)' });
+          Art.label(ctx, text, ax, ly, { size: fz, align: right ? 'left' : 'right', color: col, tx: tx, ty: ty, lineColor: col, bg: Art.LABEL_BG });
         };
         ring(1, 'rgba(255,140,140,0.95)', 'orizontul evenimentelor', 0.75);
         ring(1.5, 'rgba(255,230,130,0.9)', 'sfera fotonilor', -2.35);
@@ -370,7 +370,7 @@ defineModule({
         ctx.fillStyle = col; ctx.beginPath(); ctx.arc(aim.x0, aim.y0, 5, 0, TAU); ctx.fill();
       }
       /* contor */
-      Art.label(ctx, 'Înghițite: ' + swallowed, api.freeW - 14, 80, { size: Art.fs(U, 0.04, 13), align: 'right', color: '#ffd0a0' });
+      Art.label(ctx, 'Înghițite: ' + swallowed, api.freeW - 14, 80, { size: Art.labelSize(U), bg: Art.LABEL_BG, align: 'right', color: '#ffd0a0' });
     }
 
     return { frame: frame, resize: () => setMass(logM) };

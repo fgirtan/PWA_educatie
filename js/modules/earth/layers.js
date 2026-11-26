@@ -114,7 +114,7 @@
         selGlow = Math.max(0, selGlow - dt * 0.15);
 
         /* fundal */
-        ctx.drawImage(A.cached('ly-bg', W, H, (c, w, h) => { A.backdrop(c, w, h, { top: '#0a0f22', bottom: '#04060e', vignette: false }); A.stars(c, w, h, 0, { alpha: 0.35, n: Math.round(Math.min(100, w * h / 10000)) }); }), 0, 0, W, H);
+        ctx.drawImage(A.cached('ly-bg', W, H, (c, w, h) => { A.scene(c, w, h, 'space'); A.stars(c, w, h, 0, { alpha: 0.35, n: Math.round(Math.min(100, w * h / 10000)) }); }), 0, 0, W, H);
 
         /* cutremur: tot desenul tremură, tot mai slab pe măsură ce undele se sting */
         ctx.save();
@@ -209,11 +209,11 @@
         ctx.save(); ctx.translate(cx, by);
         ctx.beginPath(); ctx.moveTo(-sw * 1.05, -sw * 1.4); ctx.lineTo(sw * 1.05, -sw * 1.4); ctx.lineTo(0, sw * 1.2); ctx.closePath();
         A.volumeFill(ctx, -sw, -sw, sw, sw, '#ffc94a');
-        ctx.strokeStyle = 'rgba(120,70,0,0.8)'; ctx.lineWidth = 1.2;
+        ctx.strokeStyle = A.ink('#ffc94a'); ctx.lineWidth = A.lineW(U) * 1.2;
         for (let k = 0; k < 3; k++) { const ph = ((bitSpin + k / 3) % 1); const yy = -sw * 1.4 + ph * sw * 2.4, hw = sw * 1.05 * (1 - ph); ctx.beginPath(); ctx.moveTo(-hw, yy); ctx.lineTo(hw, yy + sw * 0.25); ctx.stroke(); }
         ctx.restore();
         const li = layerOf(depth);
-        if (depth > 0 && depth < 13) A.label(ctx, 'Kola: 12 km', cx + sw * 2.5 + 8, top + px(12) + A.fs(U, 0.045, 13), { size: A.fs(U, 0.04, 13), align: 'left', tx: cx + sw * 0.6, ty: top + px(12) });
+        if (depth > 0 && depth < 13) A.label(ctx, 'Kola: 12 km', cx + sw * 2.5 + 8, top + px(12) + A.labelSize(U), { size: A.labelSize(U), bg: A.LABEL_BG, align: 'left', tx: cx + sw * 0.6, ty: top + px(12) });
 
         /* unde seismice: fronturi de undă (cercuri) + raze; S se opresc la nucleul extern */
         if (quake) {
@@ -237,7 +237,7 @@
           ctx.restore();
           /* valuri la suprafață, în jurul epicentrului */
           for (let k = 0; k < 3; k++) { const ph = (quake.t * 0.8 - k * 0.35); if (ph > 0 && ph < 1.4) { ctx.strokeStyle = 'rgba(255,220,120,' + (0.7 * (1 - ph / 1.4)).toFixed(2) + ')'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(ex, ey, 10 + ph * R * 0.35, Math.PI, TAU); ctx.stroke(); } }
-          if (quake.t < 4) { const k = clamp(Math.min(quake.t * 2, (4 - quake.t)), 0, 1); ctx.globalAlpha = k; A.label(ctx, 'unde P', cx - R * 0.55, cy + R * 0.2, { size: A.fs(U, 0.04, 13), color: '#7dffb0' }); A.label(ctx, 'unde S', cx - R * 0.55, cy + R * 0.2 + A.fs(U, 0.04, 13) * 2, { size: A.fs(U, 0.04, 13), color: '#ff8a8a' }); ctx.globalAlpha = 1; }
+          if (quake.t < 4) { const k = clamp(Math.min(quake.t * 2, (4 - quake.t)), 0, 1); ctx.globalAlpha = k; A.label(ctx, 'unde P', cx - R * 0.55, cy + R * 0.2, { size: A.labelSize(U), bg: A.LABEL_BG, color: '#7dffb0' }); A.label(ctx, 'unde S', cx - R * 0.55, cy + R * 0.2 + A.labelSize(U) * 2, { size: A.labelSize(U), bg: A.LABEL_BG, color: '#ff8a8a' }); ctx.globalAlpha = 1; }
         }
 
         /* panou */
@@ -246,7 +246,7 @@
         readout.innerHTML = '<b>' + LAY[li].n + '</b> · adâncime <b>' + fmtN(depth) + ' km</b> · temperatură ~<b>' + fmtN(T) + '°C</b> · presiune ~<b>' + (P < 0.01 ? '1' : fmtN(P * 9869)) + '</b> atmosfere' + (depth > 12 ? ' · oamenii au săpat doar 12 km' : '');
 
         /* etichete curate, cu linie spre strat */
-        const fsz = A.fs(U, 0.042, 13);
+        const fsz = A.labelSize(U);
         ctx.font = A.font(fsz, 700);
         LAY.forEach((l, i) => {
           const mid = i === 0 ? 0 : (l.a + l.b) / 2, rm = R - px(mid) - (i === 0 ? cw * 0.5 : 0), pa = -Math.PI / 4 + (i - 1.5) * 0.12;
@@ -254,7 +254,7 @@
           const tw = ctx.measureText(l.n).width + fsz * 1.1;
           const lx = Math.min(cx + R * 1.08, api.freeW - tw - 8), ly = cy - R * 0.92 + i * fsz * 2.6;
           const on = i === li || i === selLayer;
-          A.label(ctx, l.n, lx, ly, { size: fsz, align: 'left', tx: pxx, ty: pyy, bg: on ? A.rgba(A.shade(l.c, -0.35), 0.92) : 'rgba(10,15,35,0.82)', border: on ? A.rgba(l.c, 0.9) : undefined, lineColor: 'rgba(255,255,255,0.75)' });
+          A.label(ctx, l.n, lx, ly, { size: fsz, align: 'left', tx: pxx, ty: pyy, bg: on ? A.rgba(A.shade(l.c, -0.35), 0.92) : A.LABEL_BG, border: on ? A.rgba(l.c, 0.9) : undefined, lineColor: 'rgba(255,255,255,0.75)' });
         });
         ctx.restore();
       }

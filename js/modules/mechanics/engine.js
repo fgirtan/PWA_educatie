@@ -50,7 +50,7 @@
         /* talerul (ciupercă) */
         ctx.beginPath(); ctx.moveTo(vx - sw, hy - U * 0.035); ctx.quadraticCurveTo(vx - sw, hy - U * 0.008, vx - hw, hy - U * 0.006); ctx.lineTo(vx - hw, hy + U * 0.006); ctx.lineTo(vx + hw, hy + U * 0.006); ctx.lineTo(vx + hw, hy - U * 0.006); ctx.quadraticCurveTo(vx + sw, hy - U * 0.008, vx + sw, hy - U * 0.035); ctx.closePath();
         Art.volumeFill(ctx, vx - hw, hy - U * 0.03, vx + hw, hy + U * 0.01, tint, { hi: 0.4, lo: 0.45 });
-        ctx.strokeStyle = 'rgba(20,24,34,0.6)'; ctx.lineWidth = 1; ctx.stroke();
+        ctx.strokeStyle = Art.ink(tint); ctx.lineWidth = Art.lineW(U); ctx.stroke();
       }
       function spring(vx, y0, y1, w, U) {
         const turns = 6; ctx.save(); ctx.lineCap = 'round';
@@ -65,7 +65,7 @@
       function cam(x, y, rb, lift, dir) {
         ctx.beginPath();
         for (let i = 0; i <= 48; i++) { const p = i / 48 * TAU; let d = Math.atan2(Math.sin(p - dir), Math.cos(p - dir)); const r = rb + (Math.abs(d) < Math.PI / 4 ? lift * Math.cos(2 * d) : 0); const px = x + Math.cos(p) * r, py = y + Math.sin(p) * r; i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
-        ctx.closePath(); Art.volumeFill(ctx, x - rb, y - rb, x + rb, y + rb * 1.6, '#8e97a8', { hi: 0.45 }); ctx.strokeStyle = 'rgba(15,20,30,0.7)'; ctx.lineWidth = 1; ctx.stroke();
+        ctx.closePath(); Art.volumeFill(ctx, x - rb, y - rb, x + rb, y + rb * 1.6, '#8e97a8', { hi: 0.45 }); ctx.strokeStyle = Art.ink('#8e97a8'); ctx.lineWidth = Art.lineW(api.unit); ctx.stroke();
         ctx.fillStyle = '#2a303d'; ctx.beginPath(); ctx.arc(x, y, rb * 0.35, 0, TAU); ctx.fill();
       }
       function bolt(x0, y0, x1, y1, seed, w) {
@@ -101,7 +101,7 @@
         const spin = playing ? rps : 0;
 
         /* ---------- fundal: sală de muzeu, spot de lumină ---------- */
-        Art.backdrop(ctx, api.W, api.H, { top: '#1c2238', bottom: '#0e1220', vignette: false });
+        Art.scene(ctx, api.W, api.H, 'lab');
         Art.groundShadow(ctx, cx, crankY + Rc + U * 0.04, Rc * 1.3, U * 0.05, 0.4);
 
         /* ---------- carter (spate) ---------- */
@@ -124,7 +124,7 @@
         ctx.save(); ctx.translate(cx, crankY); ctx.rotate(a);
         ctx.beginPath(); ctx.arc(0, 0, crr * 1.12, 0.15, Math.PI - 0.15); ctx.lineTo(-crr * 0.32, -crr * 0.1); ctx.lineTo(-crr * 0.3, -crr); ctx.arc(0, -crr, crr * 0.3, Math.PI, 0); ctx.lineTo(crr * 0.32, -crr * 0.1); ctx.closePath();
         Art.volumeFill(ctx, -crr, -crr * 1.2, crr, crr * 1.1, '#7a8498', { hi: 0.35, lo: 0.5 });
-        ctx.strokeStyle = 'rgba(10,14,24,0.6)'; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.strokeStyle = Art.ink('#7a8498'); ctx.lineWidth = Art.lineW(U) * 1.3; ctx.stroke();
         ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.beginPath(); ctx.arc(0, 0, crr * 0.9, 0.4, Math.PI - 0.4); ctx.arc(0, 0, crr * 0.55, Math.PI - 0.4, 0.4, true); ctx.closePath(); ctx.fill();
         ctx.restore();
         Art.sphere(ctx, cx, crankY, crr * 0.26, '#9aa4b6', { rim: false });
@@ -156,7 +156,7 @@
         const r1s = U * 0.042, r2s = U * 0.075, w1 = U * 0.026, w2 = U * 0.042;
         ctx.beginPath(); ctx.arc(0, 0, r1s, Math.PI / 2, -Math.PI / 2); ctx.lineTo(Ls * 0.25, -w1); ctx.lineTo(Ls - r2s * 0.6, -w2); ctx.arc(Ls, 0, r2s, -Math.PI * 0.7, Math.PI * 0.7); ctx.lineTo(Ls * 0.25, w1); ctx.closePath();
         const rg = ctx.createLinearGradient(0, -w2, 0, w2); rg.addColorStop(0, '#f2c77a'); rg.addColorStop(0.45, '#c9974a'); rg.addColorStop(1, '#6e4a1c');
-        ctx.fillStyle = rg; ctx.fill(); ctx.strokeStyle = 'rgba(60,35,10,0.7)'; ctx.lineWidth = 1.2; ctx.stroke();
+        ctx.fillStyle = rg; ctx.fill(); ctx.strokeStyle = Art.ink('#c9974a'); ctx.lineWidth = Art.lineW(U) * 1.2; ctx.stroke();
         ctx.fillStyle = 'rgba(70,45,15,0.45)'; Art.roundRectPath(ctx, r1s * 1.2, -w1 * 0.4, Ls - r1s * 1.2 - r2s * 1.3, w1 * 0.8, w1 * 0.4); ctx.fill();
         ctx.fillStyle = '#3a2a14'; [-1, 1].forEach((s) => { ctx.beginPath(); ctx.arc(Ls - r2s * 0.15, s * r2s * 0.78, U * 0.01, 0, TAU); ctx.fill(); });
         ctx.restore();
@@ -235,15 +235,15 @@
         smoke.draw(ctx);
 
         /* ---------- etichete ---------- */
-        const F = Art.fs(U, 0.045, 13);
-        Art.label(ctx, 'admisie', cx - U * 0.62, portY + pipeW * 1.25, { size: F, color: '#bfe2ff', tx: cx - U * 0.58, ty: portY + pipeW * 0.3 });
-        Art.label(ctx, 'evacuare', cx + U * 0.6, portY + pipeW * 1.25, { size: F, color: '#e3e3e8', tx: cx + U * 0.54, ty: portY + pipeW * 0.3 });
-        Art.label(ctx, 'bujie', cx + U * 0.36, headTop - U * 0.16, { size: F, color: '#fff3c4', tx: cx + U * 0.02, ty: plugTop + U * 0.02 });
+        const F = Art.labelSize(U), LB = Art.LABEL_BG;
+        Art.label(ctx, 'admisie', cx - U * 0.62, portY + pipeW * 1.25, { size: F, bg: LB, color: '#bfe2ff', tx: cx - U * 0.58, ty: portY + pipeW * 0.3 });
+        Art.label(ctx, 'evacuare', cx + U * 0.6, portY + pipeW * 1.25, { size: F, bg: LB, color: '#e3e3e8', tx: cx + U * 0.54, ty: portY + pipeW * 0.3 });
+        Art.label(ctx, 'bujie', cx + U * 0.36, headTop - U * 0.16, { size: F, bg: LB, color: '#fff3c4', tx: cx + U * 0.02, ty: plugTop + U * 0.02 });
         const lx = cl - wt - U * 0.05;
-        Art.label(ctx, 'piston', lx, pistonTop + pH * 0.3, { size: F, align: 'right', tx: cl + U * 0.04, ty: pistonTop + pH * 0.3 });
+        Art.label(ctx, 'piston', lx, pistonTop + pH * 0.3, { size: F, bg: LB, align: 'right', tx: cl + U * 0.04, ty: pistonTop + pH * 0.3 });
         const rodMy = (wristY + pin[1]) / 2 + U * 0.04;
-        Art.label(ctx, 'bielă', cx - Rc - U * 0.02, rodMy, { size: F, align: 'right', tx: (cx + pin[0]) / 2, ty: rodMy });
-        Art.label(ctx, 'arbore cotit', cx - Rc * 0.7, crankY + Rc + U * 0.08, { size: F, tx: cx - crr * 0.5, ty: crankY + crr * 0.6 });
+        Art.label(ctx, 'bielă', cx - Rc - U * 0.02, rodMy, { size: F, bg: LB, align: 'right', tx: (cx + pin[0]) / 2, ty: rodMy });
+        Art.label(ctx, 'arbore cotit', cx - Rc * 0.7, crankY + Rc + U * 0.08, { size: F, bg: LB, tx: cx - crr * 0.5, ty: crankY + crr * 0.6 });
 
         /* ---------- cadranul ciclului (720°) ---------- */
         const dr = clamp(U * 0.17, 36, 72), dX = W - dr - 18, dY = cy + U * 0.42;
@@ -254,7 +254,7 @@
         ctx.save(); ctx.translate(dX, dY); ctx.rotate(na); ctx.fillStyle = '#ffffff';
         ctx.beginPath(); ctx.moveTo(-dr * 0.12, -dr * 0.05); ctx.lineTo(dr * 0.86, 0); ctx.lineTo(-dr * 0.12, dr * 0.05); ctx.closePath(); ctx.fill(); ctx.restore();
         Art.sphere(ctx, dX, dY, dr * 0.12, '#c9ced8', { rim: false });
-        Art.text(ctx, '720°', dX, dY + dr * 0.42, { size: Math.max(11, dr * 0.24) });
+        Art.text(ctx, '720°', dX, dY + dr * 0.42, { size: Math.max(12, dr * 0.24) });
         Art.text(ctx, STROKES[stroke].n, W - 12, dY + dr + Math.max(20, F * 1.3), { size: F, color: STROKES[stroke].c, align: 'right' });
 
         info.innerHTML = '<b>Unghi:</b> ' + Math.round(cyc / (Math.PI * 2) * 360) + '° din 720° · <b style="color:' + STROKES[stroke].c + '">' + STROKES[stroke].n + '</b>';

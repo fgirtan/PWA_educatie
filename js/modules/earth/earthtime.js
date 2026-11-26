@@ -183,30 +183,39 @@
     c.restore();
   }
 
-  /* ---------- harta norilor (o singură dată) ---------- */
-  const MW = 320, MH = 160;
-  let CLOUD = null;
-  function buildClouds() {
-    CLOUD = new Uint8Array(MW * MH);
-    for (let j = 0; j < MH; j++) {
-      const lat = 90 - (j + 0.5) / MH * 180, al = Math.abs(lat);
+  /* ---------- harta norilor: câte una pe rezoluție, generată pe rânduri ---------- */
+  const ET_STATS = window.__earthtimeStats = {};          // pentru verificări (mărimea globului și a hărții)
+  const LOW = 320;                                   // harta rapidă (mereu gata); cele mari se fac pe bucăți
+  const CLOUDS = {};
+  function cloudMap(w) {
+    let c = CLOUDS[w];
+    if (!c) { c = CLOUDS[w] = { w: w, h: w / 2, d: new Uint8Array(w * w / 2), row: 0 }; }
+    return c;
+  }
+  function cloudRows(c, end) {
+    const w = c.w, h = c.h;
+    while (c.row < h) {
+      const j = c.row++, lat = 90 - (j + 0.5) / h * 180, al = Math.abs(lat);
       const band = 0.55 + 0.45 * Math.max(Math.exp(-Math.pow((al - 55) / 14, 2)), Math.exp(-Math.pow(al / 8, 2)) * 0.8);
-      for (let i = 0; i < MW; i++) {
-        const lon = (i + 0.5) / MW * 360 - 180;
+      for (let i = 0; i < w; i++) {
+        const lon = (i + 0.5) / w * 360 - 180;
         let v = pn(lon * 1.0, lat * 2.0, 0.035, 11) * 0.6 + pn(lon, lat * 2, 0.08, 31) * 0.3 + pn(lon, lat, 0.2, 53) * 0.15;
+        if (w > LOW) v += pn(lon, lat, 0.5, 71) * 0.06;            // detaliu fin doar pe hărțile mari
         v = clamp((v + 0.06) * 2.6, 0, 1) * band;
-        CLOUD[j * MW + i] = Math.round(v * 255);
+        c.d[j * w + i] = Math.round(v * 255);
       }
+      if (end && performance.now() > end) break;
     }
+    return c.row >= h;
   }
 
   defineModule({
-    id: 'earthtime', title: 'Pământul în timp', sub: 'De acum 4,6 miliarde de ani până azi',
+    id: 'earthtime', ownZoom: true, title: 'Pământul în timp', sub: 'De acum 4,6 miliarde de ani până azi',
     start: function (api) {
       const ctx = api.ctx;
       let s = 0, spin = 0, tilt = 0.25, vSpin = 0, vTilt = 0, idle = 99, dragging = false, zoom = 1, lastEra = -1, playing = false;
       let eraChangeT = -9, prevEra = 0, simT = 0;
-      if (!CLOUD) buildClouds();
+      cloudRows(cloudMap(LOW), 0);
       const ma = () => 4600 * Math.pow(1 - s, 3);
       const eraIdx = () => { const m = ma(); let k = 0; for (let i = 0; i < ERAS.length; i++) if (m <= ERAS[i].ma) k = i; return k; };
       const maText = (m) => m >= 1000 ? fmtN(m / 1000, 2) + ' miliarde de ani' : m >= 1 ? fmtN(m, 0) + ' milioane de ani' : 'azi';
@@ -225,7 +234,10 @@
       }
 
       /* ---------- harta planetei pentru epoca curentă (echirectangulară, se recalculează doar când se schimbă timpul) ---------- */
-      const MR = new Uint8Array(MW * MH), MG = new Uint8Array(MW * MH), MB = new Uint8Array(MW * MH), ME = new Uint8Array(MW * MH), MS = new Uint8Array(MW * MH), MN = new Uint8Array(MW * MH);
+      /* harta = { w, h, R, G, B, E (jar), S (apă = luciu), N (lumini de oraș), row (cât e gata), key } */
+      const newMap = (w) => { const n = w * w / 2; return { w: w, h: w / 2, R: new Uint8Array(n), G: new Uint8Array(n), B: new Uint8Array(n), E: new Uint8Array(n), S: new Uint8Array(n), N: new Uint8Array(n), row: 0, key: -1, m: 0 }; };
+      let MLO = newMap(LOW), MNEXT = newMap(LOW);   // harta mică afișată + următoarea, făcută pe bucăți în timpul derulării
+      let MHI = null;                                  // harta detaliată pentru ecrane mari (se face pe bucăți)
       let mapKey = -1, look = null;
       function eraLook(m) {
         const lava = m > 4000, snow = m < 720 && m > 635;
@@ -238,11 +250,12 @@
         const cloudC = m > 2400 ? [236, 206, 160] : [250, 252, 255];
         return { lava, snow, deep, shallow, atm, cloudK, cloudC, veg: m < 470 ? clamp((470 - m) / 150, 0, 1) : 0 };
       }
-      function buildMap(m) {
-        const L = landNow(m), lk = look;
+      function buildMap(M, end) {
+        const m = M.m, L = landNow(m), lk = eraLook(m), MW = M.w, MH = M.h, MR = M.R, MG = M.G, MB = M.B, ME = M.E, MS = M.S, MN = M.N;
         const crust = clamp((4600 - m) / 600, 0, 1), seamW = lerp(0.55, 0.07, Math.pow(crust, 0.7));
         const capLat = m < 3 ? 72 : 80, rust = m < 2400 && m > 470 ? clamp((2400 - m) / 800, 0, 1) * 0.6 : 0, hot = m < 4000 && m > 2600;
-        for (let j = 0; j < MH; j++) {
+        while (M.row < MH) {
+          const j = M.row++;
           const lat = 90 - (j + 0.5) / MH * 180, al = Math.abs(lat), cl = Math.cos(lat * 0.017453);
           for (let i = 0; i < MW; i++) {
             const lon = (i + 0.5) / MW * 360 - 180, o = j * MW + i;
@@ -292,58 +305,77 @@
             if (lk.snow) { const crack = Math.abs(N2(lon * 0.09 + 50, lat * 0.09)); c = land ? [242, 246, 252] : crack < 0.03 ? [120, 170, 210] : mixc([206, 226, 242], [232, 242, 252], crack * 2); sp = 0; e = 0; }
             MR[o] = c[0]; MG[o] = c[1]; MB[o] = c[2]; ME[o] = e; MS[o] = sp; MN[o] = nl;
           }
+          if (end && performance.now() > end) break;
         }
+        return M.row >= MH;
       }
 
-      /* ---------- globul: parametri per pixel calculați o dată (lumina e fixă, din stânga-sus) ---------- */
-      let S = 0, off = null, octx = null, img = null, PX = null;
-      function setupGlobe(size) {
-        S = size; off = document.createElement('canvas'); off.width = off.height = S; octx = off.getContext('2d'); img = octx.createImageData(S, S);
-        const h = S / 2; PX = new Float32Array(S * S * 7);
-        let lx = -0.6, ly = 0.5, lz = 0.62; const ln = Math.hypot(lx, ly, lz); lx /= ln; ly /= ln; lz /= ln;
-        let hx = lx, hy = ly, hz = lz + 1; const hn = Math.hypot(hx, hy, hz); hx /= hn; hy /= hn; hz /= hn;
-        for (let j = 0; j < S; j++) for (let i = 0; i < S; i++) {
-          const nx = (i + 0.5 - h) / h, ny = (j + 0.5 - h) / h, r2 = nx * nx + ny * ny, p = (j * S + i) * 7, r = Math.sqrt(r2);
-          const al = clamp((1 - r) * h + 0.5, 0, 1);
-          if (al <= 0) { PX[p + 5] = 0; continue; }
-          const z = Math.sqrt(Math.max(0, 1 - Math.min(1, r2))), y = -ny;
-          PX[p] = nx; PX[p + 1] = y; PX[p + 2] = z;
-          PX[p + 3] = nx * lx + y * ly + z * lz;
-          PX[p + 4] = Math.pow(Math.max(0, nx * hx + y * hy + z * hz), 140);
-          PX[p + 5] = al; PX[p + 6] = Math.pow(1 - z, 2.4);
-        }
+      /* ---------- globul ----------
+         Pentru fiecare pixel al discului se calculează o singură dată lumina (fixă, din stânga-sus) și
+         latitudinea/longitudinea pentru înclinarea curentă. Rotația în jurul axei doar decalează longitudinea,
+         deci un cadru costă doar citiri din hartă. Globul mare (ascuțit pe proiector) se construiește pe rânduri,
+         câteva ms pe cadru; cât timp e în lucru sau cât trage copilul de glob, se folosește unul mic, rapid. */
+      let LX = -0.6, LY = 0.5, LZ = 0.62; { const ln = Math.hypot(LX, LY, LZ); LX /= ln; LY /= ln; LZ /= ln; }
+      let HX = LX, HY = LY, HZ = LZ + 1; { const hn = Math.hypot(HX, HY, HZ); HX /= hn; HY /= hn; HZ /= hn; }
+      function newGlobe(S, tl) {
+        const off = document.createElement('canvas'); off.width = off.height = S; const octx = off.getContext('2d');
+        const img = octx.createImageData(S, S);
+        return { S: S, tilt: tl, off: off, octx: octx, img: img, u32: new Uint32Array(img.data.buffer), row: 0, n: 0,
+          idx: new Int32Array(Math.ceil(S * S * 0.8) + 4 * S), lon: new Float32Array(Math.ceil(S * S * 0.8) + 4 * S), lat: new Float32Array(Math.ceil(S * S * 0.8) + 4 * S),
+          px: new Float32Array((Math.ceil(S * S * 0.8) + 4 * S) * 4) };
       }
-      function renderGlobe(t) {
-        const d = img.data, lk = look;
-        const cs = Math.cos(spin), sn = Math.sin(spin), ct = Math.cos(tilt), st = Math.sin(tilt);
-        const coff = Math.floor(t * 2.2) % MW, cK = lk.cloudK, cc = lk.cloudC;
-        const ar = A.hex(lk.atm), INV = 1 / TAU, INVP = 1 / Math.PI;
-        for (let q = 0, n = S * S; q < n; q++) {
-          const p = q * 7, o = q * 4, al = PX[p + 5];
-          if (al <= 0) { d[o + 3] = 0; continue; }
-          const X = PX[p], Y = PX[p + 1], Z = PX[p + 2];
-          const y1 = Y * ct - Z * st, z1 = Y * st + Z * ct;
-          const xr = X * cs + z1 * sn, zr = -X * sn + z1 * cs;
-          const lon = Math.atan2(xr, zr), lat = Math.asin(y1 > 1 ? 1 : y1 < -1 ? -1 : y1);
-          let u = ((lon * INV + 0.5) * MW) | 0; if (u >= MW) u -= MW; if (u < 0) u += MW;
-          let v = ((0.5 - lat * INVP) * MH) | 0; if (v >= MH) v = MH - 1; if (v < 0) v = 0;
+      function globeRows(G, end) {
+        const S = G.S, h = S / 2, ct = Math.cos(G.tilt), st = Math.sin(G.tilt), INV = 1 / TAU, INVP = 1 / Math.PI;
+        while (G.row < S) {
+          const j = G.row++, ny = (j + 0.5 - h) / h, y = -ny;
+          for (let i = 0; i < S; i++) {
+            const nx = (i + 0.5 - h) / h, r2 = nx * nx + ny * ny, r = Math.sqrt(r2);
+            const al = clamp((1 - r) * h + 0.5, 0, 1);
+            if (al <= 0) { G.u32[j * S + i] = 0; continue; }
+            const z = Math.sqrt(Math.max(0, 1 - Math.min(1, r2)));
+            const y1 = y * ct - z * st, z1 = y * st + z * ct;
+            const k = G.n++, q = k * 4;
+            G.idx[k] = j * S + i;
+            G.lon[k] = Math.atan2(nx, z1) * INV + 0.5;
+            G.lat[k] = 0.5 - Math.asin(y1 > 1 ? 1 : y1 < -1 ? -1 : y1) * INVP;
+            G.px[q] = nx * LX + y * LY + z * LZ;
+            G.px[q + 1] = Math.pow(Math.max(0, nx * HX + y * HY + z * HZ), 140);
+            G.px[q + 2] = al;
+            G.px[q + 3] = Math.pow(1 - z, 2.4);
+          }
+          if (end && performance.now() > end) break;
+        }
+        return G.row >= S;
+      }
+      function renderGlobe(G, M, t) {
+        const u32 = G.u32, lk = look, MW = M.w, MH = M.h, MR = M.R, MG = M.G, MB = M.B, ME = M.E, MS = M.S, MN = M.N;
+        const CL = cloudMap(MW).row >= MH ? cloudMap(MW) : cloudMap(LOW), CW = CL.w, CD = CL.d, cs = CW / MW;
+        const spinF = spin / TAU, coff = Math.floor(((t * 2.2 / LOW) % 1) * CW), cK = lk.cloudK, cc = lk.cloudC;
+        const ar = A.hex(lk.atm), eK = LOW / MW;
+        const idx = G.idx, LON = G.lon, LAT = G.lat, PX = G.px;
+        for (let k = 0, n = G.n; k < n; k++) {
+          const q = k * 4;
+          let f = LON[k] + spinF; f -= Math.floor(f);
+          let u = (f * MW) | 0; if (u >= MW) u = MW - 1;
+          let v = (LAT[k] * MH) | 0; if (v >= MH) v = MH - 1;
           const ti = v * MW + u;
           let r = MR[ti], g = MG[ti], b = MB[ti];
-          const lam = PX[p + 3], dl = clamp((lam + 0.12) / 0.42, 0, 1), day = dl * dl * (3 - 2 * dl);
+          const lam = PX[q], dl = clamp((lam + 0.12) / 0.42, 0, 1), day = dl * dl * (3 - 2 * dl);
           let ca = 0;
-          if (cK > 0) { let cu = u + coff; if (cu >= MW) cu -= MW; ca = CLOUD[v * MW + cu] / 255 * cK; r += (cc[0] - r) * ca; g += (cc[1] - g) * ca; b += (cc[2] - b) * ca; }
+          if (cK > 0) { let cu = ((u * cs) | 0) + coff; if (cu >= CW) cu -= CW; ca = CD[((v * cs) | 0) * CW + cu] / 255 * cK; r += (cc[0] - r) * ca; g += (cc[1] - g) * ca; b += (cc[2] - b) * ca; }
           const sh = 0.045 + 0.98 * day * (0.82 + 0.18 * lam);
           r *= sh; g *= sh; b *= sh;
           r += 4 * (1 - day); g += 7 * (1 - day); b += 16 * (1 - day);
-          if (MS[ti]) { const spc = PX[p + 4] * 130 * (1 - ca); r += spc; g += spc * 0.96; b += spc * 0.88; }
+          if (MS[ti]) { const spc = PX[q + 1] * 130 * (1 - ca); r += spc; g += spc * 0.96; b += spc * 0.88; }
           const e = ME[ti];
-          if (e) { const pul = (0.72 + 0.28 * Math.sin(u * 0.23 + v * 0.31 + t * 2.4)) * e / 255 * (1 - ca * 0.6); r += 255 * pul * (1 - day * 0.35); g += 120 * pul * (1 - day * 0.35); b += 30 * pul * (1 - day * 0.35); }
-          const nl = MN[ti]; if (nl && day < 0.4) { const k = nl / 255 * (0.4 - day) / 0.4 * (1 - ca); r += 255 * k; g += 196 * k; b += 110 * k; }
-          const f = PX[p + 6] * (0.25 + 0.75 * day); r += ar[0] * f * 0.85; g += ar[1] * f * 0.85; b += ar[2] * f * 0.85;
-          d[o] = r > 255 ? 255 : r; d[o + 1] = g > 255 ? 255 : g; d[o + 2] = b > 255 ? 255 : b; d[o + 3] = al * 255;
+          if (e) { const pul = (0.72 + 0.28 * Math.sin(u * eK * 0.23 + v * eK * 0.31 + t * 2.4)) * e / 255 * (1 - ca * 0.6); r += 255 * pul * (1 - day * 0.35); g += 120 * pul * (1 - day * 0.35); b += 30 * pul * (1 - day * 0.35); }
+          const nl = MN[ti]; if (nl && day < 0.4) { const kk = nl / 255 * (0.4 - day) / 0.4 * (1 - ca); r += 255 * kk; g += 196 * kk; b += 110 * kk; }
+          const fr = PX[q + 3] * (0.25 + 0.75 * day); r += ar[0] * fr * 0.85; g += ar[1] * fr * 0.85; b += ar[2] * fr * 0.85;
+          u32[idx[k]] = (((PX[q + 2] * 255) & 255) << 24 | (b > 255 ? 255 : b) << 16 | (g > 255 ? 255 : g) << 8 | (r > 255 ? 255 : r)) >>> 0;
         }
-        octx.putImageData(img, 0, 0);
+        G.octx.putImageData(G.img, 0, 0);
       }
+      let gLo = null, gHi = null, gJob = null, tiltCalm = 0, renderMs = 4, sMax = 1024, growT = 0;
 
       /* control: trage cu mouse-ul / degetul ca să rotești globul; rotița = zoom */
       let lx = 0, ly = 0, lt = 0;
@@ -399,21 +431,52 @@
           idle += dt;
           spin += vSpin * dt; tilt = clamp(tilt + vTilt * dt, -1.35, 1.35);
           const damp = Math.exp(-dt * 3.5); vSpin *= damp; vTilt *= damp;
-          if (idle > 3) { spin += dt * 0.35; tilt += (0.25 - tilt) * Math.min(1, dt * 0.8); }
+          if (idle > 3) { spin += dt * 0.35; tilt += (0.25 - tilt) * Math.min(1, dt * 0.8); if (Math.abs(tilt - 0.25) < 0.004) tilt = 0.25; }
+          if (Math.abs(vTilt) < 0.01) vTilt = 0;
         }
         const m = ma(), cx = api.cx, cy = api.cy, R = api.unit * 0.82 * zoom, W = api.W, H = api.H, U = api.unit;
         /* fundal: spațiu adânc cu nebuloasă discretă și lumina Soarelui din stânga */
         const bg = A.cached('et-bg', W, H, (c, w, h) => {
-          A.backdrop(c, w, h, { top: '#0a0f22', bottom: '#04060e', vignette: false });
+          A.scene(c, w, h, 'space');
           A.stars(c, w, h, 0, { alpha: 0.4, n: Math.round(Math.min(120, w * h / 9000)) });
         });
         ctx.drawImage(bg, 0, 0, W, H);
 
         const key = Math.round(s * 300);
-        if (key !== mapKey) { mapKey = key; look = eraLook(m); buildMap(m); }
-        const want = clamp(Math.round(R * 1.25), 160, 320);
-        if (!PX || Math.abs(want - S) > 24) setupGlobe(want);
-        renderGlobe(t); sayEra();
+        const budget = performance.now() + (playing ? 2.5 : 5);
+        if (key !== mapKey) {
+          mapKey = key; MNEXT.m = m; MNEXT.row = 0; MNEXT.key = key;
+          if (MLO.key < 0) { buildMap(MNEXT, 0); const tmp = MLO; MLO = MNEXT; MNEXT = tmp; look = eraLook(m); }
+        }
+        if (MNEXT.key === mapKey && MNEXT.key !== MLO.key && buildMap(MNEXT, budget)) { const tmp = MLO; MLO = MNEXT; MNEXT = tmp; look = eraLook(MLO.m); }
+        /* mărimea globului pe ecran → rezoluția hărții și a globului */
+        const dpr = Math.min(api.DPR || 1, 1.5), wantS = clamp(Math.round(R * 2 * dpr / 16) * 16, 160, sMax);
+        const wantW = wantS > 560 ? 1024 : wantS > 300 ? 640 : LOW;
+        if (wantW > LOW) {
+          if (!MHI || MHI.w !== wantW) MHI = newMap(wantW);
+          if (MHI.key !== key) { MHI.key = key; MHI.m = m; MHI.row = 0; }
+          if (!playing || MHI.row > 0) { if (cloudRows(cloudMap(wantW), budget)) buildMap(MHI, budget); }
+        }
+        const mapNow = MHI && MHI.w === wantW && MHI.key === key && MHI.row >= MHI.h ? MHI : MLO;
+        /* globul: cel mare când înclinarea stă pe loc, cel mic (refăcut pe loc) cât timp se mișcă */
+        tiltCalm = Math.abs(tilt - (gLo ? gLo.tilt : tilt)) > 1e-4 ? 0 : tiltCalm + dt;
+        const loS = Math.min(wantS, 320);
+        if (!gLo || gLo.S !== loS) { gLo = newGlobe(loS, tilt); globeRows(gLo, 0); }
+        else if (Math.abs(gLo.tilt - tilt) > 1e-4) { gLo.tilt = tilt; gLo.row = 0; gLo.n = 0; globeRows(gLo, 0); }
+        let G = gLo;
+        if (wantS > loS) {
+          if (gHi && (Math.abs(gHi.tilt - tilt) > 2e-3 || Math.abs(gHi.S - wantS) > 48)) gHi = null;
+          if (!gHi && tiltCalm > 0.25) { if (!gJob || gJob.S !== wantS || Math.abs(gJob.tilt - tilt) > 2e-3) gJob = newGlobe(wantS, tilt); if (globeRows(gJob, budget + 2)) { gHi = gJob; gJob = null; } }
+          if (gHi) G = gHi;
+        } else { gHi = null; gJob = null; }
+        const r0 = performance.now(); renderGlobe(G, mapNow, t); const rms = performance.now() - r0;
+        if (G === gHi) {
+          renderMs = renderMs * 0.95 + rms * 0.05; growT += dt;
+          if (renderMs > 8 && sMax > 400) { sMax = Math.max(400, Math.round(G.S * 0.85 / 16) * 16); renderMs = 5; growT = 0; }
+          else if (renderMs < 3.5 && sMax < 1024 && growT > 3) { sMax = Math.min(1024, sMax + 64); growT = 0; }
+        }
+        ET_STATS.S = G.S; ET_STATS.map = mapNow.w; ET_STATS.renderMs = Math.round(rms * 10) / 10; ET_STATS.sMax = sMax;
+        sayEra();
 
         /* Luna: mare, aproape și încă fierbinte la început */
         const mr = lerp(0.3, 0.1, clamp((4400 - m) / 1500, 0, 1)), md = lerp(1.35, 1.75, clamp((4400 - m) / 4400, 0, 1));
@@ -442,7 +505,7 @@
         const debK = m > 4440 && m < 4592 ? Math.min(1, (4592 - m) / 20) * Math.min(1, (m - 4440) / 60) : 0;
         if (debK > 0) debris(cx, cy, R, debK, t, false);
         ctx.imageSmoothingEnabled = true;
-        ctx.drawImage(off, cx - R, cy - R, R * 2, R * 2);
+        ctx.drawImage(G.off, cx - R, cy - R, R * 2, R * 2);
         /* margine luminoasă pe partea însorită */
         if (debK > 0) debris(cx, cy, R, debK, t, true);
         if (m < 4580 && behindMoon) drawMoon();
@@ -451,7 +514,7 @@
         if (m > 4588) {
           const k = clamp((m - 4588) / 12, 0, 1), tr = R * 0.52, tx = Math.max(tr * 0.75, cx - R * (0.95 + 0.35 * k)), ty = Math.max(cy - U + tr * 0.9, cy - R * (0.55 + 0.25 * k));
           A.sphere(ctx, tx, ty, tr, '#8a6a58', { lx: -0.5, ly: -0.5, rimColor: '#ffb070' });
-          A.label(ctx, 'Theia', tx, ty - tr - A.fs(U, 0.05, 14), { size: A.fs(U, 0.045, 13), color: '#ffd9b0' });
+          A.label(ctx, 'Theia', tx, ty - tr - A.fs(U, 0.05, 14), { size: A.labelSize(U), bg: A.LABEL_BG, color: '#ffd9b0' });
         }
         /* bombardamentul timpuriu: meteoriți cu dâre */
         if (m > 3900) for (let i = 0; i < 3; i++) {
@@ -483,7 +546,7 @@
         const k = eraIdx(), ir = clamp(U * 0.16, 30, 62), ix2 = api.freeW - ir - 14, iy2 = top + ir + 6;
         const pop = A.ease.back(clamp((t - eraChangeT) * 2.5, 0, 1));
         drawIcon(ctx, k, ix2, iy2, ir * (0.6 + 0.4 * pop), t);
-        A.label(ctx, ERAS[k].n, ix2 + ir, iy2 + ir + A.fs(U, 0.05, 14), { size: A.fs(U, 0.04, 13), align: 'right' });
+        A.label(ctx, ERAS[k].n, ix2 + ir, iy2 + ir + A.fs(U, 0.05, 14), { size: A.labelSize(U), bg: A.LABEL_BG, align: 'right' });
       }
       return { frame: frame };
     }

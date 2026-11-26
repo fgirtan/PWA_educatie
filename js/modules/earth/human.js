@@ -40,6 +40,7 @@
   const PER = [['Paleolitic inferior', 3.3e6, 3.0e5, '#7a5a3a'], ['Paleolitic mijlociu', 3.0e5, 5.0e4, '#a07a3a'], ['Paleolitic superior', 5.0e4, 1.17e4, '#c8a050'], ['Mezolitic', 1.17e4, 8.0e3, '#6aa0a0'], ['Neolitic', 8.0e3, 5.0e3, '#6ac080']];
 
   /* ---------- ajutoare de desen locale ---------- */
+  let LWH = 1;                    // grosimea conturului (din Art.lineW, setată la fiecare cadru)
   /* membru conic (capsulă cu capete rotunde), umplut cu gradient de volum */
   function limb(ctx, ax, ay, bx, by, wa, wb, col, outline) {
     const dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L, a0 = Math.atan2(ny, nx);
@@ -48,7 +49,7 @@
     const g = ctx.createLinearGradient(mx + nx * w * lit, my + ny * w * lit, mx - nx * w * lit, my - ny * w * lit);
     g.addColorStop(0, Art.shade(col, 0.14)); g.addColorStop(0.4, col); g.addColorStop(1, Art.shade(col, -0.28));
     ctx.fillStyle = g; ctx.fill();
-    if (outline) { ctx.strokeStyle = outline; ctx.lineWidth = Math.max(0.7, w * 0.12); ctx.stroke(); }
+    if (outline) { ctx.strokeStyle = Art.ink(col); ctx.lineWidth = LWH; ctx.stroke(); }
   }
 
   /* contur anatomic de-a lungul unui os: puncte [x, y, lățime-față, lățime-spate] → poligon închis */
@@ -72,7 +73,7 @@
     const g = ctx.createLinearGradient(cx - w, y0, cx + w, y0 + Math.min(y1 - y0, w * 0.6));
     g.addColorStop(0, Art.shade(col, hi === undefined ? 0.16 : hi)); g.addColorStop(0.45, col); g.addColorStop(1, Art.shade(col, -(lo === undefined ? 0.3 : lo)));
     ctx.fillStyle = g; ctx.fill();
-    if (ol) { ctx.strokeStyle = ol; ctx.lineWidth = 1; ctx.stroke(); }
+    if (ol) { ctx.strokeStyle = Art.ink(col); ctx.globalAlpha *= 0.85; ctx.lineWidth = LWH; ctx.stroke(); ctx.globalAlpha /= 0.85; }
   }
   /* margine de blană: fire scurte pe contur */
   function furEdge(ctx, poly, col, len, from, to) {
@@ -92,10 +93,11 @@
   }
 
   /* ---------- un hominin ilustrat, din profil, cu picioarele în (0,0); s = înălțimea în px ---------- */
-  function drawHominin(ctx, st, s, t, walk, phase, modern) {
+  function drawHominin(ctx, st, s, t, walk, phase, modern, an) {
+    an = an || { open: 1, gx: 0, gy: 0, tilt: 0 };
     const seed = st.seed, breathe = Math.sin(t * 1.5 + seed) * 0.5 + 0.5;
     const skin = st.skin, furC = st.furC, body = Art.mix(skin, furC, st.fur), limbC = Art.mix(skin, furC, st.fur * 0.95);
-    const ol = 'rgba(30,16,8,0.38)';
+    const ol = Art.ink(st.skin);
     const wk = s * (0.82 + 0.2 * st.build) * (st.lean > 0.25 ? 0.88 : 1);
     /* --- picioare: șold → genunchi → gleznă, cu ciclu de mers --- */
     const legL = st.leg * s, th = legL * 0.52, sh = legL * 0.48, fl = s * (st.leg > 0.5 ? 0.15 : 0.135) * (st.toe ? 1.1 : 1);
@@ -285,7 +287,7 @@
     /* --- cap --- */
     const hr = s * 0.064 * (st.brain < 0.4 ? 1.06 : 1);
     const hf = 0.1 + st.snout * 0.55 + st.lean * 0.5, neckL = s * 0.045;
-    const nb = P(1.02, -0.1), nod = Math.sin(phase * 2) * 0.025 * walk + Math.sin(t * 0.45 + seed) * 0.025;
+    const nb = P(1.02, -0.1), nod = Math.sin(phase * 2) * 0.025 * walk + Math.sin(t * 0.45 + seed) * 0.012 + an.tilt;
     const Hc = [nb[0] + Math.sin(hf) * neckL + hr * 0.2, nb[1] - Math.cos(hf) * neckL - hr * 0.3];
     function headPts() {
       const b = st.brain, p = st.snout, br = st.brow, ch = st.chin, jw = st.jaw, ns = st.nose, bun = st.bun || 0;
@@ -328,18 +330,22 @@
       const ex = 0.42 + 0.2 * st.snout, ey = -0.08;
       ctx.fillStyle = 'rgba(40,18,8,' + (0.16 + 0.24 * st.brow) + ')'; ctx.beginPath(); ctx.ellipse(ex + 0.04, ey - 0.02, 0.24, 0.16, 0, 0, 7); ctx.fill();
       ctx.restore();
-      ctx.strokeStyle = 'rgba(30,15,8,0.45)'; ctx.lineWidth = 1 / hr; ctx.beginPath(); Art.smoothPath(ctx, pts, true); ctx.stroke();
+      ctx.strokeStyle = ol; ctx.lineWidth = LWH / hr; ctx.beginPath(); Art.smoothPath(ctx, pts, true); ctx.stroke();
       /* arcada sprâncenei */
       ctx.strokeStyle = Art.shade(faceC, -0.42); ctx.lineWidth = 0.05 + 0.08 * st.brow; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(ex - 0.2, ey - 0.17 - 0.04 * st.brow); ctx.quadraticCurveTo(ex + 0.05, ey - 0.29 - 0.06 * st.brow, ex + 0.28, ey - 0.15); ctx.stroke();
+      const bu = 0.03 * Math.max(0, -an.gy) * (1 - st.brow * 0.5); ctx.beginPath(); ctx.moveTo(ex - 0.2, ey - 0.17 - 0.04 * st.brow - bu); ctx.quadraticCurveTo(ex + 0.05, ey - 0.29 - 0.06 * st.brow - bu, ex + 0.28, ey - 0.15 - bu); ctx.stroke();
       /* ochiul: pleoapă, iris, lumină mică */
-      const blink = ((t * 0.21 + seed * 0.37) % 1) < 0.025 ? 0.12 : 1;
-      ctx.save(); ctx.beginPath(); ctx.ellipse(ex, ey, 0.1, 0.06 * blink, 0.05, 0, 7); ctx.fillStyle = st.brain > 0.8 ? '#efe6da' : '#cdb8a2'; ctx.fill(); ctx.clip();
-      ctx.fillStyle = st.brain > 0.8 ? '#4a2c18' : '#2a170a'; ctx.beginPath(); ctx.arc(ex + 0.045, ey, 0.058, 0, 7); ctx.fill();
-      ctx.fillStyle = '#0c0603'; ctx.beginPath(); ctx.arc(ex + 0.05, ey, 0.028, 0, 7); ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.beginPath(); ctx.arc(ex + 0.03, ey - 0.02, 0.014, 0, 7); ctx.fill();
+      const blink = Math.max(0.06, an.open * (1 - 0.2 * Math.max(0, an.gy)));
+      const igx = ex + 0.045 + an.gx * 0.022, igy = ey + an.gy * 0.022;
+      ctx.save(); ctx.beginPath(); ctx.ellipse(ex, ey + 0.012 * (1 - blink), 0.1, 0.06 * blink, 0.05, 0, 7); ctx.fillStyle = st.brain > 0.8 ? '#efe6da' : '#cdb8a2'; ctx.fill(); ctx.clip();
+      ctx.fillStyle = st.brain > 0.8 ? '#4a2c18' : '#2a170a'; ctx.beginPath(); ctx.arc(igx, igy, 0.058, 0, 7); ctx.fill();
+      ctx.fillStyle = '#0c0603'; ctx.beginPath(); ctx.arc(igx + 0.005, igy, 0.028, 0, 7); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.beginPath(); ctx.arc(igx - 0.015, igy - 0.02, 0.014, 0, 7); ctx.fill();
+      ctx.fillStyle = 'rgba(40,18,8,0.25)'; ctx.fillRect(ex - 0.12, ey - 0.08, 0.24, 0.035);
       ctx.restore();
-      ctx.strokeStyle = 'rgba(40,18,8,0.7)'; ctx.lineWidth = 0.035; ctx.beginPath(); ctx.ellipse(ex, ey, 0.1, 0.06 * blink, 0.05, Math.PI * 1.05, Math.PI * 1.95); ctx.stroke();
+      /* pleoapa de sus coboară la clipit */
+      if (blink < 0.95) { ctx.fillStyle = Art.shade(faceC, -0.08); ctx.beginPath(); ctx.ellipse(ex, ey + 0.012 * (1 - blink), 0.104, 0.064, 0.05, Math.PI, Math.PI * 2); ctx.ellipse(ex, ey + 0.012 * (1 - blink), 0.104, 0.064 * blink, 0.05, 0, Math.PI, true); ctx.fill(); }
+      ctx.strokeStyle = 'rgba(40,18,8,0.7)'; ctx.lineWidth = 0.035; ctx.beginPath(); ctx.ellipse(ex, ey + 0.012 * (1 - blink), 0.1, 0.06 * blink, 0.05, Math.PI * 1.05, Math.PI * 1.95); ctx.stroke();
       /* nara, buzele, urechea */
       const nsx = 0.62 + 0.3 * st.snout + 0.14 * st.nose;
       ctx.strokeStyle = 'rgba(40,18,8,0.6)'; ctx.lineWidth = 0.04;
@@ -390,12 +396,12 @@
   }
   function paintBg(c, W, H, gy, top, v) {
     const V = VAR[v], sh = Math.max(40, gy - top);
-    const g = c.createLinearGradient(0, top, 0, gy); g.addColorStop(0, V.sky[0]); g.addColorStop(1, V.sky[1]); c.fillStyle = g; c.fillRect(0, 0, W, H);
+    const SKY = Art.SCENE.day, g = c.createLinearGradient(0, top, 0, gy); g.addColorStop(0, SKY[0]); g.addColorStop(1, SKY[1]); c.fillStyle = g; c.fillRect(0, 0, W, H);
     /* munți îndepărtați — o singură siluetă plată */
     const base1 = gy - sh * 0.2, amp1 = sh * 0.3;
     c.beginPath(); c.moveTo(0, gy);
     for (let x = 0; x <= W + 10; x += 10) c.lineTo(x, base1 - amp1 * (0.5 + 0.5 * ridge(1, x, W, 2)));
-    c.lineTo(W, gy); c.closePath(); c.fillStyle = Art.mix(V.far, V.sky[1], 0.35); c.fill();
+    c.lineTo(W, gy); c.closePath(); c.fillStyle = Art.mix(V.far, SKY[1], 0.35); c.fill();
     if (V.snow > 0) {
       const lim = base1 - amp1 * (1 - V.snow * 0.9);
       c.save(); c.clip(); c.fillStyle = 'rgba(255,255,255,0.85)'; c.fillRect(0, 0, W, lim); c.restore();
@@ -438,13 +444,22 @@
         const rowH = clamp((avail * 0.36 - perH - 30) / SP.length, avail > 380 ? 15.5 : 12, 24);
         const rowsEnd = rowY + SP.length * rowH;
         const panelB = rowsEnd + Art.fs(api.unit, 0.05, 13) * 1.9 + 6;
-        const fName = Art.fs(api.unit, 0.045, 13), fH = Math.max(12, fName - 2);
+        const fName = Art.labelSize(api.unit), fH = Math.max(12, fName - 2);
         const groundY = bottom - (fName * 1.8 + fH * 1.3 + 12);
         const gY = Math.max(groundY, panelB + 60);
         lay = { W, top, bottom, labelW, cx0, cw, perY, perH, rowY, rowH, rowsEnd, panelB, groundY: gY, sceneTop: panelB + 6, narrow, fName, fH };
       }
       /* stare animată pentru fiecare specie (apariție, poziție) */
-      const FIG = SP.map(() => ({ p: 0, x: 0, placed: false }));
+      const FIG = SP.map((p, i) => ({ p: 0, x: 0, placed: false, an: { open: 1, ph: -1, wait: 1 + ((i * 0.618) % 1) * 4, gx: 0, gy: 0, tgx: 0, tgy: 0, gw: (i * 0.37) % 1 * 2, tilt: 0, ttilt: 0 } }));
+      /* viața din priviri: clipit la intervale neregulate, privirea și capul se mută lin */
+      function animFig(a, dt, walking) {
+        a.wait -= dt;
+        if (a.wait <= 0 && a.ph < 0) { a.ph = 0; a.wait = Math.random() < 0.15 ? 0.3 : 2.4 + Math.random() * 4; }
+        if (a.ph >= 0) { a.ph += dt / 0.18; a.open = a.ph >= 1 ? 1 : 1 - Math.sin(Math.PI * a.ph); if (a.ph >= 1) a.ph = -1; } else a.open = 1;
+        a.gw -= dt;
+        if (a.gw <= 0) { const r = Math.random(); a.tgx = r < 0.4 ? 0 : Math.random() * 2 - 1; a.tgy = walking ? 0.1 : r < 0.4 ? 0 : Math.random() * 1.6 - 0.8; a.ttilt = walking ? 0 : a.tgy * 0.06 + (Math.random() - 0.5) * 0.04; a.gw = 1.4 + Math.random() * 3; }
+        a.gx = Art.damp(a.gx, a.tgx, 8, dt); a.gy = Art.damp(a.gy, a.tgy, 8, dt); a.tilt = Art.damp(a.tilt, a.ttilt, 2.2, dt);
+      }
       let walk = 0, phase = 0, scroll = 0, lastX = x, pxPerM = 0, fireA = 0, hits = [];
       api.pointer({
         down: (px, py) => {
@@ -470,7 +485,7 @@
       let lastInfo = '';
       function frame(dt, t) {
         if (play) { x = Math.min(1, x + dt * 0.04); sl.set(x); if (x >= 1) { play = false; bP.innerHTML = '↺ De la început'; } }
-        measure(); layout();
+        measure(); layout(); LWH = Math.max(0.8, Art.lineW(api.unit) * 0.6);
         const L = lay, age = ageOf(x), X = (a) => L.cx0 + L.cw * xOf(a);
         /* mers când timpul curge, respirație când stă */
         const moving = Math.abs(x - lastX) > 1e-6 || play; lastX = x;
@@ -524,9 +539,10 @@
           f.p = Art.damp(f.p, on ? 1 : 0, 4, dt); if (on) f.x = Art.damp(f.x, f.tx, 5, dt);
           if (f.p < 0.01) { f.placed = false; return; }
           const s = p.h * pxPerM, e = Art.ease.out(f.p), isSel = sel === p;
+          animFig(f.an, dt, walk > 0.3);
           ctx.fillStyle = isSel ? 'rgba(255,209,102,' + 0.7 * e + ')' : 'rgba(0,0,0,' + 0.18 * e + ')'; ctx.beginPath(); ctx.ellipse(f.x + s * 0.03, L.groundY + 2, s * 0.22, s * 0.035, 0, 0, 7); ctx.fill();
           ctx.save(); ctx.globalAlpha = e; ctx.translate(f.x, L.groundY + (1 - e) * 12);
-          drawHominin(ctx, ST[i], s, t, walk, phase + i * 1.7, modern && i === 11);
+          drawHominin(ctx, ST[i], s, t, walk, phase + i * 1.7, modern && i === 11, f.an);
           ctx.restore();
           hits.push({ i, x: f.x, w: Math.max(18, s * 0.28), y0: L.groundY - s * 1.05, y1: L.groundY + L.fName * 2 });
         });
@@ -539,24 +555,24 @@
           const f = FIG[i], a = Art.ease.out(f.p);
           ctx.save(); ctx.globalAlpha = a;
           const yN = L.groundY + 8 + L.fName * 0.9 + (crowded ? (k % 2) * (L.fName * 1.75) : 0);
-          Art.label(ctx, (L.narrow || crowded) ? ST[i].short : p.n.split(' (')[0], f.x, yN, { size: L.fName, bg: sel === p ? 'rgba(255,209,102,0.92)' : 'rgba(12,14,24,0.72)', color: sel === p ? '#2a1a05' : '#fff', border: Art.rgba(p.c, 0.8) });
+          Art.label(ctx, (L.narrow || crowded) ? ST[i].short : p.n.split(' (')[0], f.x, yN, { size: L.fName, bg: sel === p ? 'rgba(255,209,102,0.92)' : Art.LABEL_BG, color: sel === p ? '#2a1a05' : '#fff', border: Art.rgba(p.c, 0.8) });
           if (!crowded) Art.text(ctx, fmt(p.h, 2) + ' m', f.x, yN + L.fName * 1.45, { size: L.fH, color: 'rgba(255,248,230,0.95)', halo: false });
           else Art.text(ctx, fmt(p.h, 2) + ' m', f.x, L.groundY - p.h * pxPerM - L.fH * 0.9, { size: L.fH, color: 'rgba(255,248,230,0.95)', halo: false });
           ctx.restore();
         });
-        if (!n) Art.label(ctx, 'Pe vremea aceea încă nu existau strămoși ai omului cunoscuți.', L.W / 2, L.groundY - sceneH * 0.45, { size: Art.fs(api.unit, 0.045, 13), bg: 'rgba(20,24,36,0.75)', border: false });
+        if (!n) Art.label(ctx, 'Pe vremea aceea încă nu existau strămoși ai omului cunoscuți.', L.W / 2, L.groundY - sceneH * 0.45, { size: Art.labelSize(api.unit), bg: Art.LABEL_BG, border: false });
 
         /* ----- cronologia (panou de sticlă deasupra cerului) ----- */
         ctx.fillStyle = '#17151f'; Art.roundRectPath(ctx, 6, L.top, L.W - 12, L.panelB - L.top, 14); ctx.fill();
-        const fRow = clamp(L.rowH * 0.78, 10.5, 15);
+        const fRow = clamp(L.rowH * 0.78, 12, 15);
         /* perioade */
-        Art.text(ctx, 'perioade', L.labelW, L.perY + L.perH / 2, { size: Math.max(11, fRow - 1), align: 'right', color: 'rgba(255,240,210,0.75)', halo: false, weight: 600 });
+        Art.text(ctx, 'perioade', L.labelW, L.perY + L.perH / 2, { size: Math.max(12, fRow - 1), align: 'right', color: 'rgba(255,240,210,0.75)', halo: false, weight: 600 });
         PER.forEach((p) => {
           const x0 = X(p[1]), x1 = X(p[2]), w = Math.max(2, x1 - x0 - 1.5);
           ctx.save(); Art.roundRectPath(ctx, x0, L.perY, w, L.perH, Math.min(7, w / 2));
           ctx.fillStyle = p[3]; ctx.fill(); ctx.restore();
           ctx.save(); ctx.font = Art.font(Math.max(12, fRow - 2), 700); const tw = ctx.measureText(p[0]).width; ctx.restore();
-          if (tw + 8 < w) Art.text(ctx, p[0], x0 + w / 2, L.perY + L.perH / 2 + 0.5, { size: Math.max(11, fRow - 2), halo: false, color: '#fff' });
+          if (tw + 8 < w) Art.text(ctx, p[0], x0 + w / 2, L.perY + L.perH / 2 + 0.5, { size: Math.max(12, fRow - 2), halo: false, color: '#fff' });
         });
         /* grila de timp, foarte discretă */
         ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1; ctx.beginPath();
@@ -579,7 +595,7 @@
         ctx.save(); ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(cxp, L.perY - 3); ctx.lineTo(cxp, L.rowsEnd + 2); ctx.stroke(); ctx.restore();
         ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(cxp, L.perY - 2, 4.5, 0, 7); ctx.fill();
-        const fl = Art.fs(api.unit, 0.05, 13);
+        const fl = Art.labelSize(api.unit);
         ctx.save(); ctx.font = Art.font(fl, 800); const lw = ctx.measureText(ageText(age)).width + fl * 1.1; ctx.restore();
         Art.label(ctx, ageText(age), clamp(cxp, 14 + lw / 2, L.W - 14 - lw / 2), L.rowsEnd + fl * 0.95 + 2, { size: fl, bg: 'rgba(255,209,102,0.95)', color: '#2a1a05', weight: 800, tx: cxp, ty: L.rowsEnd + 2, lineColor: '#ffd166' });
 

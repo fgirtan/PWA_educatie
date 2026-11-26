@@ -58,7 +58,7 @@
       const vOf = () => { const u = uOf(), F = fp(); return F * u / (u - F); };
 
       /* fundaluri în cache */
-      const studioBg = () => A.cached('cam-studio', api.W, api.H, (c, w, h) => { A.backdrop(c, w, h, { top: '#1a2444', bottom: '#0e1428', vignette: false }); });
+      const studioBg = () => A.cached('cam-studio-lab', api.W, api.H, (c, w, h) => { A.scene(c, w, h, 'lab'); });
       /* poza cu lumânarea (clară); estomparea se face la desen */
       const candlePhoto = (pw, ph) => A.cached('cam-candle-photo', pw, ph, (c, w, h) => {
         const g = c.createRadialGradient(w * 0.5, h * 0.42, 0, w * 0.5, h * 0.5, w * 0.8); g.addColorStop(0, '#6a4424'); g.addColorStop(0.5, '#2a1a14'); g.addColorStop(1, '#0c0808'); c.fillStyle = g; c.fillRect(0, 0, w, h);
@@ -73,7 +73,7 @@
         const yCenAt = (x) => cy + (iy - cy) / (ix - cx) * (x - cx);                       // raza prin centru
         const sx = cx + s, blur = Math.abs(yTopAt(sx) - yCenAt(sx)) * 0.5;
         blurS = A.damp(blurS, blur, 12, dt);
-        const lab = Math.max(12, A.fs(U, 0.045, 12));
+        const lab = Math.max(12, A.fs(U, 0.045, 12)), LS = A.labelSize(U);
         /* corpul aparatului, în secțiune */
         const bx0 = cx - U * 0.16, bx1 = cx + 2.1 * F + U * 0.14, by0 = cy - U * 0.6, by1 = cy + U * 0.6;
         ctx.save();
@@ -83,7 +83,7 @@
         const hx = bx1 - (bx1 - bx0) * 0.55; ctx.beginPath(); ctx.moveTo(hx - U * 0.2, by0); ctx.lineTo(hx - U * 0.12, by0 - U * 0.12); ctx.lineTo(hx + U * 0.12, by0 - U * 0.12); ctx.lineTo(hx + U * 0.2, by0); ctx.fillStyle = 'rgba(60,70,100,0.4)'; ctx.fill(); ctx.strokeStyle = 'rgba(170,190,230,0.35)'; ctx.lineWidth = 1.5; ctx.stroke();
         A.sphere(ctx, bx1 - U * 0.12, by0 - U * 0.025, U * 0.035, '#c9d2e2', { rim: false });
         ctx.restore();
-        txt(ctx, 'aparatul foto (în secțiune)', (bx0 + bx1) / 2, by1 + lab * 1.1, { size: lab * 0.9, color: 'rgba(200,215,255,0.7)', weight: 600 });
+        A.label(ctx, 'aparatul foto (în secțiune)', (bx0 + bx1) / 2, by1 + LS * 1.2, { size: LS, bg: A.LABEL_BG, color: 'rgba(200,215,255,0.85)', weight: 600 });
         /* axa optică */
         ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 1.2; ctx.setLineDash([6, 6]); ctx.beginPath(); ctx.moveTo(ox - 50, cy); ctx.lineTo(Math.max(sx, ix) + U * 0.3, cy); ctx.stroke(); ctx.setLineDash([]);
         /* subiectul: o lumânare */
@@ -115,12 +115,12 @@
         ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.beginPath(); ctx.ellipse(cx - lw * 0.3, cy - LH * 0.55, 2.2, 5, 0, 0, TAU); ctx.fill();
         ctx.restore();
         [cy - LH * 1.06 - 12, cy + LH * 1.06 - 2].forEach((yy) => A.cylinder(ctx, cx - lw - 8, yy, lw * 2 + 16, 14, '#5b6577'));
-        txt(ctx, 'lentila', cx, cy - LH * 1.06 - lab * 1.4, { size: lab, color: '#bfe3ff' });
+        A.label(ctx, 'lentila', cx, cy - LH * 1.06 - LS * 1.6, { size: LS, bg: A.LABEL_BG, color: '#bfe3ff' });
         /* focarele */
         for (const sg of [-1, 1]) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx + sg * F, cy, 3.5, 0, TAU); ctx.fill(); txt(ctx, 'F', cx + sg * F, cy + lab * 1.3, { size: lab }); }
         /* imaginea (răsturnată) — unde s-ar forma clar */
         ctx.save(); ctx.translate(ix, cy); ctx.scale(1, -1); candle(ctx, hi, t, 0.55); ctx.restore();
-        txt(ctx, 'imagine (răsturnată)', ix, iy + lab * 1.5, { size: lab, color: '#7dffb0' });
+        { const lt = 'imagine (răsturnată)'; ctx.save(); ctx.font = A.font(LS, 700); const lw2 = ctx.measureText(lt).width + LS * 1.1; ctx.restore(); /* lângă senzor, nu peste el — dar în ecran */ A.label(ctx, lt, Math.min(Math.max(ix, cx + s) + 14, api.freeW - 8 - lw2), iy + LS * 1.6, { size: LS, bg: A.LABEL_BG, color: '#7dffb0', align: 'left' }); }
         /* senzorul */
         const sh = U * 0.9;
         ctx.save();
@@ -130,7 +130,7 @@
         ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 1; for (let y = cy - sh / 2 + 6; y < cy + sh / 2; y += 6) { ctx.beginPath(); ctx.moveTo(sx - 5, y); ctx.lineTo(sx + 5, y); ctx.stroke(); }
         ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 1.5; rrect(ctx, sx - 5, cy - sh / 2, 10, sh, 3); ctx.stroke();
         ctx.restore();
-        A.label(ctx, 'senzor', sx, cy - sh / 2 - lab * 1.4, { size: lab, color: '#ffd166' });
+        A.label(ctx, 'senzor', sx, cy - sh / 2 - LS * 1.4, { size: LS, bg: A.LABEL_BG, color: '#ffd166' });
         /* pata de lumină pe senzor: mică = clar, mare = neclar */
         const spotY = yCenAt(sx), spotR = Math.max(3, blurS + 3);
         A.glow(ctx, sx, spotY, spotR * 2.2, '#ffd166', clamp(0.9 - blurS / 40, 0.3, 0.9));
@@ -216,14 +216,14 @@
         else { ctx.fillStyle = 'rgba(255,255,255,' + clamp((B - 1) * 0.28, 0, 0.92) + ')'; ctx.fillRect(fx, fy, fw, fh); }
         /* zgomot ∝ ISO (textură pre-randată, mutată aleator la fiecare cadru) */
         const grain = clamp((iso - 100) / 3100, 0, 1) * 0.9;
-        if (grain > 0) for (const dark of [false, true]) { ctx.globalAlpha = grain * (dark ? 0.8 : 1); ctx.fillStyle = ctx.createPattern(noiseTex(dark), 'repeat'); const ox = Math.random() * 256, oy = Math.random() * 256; ctx.translate(ox, oy); ctx.fillRect(fx - ox, fy - oy, fw, fh); ctx.translate(-ox, -oy); }
+        if (grain > 0) for (const dark of [false, true]) { ctx.globalAlpha = grain * (dark ? 0.8 : 1); ctx.fillStyle = ctx.createPattern(noiseTex(dark), 'repeat'); const fr = Math.floor(t * 30), ox = (fr * 97 + (dark ? 131 : 0)) % 256, oy = (fr * 61 + (dark ? 77 : 0)) % 256; /* după timpul modulului: la pauză, zgomotul stă pe loc */ ctx.translate(ox, oy); ctx.fillRect(fx - ox, fy - oy, fw, fh); ctx.translate(-ox, -oy); }
         ctx.globalAlpha = 1;
         /* reflexie pe sticla ecranului */
         const rg = ctx.createLinearGradient(fx, fy, fx + fw * 0.6, fy + fh); rg.addColorStop(0, 'rgba(255,255,255,0.12)'); rg.addColorStop(0.35, 'rgba(255,255,255,0.03)'); rg.addColorStop(0.36, 'rgba(255,255,255,0)'); ctx.fillStyle = rg; ctx.fillRect(fx, fy, fw, fh);
         ctx.restore();
-        rrect(ctx, fx, fy, fw, fh, 10); ctx.strokeStyle = '#0a0b10'; ctx.lineWidth = 3; ctx.stroke();
+        rrect(ctx, fx, fy, fw, fh, 10); ctx.strokeStyle = A.ink('#3a3f4c'); ctx.lineWidth = A.lineW(U) * 1.5; ctx.stroke();
         const lab = B < 0.55 ? ['Prea întunecată (subexpusă)', '#ff9a7a'] : B > 2 ? ['Prea luminoasă (supraexpusă)', '#ff9a7a'] : ['Expunere bună ✓', '#7dffb0'];
-        A.label(ctx, lab[0], W / 2, cy0 + ch + Math.max(22, A.fs(U, 0.07, 22)), { size: Math.max(14, A.fs(U, 0.055, 14)), color: lab[1] });
+        A.label(ctx, lab[0], W / 2, cy0 + ch + Math.max(22, A.fs(U, 0.07, 22)), { size: A.labelSize(U), bg: A.LABEL_BG, color: lab[1] });
         const eff = []; if (N < 5) eff.push('fundal neclar (diafragmă deschisă)'); if (shut <= 30) eff.push('mașina e „ștearsă” (timp lung)'); if (iso >= 1600) eff.push('zgomot (ISO mare)'); if (!eff.length) eff.push('poză clară, fără efecte');
         info2.innerHTML = '<b>Efecte:</b> ' + eff.join(' · ');
       }

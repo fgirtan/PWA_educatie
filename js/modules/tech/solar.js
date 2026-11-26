@@ -61,7 +61,7 @@
         const rg = ctx.createLinearGradient(0, hy - hh - roofH, 0, hy - hh); rg.addColorStop(0, '#b4533a'); rg.addColorStop(1, '#8a3a2a'); ctx.fillStyle = rg; ctx.fill(); ctx.clip();
         ctx.strokeStyle = 'rgba(60,20,10,0.35)'; ctx.lineWidth = 1; for (let y = hy - hh - roofH + 6; y < hy - hh; y += Math.max(5, roofH / 7)) { ctx.beginPath(); ctx.moveTo(hxl - hw * 0.1, y); ctx.lineTo(hxl + hw * 1.1, y); ctx.stroke(); }
         ctx.restore();
-        ctx.strokeStyle = '#6a2a1e'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(hxl - hw * 0.08, hy - hh); ctx.lineTo(hx, hy - hh - roofH); ctx.lineTo(hxl + hw * 1.08, hy - hh); ctx.stroke();
+        ctx.strokeStyle = A.ink('#8a3a2a'); ctx.lineWidth = A.lineW(U) * 1.5; ctx.beginPath(); ctx.moveTo(hxl - hw * 0.08, hy - hh); ctx.lineTo(hx, hy - hh - roofH); ctx.lineTo(hxl + hw * 1.08, hy - hh); ctx.stroke();
         /* ușa */
         const dw = hw * 0.14, dh = hh * 0.55, dx = hx - dw / 2;
         rrect(ctx, dx, hy - dh, dw, dh, dw * 0.12); const dg = ctx.createLinearGradient(dx, 0, dx + dw, 0); dg.addColorStop(0, '#7a5236'); dg.addColorStop(1, '#5a3a24'); ctx.fillStyle = dg; ctx.fill();
@@ -126,11 +126,12 @@
         bat = clamp(bat + (P - LOAD) * hrs / CAP, 0, 1); energy += P * hrs;
         batShown = A.damp(batShown, bat, 6, dt);
         hist[Math.round(hour * 10)] = P;
-        /* cer: noapte → răsărit (cald) → zi */
+        /* cer: noapte → răsărit (cald) → zi — culorile comune ale scenelor în aer liber (Art.SCENE night/dusk/day) */
+        const SN = A.SCENE.night.map(A.hex), SD = A.SCENE.dusk.map(A.hex), SY = A.SCENE.day.map(A.hex);
         const day = clamp(Math.sin(b) * 1.4 + 0.1, 0, 1), dusk = sn.up ? clamp(1 - Math.abs(Math.sin(b)) * 3.2, 0, 1) : 0;
         const hy = api.cy + U * 0.2;
         const sky = ctx.createLinearGradient(0, 0, 0, hy);
-        sky.addColorStop(0, mix([12, 18, 44], [70, 130, 205], day)); sky.addColorStop(1, mix(mix2([20, 28, 60], [240, 170, 120], dusk), [200, 226, 245], day));
+        sky.addColorStop(0, mix(mix2(SN[0], SD[0], dusk), SY[0], day)); sky.addColorStop(1, mix(mix2(SN[1], SD[1], dusk), SY[1], day));
         ctx.fillStyle = sky; ctx.fillRect(0, 0, api.W, hy + 2);
         if (day < 0.6) { ctx.save(); ctx.globalAlpha = 1 - day / 0.6; ctx.drawImage(starField(), 0, 0, api.W, api.H); ctx.restore(); }
         if (!sn.up) { const mx = W * 0.8, my = api.cy - U * 0.55, mr = clamp(U * 0.06, 12, 24); ctx.fillStyle = '#ece8d8'; ctx.beginPath(); ctx.arc(mx, my, mr, 0, TAU); ctx.fill(); ctx.fillStyle = 'rgba(160,155,140,0.35)'; for (const [dx, dy, r] of [[-0.3, -0.2, 0.22], [0.25, 0.1, 0.16], [-0.05, 0.4, 0.12]]) { ctx.beginPath(); ctx.arc(mx + dx * mr, my + dy * mr, r * mr, 0, TAU); ctx.fill(); } }
@@ -173,9 +174,9 @@
         if (P > 5) { ctx.fillStyle = '#7ec8ff'; ctx.strokeStyle = '#1f4f80'; ctx.lineWidth = 1; for (let i = 0; i < 6; i++) { const u = (((i / 6 + t * 0.5 * (0.3 + P / PMAX)) % 1)); const y = u < 0.5 ? lerp(py + 8, hy - hh - 4, u * 2) : lerp(hy - hh - 4, hy + 10, (u - 0.5) * 2); ctx.beginPath(); ctx.arc(u < 0.5 ? px : hxl + hw + 4, y, 3, 0, TAU); ctx.fill(); ctx.stroke(); } }
         /* baterie */
         battery(bx, by, bw, bh, clamp(batShown, 0, 1));
-        const lab = Math.max(12, A.fs(U, 0.042, 12));
-        txt(ctx, 'baterie ' + Math.round(bat * 100) + '%', bx, by + bh / 2 + lab * 1.1, { size: lab, color: '#fff', weight: 700 });
-        A.label(ctx, 'panou solar', px, py - ph - lab, { size: lab, bg: 'rgba(15,22,45,0.7)' });
+        const lab = A.labelSize(U);
+        A.label(ctx, 'baterie ' + Math.round(bat * 100) + '%', bx, by + bh / 2 + lab * 1.3, { size: lab, bg: A.LABEL_BG, color: '#fff', weight: 700 });
+        A.label(ctx, 'panou solar', px, py - ph - lab, { size: lab, bg: A.LABEL_BG });
         /* grafic: puterea produsă în timpul zilei */
         const gw = Math.min(W - 30, 360), gx = 14, gy = api.cy - U + 8, gh = 52;
         A.panel(ctx, gx, gy, gw, gh + 24, { r: 10, bg: 'rgba(10,16,36,0.82)' });

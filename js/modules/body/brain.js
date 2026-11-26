@@ -58,7 +58,7 @@
             if (sel !== prev) selT = 0;
             if (sel) api.say('<b>' + REG[sel].n + '.</b> ' + REG[sel].t, 14000);
           } else if (mode === 'reflex') {
-            if (rf.s === 'idle' || rf.s === 'result' || rf.s === 'early') { rf.s = 'wait'; rf.delay = 1.5 + Math.random() * 2.8; rf.t0 = performance.now(); }
+            if (rf.s === 'idle' || rf.s === 'result' || rf.s === 'early') { rf.s = 'wait'; rf.delay = 1.5 + Math.random() * 2.8; rf.w = 0; }
             else if (rf.s === 'wait') { rf.s = 'early'; }
             else if (rf.s === 'go') { rf.ms = performance.now() - rf.t0; rf.s = 'result'; if (!rf.best || rf.ms < rf.best) rf.best = rf.ms; api.say(rf.ms < 200 ? '🚀 <b>' + Math.round(rf.ms) + ' ms</b> — foarte rapid!' : rf.ms < 300 ? '✅ <b>' + Math.round(rf.ms) + ' ms</b> — un timp bun. Media oamenilor e ~250 ms.' : '<b>' + Math.round(rf.ms) + ' ms</b>. Încearcă din nou — oboseala îți încetinește reflexele!', 7000); }
           } else {
@@ -87,13 +87,13 @@
           /* trunchiul cerebral */
           c.beginPath(); c.moveTo(bx + U * 0.02, oy + U * 0.42); c.bezierCurveTo(bx + U * 0.0, oy + U * 0.62, bx + U * 0.07, oy + U * 0.8, bx + U * 0.08, oy + U * 0.94);
           c.lineTo(bx + U * 0.17, oy + U * 0.94); c.bezierCurveTo(bx + U * 0.17, oy + U * 0.78, bx + U * 0.22, oy + U * 0.6, bx + U * 0.22, oy + U * 0.45); c.closePath();
-          A.volumeFill(c, bx, 0, bx + U * 0.22, 0, '#d8b2ae', { hi: 0.2, lo: 0.35 }); c.strokeStyle = 'rgba(110,60,65,0.7)'; c.lineWidth = 1.5; c.stroke();
+          A.volumeFill(c, bx, 0, bx + U * 0.22, 0, '#d8b2ae', { hi: 0.2, lo: 0.35 }); c.strokeStyle = A.ink('#d8b2ae'); c.lineWidth = A.lineW(U); c.stroke();
           c.strokeStyle = 'rgba(110,60,65,0.35)'; c.lineWidth = 1; for (let i = 0; i < 4; i++) { const yy = oy + U * (0.5 + i * 0.1); c.beginPath(); c.moveTo(bx + U * 0.05, yy); c.quadraticCurveTo(bx + U * 0.12, yy + U * 0.02, bx + U * 0.2, yy); c.stroke(); }
           /* cerebelul, cu foliile fine */
           const ex = bx + U * 0.5, ey = oy + U * 0.58, erx = U * 0.32, ery = U * 0.24;
           c.beginPath(); c.ellipse(ex, ey, erx, ery, -0.08, 0, TAU);
           const cg = c.createRadialGradient(ex - erx * 0.35, ey - ery * 0.45, 2, ex, ey, erx); cg.addColorStop(0, '#f0c9c4'); cg.addColorStop(0.6, '#d69c9c'); cg.addColorStop(1, '#a8696e');
-          c.fillStyle = cg; c.fill(); c.strokeStyle = 'rgba(105,45,55,0.8)'; c.lineWidth = 2; c.stroke();
+          c.fillStyle = cg; c.fill(); c.strokeStyle = A.ink('#d69c9c'); c.lineWidth = A.lineW(U); c.stroke();
           c.save(); c.beginPath(); c.ellipse(ex, ey, erx, ery, -0.08, 0, TAU); c.clip();
           for (let i = 1; i < 13; i++) { const yy = ey - ery + i * ery * 2 / 13; c.beginPath(); c.moveTo(ex - erx * 1.05, yy + ery * 0.25); c.quadraticCurveTo(ex, yy - ery * 0.35 + Math.sin(i * 1.7) * 2, ex + erx * 1.05, yy + ery * 0.2); c.strokeStyle = 'rgba(105,45,55,0.5)'; c.lineWidth = 1.3; c.stroke(); c.save(); c.translate(0, -1.5); c.strokeStyle = 'rgba(255,230,225,0.3)'; c.lineWidth = 1; c.stroke(); c.restore(); }
           c.restore();
@@ -128,7 +128,7 @@
           /* umbră pe marginea de jos (volum) */
           const sh = c.createLinearGradient(0, by + ry * 0.2, 0, by + ry); sh.addColorStop(0, 'rgba(80,20,30,0)'); sh.addColorStop(1, 'rgba(80,20,30,0.3)'); c.fillStyle = sh; c.fillRect(bx - rx, by, rx * 2, ry);
           c.restore();
-          brainOutline(c, bx, by, rx, ry); c.strokeStyle = 'rgba(100,40,50,0.85)'; c.lineWidth = 2; c.stroke();
+          brainOutline(c, bx, by, rx, ry); c.strokeStyle = A.ink('#e4aeaa'); c.lineWidth = A.lineW(U) * 1.3; c.stroke();
         });
         return { tex: tex, w: w, h: h, bx: bx, by: by, rx: rx, ry: ry };
       }
@@ -146,7 +146,7 @@
       function frame(dt, t) {
         selT += dt;
         const U = api.unit, cx = api.cx, cy = api.cy;
-        A.backdrop(ctx, api.W, api.H, { top: '#161a2e', bottom: '#0b0d18', vignette: false });
+        A.scene(ctx, api.W, api.H, 'body');
         if (mode === 'zones') {
           const by = cy - U * 0.08, rx = U * 0.95, ry = U * 0.66;
           const X = (nx) => cx + nx * rx, Y = (ny) => by + ny * ry;
@@ -180,14 +180,14 @@
             ctx.restore();
           }
           /* etichete */
-          const fsz = A.fs(U, 0.045, 13);
-          const lab = (id, s, x, y) => A.label(ctx, s, x, y, { size: fsz, bg: sel === id ? A.rgba(A.shade(REG[id].c, -0.55), 0.92) : 'rgba(20,16,30,0.72)', border: sel === id ? A.rgba(REG[id].c, 0.9) : 'rgba(255,255,255,0.15)' });
+          const fsz = A.labelSize(U);
+          const lab = (id, s, x, y) => A.label(ctx, s, x, y, { size: fsz, bg: A.LABEL_BG, border: sel === id ? A.rgba(REG[id].c, 0.9) : 'rgba(255,255,255,0.15)' });
           lab('frontal', 'frontal', cx - rx * 0.6, by - ry * 0.25); lab('parietal', 'parietal', cx + rx * 0.15, by - ry * 0.45); lab('occipital', 'occipital', cx + rx * 0.76, by); lab('temporal', 'temporal', cx - rx * 0.1, by + ry * 0.55); lab('cerebel', 'cerebel', cx + U * 0.5, cy + U * 0.64); lab('stem', 'trunchi', cx + U * 0.12, cy + U * 0.95);
           A.arrow(ctx, Math.max(46, cx - rx * 0.78), by - ry - 6, Math.max(10, cx - rx - 4), by - ry - 6, { color: 'rgba(255,255,255,0.75)', width: 2 });
           A.text(ctx, 'față', Math.max(52, cx - rx * 0.72), by - ry - 6, { size: A.fs(U, 0.038, 12), align: 'left', halo: false, color: 'rgba(255,255,255,0.85)' });
           info.innerHTML = sel ? '<b>' + REG[sel].n + '</b>' : 'Atinge o zonă a creierului.';
         } else if (mode === 'reflex') {
-          if (rf.s === 'wait' && (performance.now() - rf.t0) / 1000 > rf.delay) { rf.s = 'go'; rf.t0 = performance.now(); }
+          if (rf.s === 'wait') { rf.w = (rf.w || 0) + dt; if (rf.w > rf.delay) { rf.s = 'go'; rf.t0 = performance.now(); } }   // așteptarea urmează timpul modulului (pauză/încetinire); reacția se măsoară în timp real
           const col = rf.s === 'go' ? '#2fae57' : rf.s === 'wait' ? '#c9443c' : rf.s === 'early' ? '#d39a36' : '#3a5aa8';
           const w = Math.min(api.freeW - 32, U * 2), h = U * 1.2;
           A.roundRectPath(ctx, cx - w / 2, cy - h / 2, w, h, 24); A.volumeFill(ctx, 0, cy - h / 2, 0, cy + h / 2, col, { hi: 0.12, lo: 0.18 });
@@ -208,7 +208,7 @@
             ctx.strokeStyle = L > 0.5 ? '#ffffff' : 'rgba(255,255,255,0.12)'; ctx.lineWidth = L > 0.5 ? 4 : 1.5; ctx.stroke();
           }
           const ty = cy - api.unit * 1.0 - 4 < 90 ? 96 : cy - api.unit * 1.0 - 4;
-          A.label(ctx, mem.state === 'idle' ? 'Atinge ecranul ca să începi' : mem.state === 'over' ? 'Joc terminat · atinge ca să reîncepi' : mem.state === 'show' ? 'Uită-te…' : mem.state === 'input' ? 'Acum tu!' : 'Bravo!', cx, ty, { size: A.fs(U, 0.05, 16), weight: 800, bg: 'rgba(10,14,30,0.88)' });
+          A.label(ctx, mem.state === 'idle' ? 'Atinge ecranul ca să începi' : mem.state === 'over' ? 'Joc terminat · atinge ca să reîncepi' : mem.state === 'show' ? 'Uită-te…' : mem.state === 'input' ? 'Acum tu!' : 'Bravo!', cx, ty, { size: A.labelSize(U), weight: 800, bg: A.LABEL_BG });
           info.innerHTML = 'Rundă: <b>' + (mem.seq.length || 0) + '</b> · scor: <b>' + mem.score + '</b> · cel mai bun: <b>' + mem.best + '</b>';
         }
       }

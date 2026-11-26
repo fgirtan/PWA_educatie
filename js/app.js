@@ -188,9 +188,9 @@ const ATMO = {
 const ROT_H = { sun: 609, mercury: 1407, venus: -5832, earth: 24, moon: 655, jupiter: 9.9, saturn: 10.7, uranus: -17.2, neptune: 16.1, pluto: -153 };
 function globeSize(r) {
   const need = r * 2 * DPR;
-  const sizes = [32, 64, 128, 192, 288, 416, 512];
+  const sizes = [32, 64, 128, 192, 288, 416, 512, 768, 1024];   // 768/1024: planete mari pe ecrane mari (proiector)
   for (const s of sizes) if (need <= s * 1.1) return s;
-  return 512;
+  return 1024;
 }
 function bodyTurns(b) {
   if (b.id === 'mars') return 0;       // traseele roboților sunt desenate pe fața din față

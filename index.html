@@ -11,8 +11,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-<link rel="stylesheet" href="css/style.css?v=44">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="css/style.css?v=46">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -39,6 +39,7 @@
     <symbol id="i-zoomto" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M15.5 15.5 20 20M10.5 7.8v5.4M7.8 10.5h5.4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
     <symbol id="i-follow" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></symbol>
     <symbol id="i-text" viewBox="0 0 24 24"><path d="M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5h-7.5L7 20.5v-4H5A1.5 1.5 0 0 1 3.5 15V6A1.5 1.5 0 0 1 5 4.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M7.5 9h9M7.5 12.2h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-laser" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.6" fill="currentColor"/><circle cx="12" cy="12" r="7.6" fill="none" stroke="currentColor" stroke-width="1.8" opacity=".55"/><path d="M12 1.8v3M12 19.2v3M1.8 12h3M19.2 12h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
     <symbol id="i-skip" viewBox="0 0 24 24"><path d="M6 6l7 6-7 6zM15 6l7 6-7 6z" fill="currentColor"/></symbol>
     <symbol id="i-logo" viewBox="0 0 48 48"><defs><radialGradient id="lg-p" cx="35%" cy="32%" r="75%"><stop offset="0" stop-color="#d7ccff"/><stop offset=".45" stop-color="#8b7bff"/><stop offset="1" stop-color="#2a1d8f"/></radialGradient><linearGradient id="lg-r" x1="0" x2="1"><stop offset="0" stop-color="#ffd166" stop-opacity=".2"/><stop offset=".5" stop-color="#ffd166"/><stop offset="1" stop-color="#ff8fa3" stop-opacity=".3"/></linearGradient></defs><circle cx="24" cy="24" r="13" fill="url(#lg-p)"/><ellipse cx="24" cy="24" rx="22" ry="7" transform="rotate(-22 24 24)" fill="none" stroke="url(#lg-r)" stroke-width="3"/><path d="M11.5 20.5a13 13 0 0 1 25 0" fill="url(#lg-p)"/><circle cx="40" cy="9" r="2.2" fill="#fff"/><circle cx="7" cy="38" r="1.4" fill="#fff" opacity=".7"/></symbol>
   </defs>
@@ -394,6 +395,17 @@
     <button id="mod-full" class="icon" title="Ecran complet (F)" aria-label="Ecran complet"><svg class="i" aria-hidden="true"><use href="#i-full"/></svg></button>
   </header>
   <div id="mod-info" role="status" aria-live="polite"></div>
+  <div id="mod-tools" role="toolbar" aria-label="Unelte: pauză, viteză, zoom, indicator">
+    <button id="mt-more" class="icon" title="Unelte" aria-label="Arată uneltele"><svg class="i" aria-hidden="true"><use href="#i-catalog"/></svg></button>
+    <button id="mt-play" class="icon" title="Pauză / pornește (Space)" aria-label="Pune pauză"><svg class="i" aria-hidden="true"><use href="#i-pause"/></svg></button>
+    <button id="mt-speed" class="icon" title="Viteza animației (S)" aria-label="Viteza animației">1×</button>
+    <span class="mt-sep"></span>
+    <button id="mt-zin" class="icon mt-z" title="Mărește (+)" aria-label="Mărește"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button>
+    <button id="mt-zout" class="icon mt-z" title="Micșorează (−)" aria-label="Micșorează"><svg class="i" aria-hidden="true"><use href="#i-minus"/></svg></button>
+    <button id="mt-zreset" class="icon mt-z hidden" title="Mărime normală (0)" aria-label="Mărime normală"><svg class="i" aria-hidden="true"><use href="#i-reset"/></svg></button>
+    <span class="mt-sep"></span>
+    <button id="mt-laser" class="icon" title="Indicator pentru proiector (P)" aria-label="Indicator pentru proiector" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-laser"/></svg></button>
+  </div>
   <div id="mod-panel"></div>
 </section>
 
@@ -541,42 +553,42 @@
   </div>
 </main>
 
-<script src="js/data.js?v=44"></script>
-<script src="js/data-extra.js?v=44"></script>
-<script src="js/textures.js?v=44"></script>
-<script src="js/sky.js?v=44"></script>
-<script src="js/app.js?v=44"></script>
-<script src="js/core/art.js?v=44"></script>
-<script src="js/core/creatures.js?v=44"></script>
-<script src="js/core/modules.js?v=44"></script>
-<script src="js/core/ux.js?v=44"></script>
-<script src="js/modules/body/brain.js?v=44"></script>
-<script src="js/modules/body/digestion.js?v=44"></script>
-<script src="js/modules/body/heart.js?v=44"></script>
-<script src="js/modules/body/lungs.js?v=44"></script>
-<script src="js/modules/body/skeleton.js?v=44"></script>
-<script src="js/modules/earth/civ.js?v=44"></script>
-<script src="js/modules/earth/earthtime.js?v=44"></script>
-<script src="js/modules/earth/human.js?v=44"></script>
-<script src="js/modules/earth/layers.js?v=44"></script>
-<script src="js/modules/earth/lifeevo.js?v=44"></script>
-<script src="js/modules/earth/ocean.js?v=44"></script>
-<script src="js/modules/earth/relief.js?v=44"></script>
-<script src="js/modules/earth/volcano.js?v=44"></script>
-<script src="js/modules/mechanics/engine.js?v=44"></script>
-<script src="js/modules/mechanics/mechanics.js?v=44"></script>
-<script src="js/modules/space/bigbang.js?v=44"></script>
-<script src="js/modules/space/blackhole.js?v=44"></script>
-<script src="js/modules/space/explosions.js?v=44"></script>
-<script src="js/modules/space/gravity.js?v=44"></script>
-<script src="js/modules/tech/binary.js?v=44"></script>
-<script src="js/modules/tech/camera.js?v=44"></script>
-<script src="js/modules/tech/circuit.js?v=44"></script>
-<script src="js/modules/tech/phone.js?v=44"></script>
-<script src="js/modules/tech/solar.js?v=44"></script>
-<script src="js/modules/vehicles/airplane.js?v=44"></script>
-<script src="js/modules/vehicles/car.js?v=44"></script>
-<script src="js/modules/vehicles/emotor.js?v=44"></script>
-<script src="js/modules/vehicles/train.js?v=44"></script>
+<script src="js/data.js?v=46"></script>
+<script src="js/data-extra.js?v=46"></script>
+<script src="js/textures.js?v=46"></script>
+<script src="js/sky.js?v=46"></script>
+<script src="js/app.js?v=46"></script>
+<script src="js/core/art.js?v=46"></script>
+<script src="js/core/creatures.js?v=46"></script>
+<script src="js/core/modules.js?v=46"></script>
+<script src="js/core/ux.js?v=46"></script>
+<script src="js/modules/body/brain.js?v=46"></script>
+<script src="js/modules/body/digestion.js?v=46"></script>
+<script src="js/modules/body/heart.js?v=46"></script>
+<script src="js/modules/body/lungs.js?v=46"></script>
+<script src="js/modules/body/skeleton.js?v=46"></script>
+<script src="js/modules/earth/civ.js?v=46"></script>
+<script src="js/modules/earth/earthtime.js?v=46"></script>
+<script src="js/modules/earth/human.js?v=46"></script>
+<script src="js/modules/earth/layers.js?v=46"></script>
+<script src="js/modules/earth/lifeevo.js?v=46"></script>
+<script src="js/modules/earth/ocean.js?v=46"></script>
+<script src="js/modules/earth/relief.js?v=46"></script>
+<script src="js/modules/earth/volcano.js?v=46"></script>
+<script src="js/modules/mechanics/engine.js?v=46"></script>
+<script src="js/modules/mechanics/mechanics.js?v=46"></script>
+<script src="js/modules/space/bigbang.js?v=46"></script>
+<script src="js/modules/space/blackhole.js?v=46"></script>
+<script src="js/modules/space/explosions.js?v=46"></script>
+<script src="js/modules/space/gravity.js?v=46"></script>
+<script src="js/modules/tech/binary.js?v=46"></script>
+<script src="js/modules/tech/camera.js?v=46"></script>
+<script src="js/modules/tech/circuit.js?v=46"></script>
+<script src="js/modules/tech/phone.js?v=46"></script>
+<script src="js/modules/tech/solar.js?v=46"></script>
+<script src="js/modules/vehicles/airplane.js?v=46"></script>
+<script src="js/modules/vehicles/car.js?v=46"></script>
+<script src="js/modules/vehicles/emotor.js?v=46"></script>
+<script src="js/modules/vehicles/train.js?v=46"></script>
 </body>
 </html>

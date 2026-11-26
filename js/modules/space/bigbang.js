@@ -250,12 +250,12 @@ defineModule({
     function drawInset(x, R, t) {
       const U = api.unit, show = clamp((x - 17.46) / 0.05, 0, 1); if (show <= 0) return;
       const today = x >= 17.6, ir = U * 0.21, ix = api.cx + R * 0.52, iy = api.cy + R * 0.48;
-      const g0 = GAL[0], gx = api.cx + g0.x * R, gy = api.cy + g0.y * R, fz = Art.fs(U, 0.034, 13);
+      const g0 = GAL[0], gx = api.cx + g0.x * R, gy = api.cy + g0.y * R, fz = Art.labelSize(U);
       ctx.save(); ctx.globalAlpha = show;
       ctx.strokeStyle = 'rgba(220,230,255,0.5)'; ctx.lineWidth = 1.2; ctx.setLineDash([4, 5]);
       ctx.beginPath(); ctx.arc(gx, gy, R * 0.06, 0, TAU); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(gx + R * 0.045, gy + R * 0.04); ctx.lineTo(ix - ir * 0.7, iy - ir * 0.7); ctx.stroke(); ctx.setLineDash([]);
-      Art.label(ctx, 'Calea Lactee', gx, gy - R * 0.06 - fz, { size: fz, bg: 'rgba(8,12,30,0.7)' });
+      Art.label(ctx, 'Calea Lactee', gx, gy - R * 0.06 - fz, { size: fz, bg: Art.LABEL_BG });
       ctx.fillStyle = '#060918'; ctx.beginPath(); ctx.arc(ix, iy, ir, 0, TAU); ctx.fill();
       ctx.save(); ctx.beginPath(); ctx.arc(ix, iy, ir, 0, TAU); ctx.clip();
       if (!today) {
@@ -273,7 +273,7 @@ defineModule({
       }
       ctx.restore();
       ctx.strokeStyle = 'rgba(220,230,255,0.6)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(ix, iy, ir, 0, TAU); ctx.stroke();
-      Art.label(ctx, today ? 'Noi, azi, pe Pământ' : 'Soarele și Pământul', ix, iy + ir + fz * 1.2, { size: fz, bg: 'rgba(8,12,30,0.75)' });
+      Art.label(ctx, today ? 'Noi, azi, pe Pământ' : 'Soarele și Pământul', ix, iy + ir + fz * 1.2, { size: fz, bg: Art.LABEL_BG });
       ctx.restore();
     }
 
@@ -282,7 +282,7 @@ defineModule({
       flash = Math.max(0, flash - dt * 3);
       const t = tSec(), x = lt(), T = temperature(t), cx = api.cx, cy = api.cy, U = api.unit, R = rv() * U;
       const sk = clamp(U / 300, 0.9, 1.6);
-      ctx.drawImage(Art.cached('bb-bg', api.W, api.H, (c, w, h) => Art.backdrop(c, w, h, { top: '#070917', bottom: '#020308', vignette: false })), 0, 0, api.W, api.H);
+      ctx.drawImage(Art.cached('bb-bg-space', api.W, api.H, (c, w, h) => Art.scene(c, w, h, 'space')), 0, 0, api.W, api.H);
       say(false);
       const spr = (img, px, py, sz) => ctx.drawImage(img, px - sz, py - sz, sz * 2, sz * 2);
 
@@ -387,7 +387,7 @@ defineModule({
       drawInset(x, R, tm);
       /* etichetă */
       const ev = ERAS[eraIdx()];
-      Art.label(ctx, ev.n, cx, api.cy - api.unit + 14, { size: Art.fs(U, 0.045, 14), bg: 'rgba(8,12,30,0.7)' });
+      Art.label(ctx, ev.n, cx, api.cy - api.unit + 14, { size: Art.labelSize(U), bg: Art.LABEL_BG });
       readout.innerHTML = '<b>Timp:</b> ' + timeText(t) + ' &nbsp;·&nbsp; <b>Temperatură:</b> ' + tempText(T) + ' &nbsp;·&nbsp; <b>Mărime:</b> ' + (x < -6 ? 'mai mică decât un atom' : sizeText(sizeM(t)));
     }
     return { frame: frame };

@@ -46,24 +46,77 @@
   /* ================= ajutoare de desen ================= */
   const S = Art.shade;
   function poly(c, pts, close) { c.beginPath(); c.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) c.lineTo(pts[i][0], pts[i][1]); if (close !== false) c.closePath(); }
-  function fillV(c, col, x0, y0, x1, y1, hi, lo) { const g = c.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, S(col, hi === undefined ? 0.14 : hi)); g.addColorStop(1, S(col, -(lo === undefined ? 0.22 : lo))); c.fillStyle = g; c.fill(); }
-  function edge(c, col, w) { c.strokeStyle = col || 'rgba(30,20,10,0.45)'; c.lineWidth = w || 1; c.stroke(); }
+  let lastFill = '#888888';
+  function fillV(c, col, x0, y0, x1, y1, hi, lo) { lastFill = col; const g = c.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, S(col, hi === undefined ? 0.14 : hi)); g.addColorStop(1, S(col, -(lo === undefined ? 0.22 : lo))); c.fillStyle = g; c.fill(); }
+  function edge(c, col, w) { c.strokeStyle = w ? (col || Art.ink(lastFill)) : Art.ink(lastFill); c.lineWidth = w || LWC; c.stroke(); }
   function box(c, x, y, w, h, col, sideW) {          /* cutie cu fața luminată și o latură în umbră (perspectivă simplă) */
     c.fillStyle = col; c.fillRect(x, y, w, h);
     if (sideW) { c.fillStyle = S(col, -0.25); poly(c, [[x + w, y], [x + w + sideW, y - sideW * 0.5], [x + w + sideW, y + h - sideW * 0.5], [x + w, y + h]]); c.fill(); }
   }
-  /* om mic, îmbrăcat, din profil (pentru diorame) */
+  /* om mic, îmbrăcat, din profil (pentru diorame): picioare și brațe cu volum, cap cu păr,
+     nas, ureche și ochi care clipește; privește spre mijlocul scenei, respiră și gesticulează lin */
+  let SCX = 0, LWC = 1;                     // mijlocul dioramei curente și grosimea conturului
+  function limbC(c, x0, y0, x1, y1, r0, r1, col) {
+    const a = Math.atan2(y1 - y0, x1 - x0), nx = -Math.sin(a), ny = Math.cos(a);
+    c.beginPath(); c.moveTo(x0 + nx * r0, y0 + ny * r0); c.lineTo(x1 + nx * r1, y1 + ny * r1); c.arc(x1, y1, r1, a + Math.PI / 2, a - Math.PI / 2, true);
+    c.lineTo(x0 - nx * r0, y0 - ny * r0); c.arc(x0, y0, r0, a - Math.PI / 2, a + Math.PI / 2, true); c.closePath();
+    c.fillStyle = col; c.fill();
+  }
   function person(c, x, y, h, robe, skin, t, ph, hat) {
-    const sw = Math.sin(t * 2 + ph) * h * 0.04;
-    c.save(); c.translate(x, y);
-    c.fillStyle = S(skin, -0.2); c.fillRect(-h * 0.07 + sw, -h * 0.28, h * 0.07, h * 0.28); c.fillRect(h * 0.02 - sw, -h * 0.28, h * 0.07, h * 0.28);
-    c.beginPath(); c.moveTo(-h * 0.14, -h * 0.25); c.quadraticCurveTo(-h * 0.16, -h * 0.62, -h * 0.1, -h * 0.78); c.lineTo(h * 0.1, -h * 0.78); c.quadraticCurveTo(h * 0.18, -h * 0.6, h * 0.15, -h * 0.25); c.closePath(); fillV(c, robe, -h * 0.15, 0, h * 0.15, 0, 0.12, 0.25);
-    c.fillStyle = skin; c.beginPath(); c.arc(h * 0.02, -h * 0.88, h * 0.11, 0, 7); c.fill();
-    if (hat) { c.fillStyle = hat; c.beginPath(); c.arc(h * 0.02, -h * 0.9, h * 0.115, Math.PI, 0); c.fill(); }
+    const d = x < SCX ? 1 : -1, hair = ph % 2 ? '#3a2616' : '#24170e';
+    const br = Math.sin(t * 1.6 + ph * 1.3), sway = Math.sin(t * 0.7 + ph) * h * 0.008;
+    const gest = Math.max(0, Math.sin(t * 0.55 + ph * 2.1)), lw = Math.max(0.6, Math.min(LWC, h * 0.03));
+    const legC = S(robe, -0.38), skinD = S(skin, -0.16), shoe = '#3a2a1e';
+    c.save(); c.translate(x + sway, y); c.scale(d, 1); c.lineCap = 'round'; c.lineJoin = 'round';
+    /* picioarele (cel din spate mai întunecat) și încălțările */
+    limbC(c, -h * 0.03, -h * 0.5, -h * 0.05, -h * 0.03, h * 0.045, h * 0.032, S(legC, -0.15));
+    limbC(c, h * 0.035, -h * 0.5, h * 0.05, -h * 0.03, h * 0.048, h * 0.034, legC);
+    for (const [fx, col] of [[-h * 0.05, S(shoe, -0.2)], [h * 0.05, shoe]]) { c.beginPath(); c.ellipse(fx + h * 0.035, -h * 0.018, h * 0.06, h * 0.022, 0, 0, 7); c.fillStyle = col; c.fill(); }
+    /* brațul din spate */
+    limbC(c, -h * 0.02, -h * 0.78, -h * 0.06, -h * 0.5, h * 0.034, h * 0.027, S(robe, -0.22));
+    c.beginPath(); c.arc(-h * 0.06, -h * 0.48, h * 0.03, 0, 7); c.fillStyle = skinD; c.fill();
+    /* veșmântul: umeri rotunzi, talie, poale până sub genunchi */
+    const bw = 1 + br * 0.012;
+    c.beginPath(); c.moveTo(-h * 0.1 * bw, -h * 0.8);
+    c.quadraticCurveTo(-h * 0.02, -h * 0.85, h * 0.09 * bw, -h * 0.8);
+    c.quadraticCurveTo(h * 0.14 * bw, -h * 0.66, h * 0.11, -h * 0.52);
+    c.quadraticCurveTo(h * 0.15, -h * 0.36, h * 0.16, -h * 0.24);
+    c.quadraticCurveTo(0, -h * 0.21, -h * 0.15, -h * 0.25);
+    c.quadraticCurveTo(-h * 0.14, -h * 0.4, -h * 0.12, -h * 0.52);
+    c.quadraticCurveTo(-h * 0.15, -h * 0.68, -h * 0.1 * bw, -h * 0.8); c.closePath();
+    fillV(c, robe, -h * 0.15, 0, h * 0.15, 0, 0.16, 0.28); c.strokeStyle = Art.ink(robe); c.lineWidth = lw; c.stroke();
+    c.strokeStyle = S(robe, -0.3); c.lineWidth = Math.max(0.8, h * 0.025); c.beginPath(); c.moveTo(-h * 0.12, -h * 0.52); c.quadraticCurveTo(0, -h * 0.5, h * 0.11, -h * 0.52); c.stroke();
+    c.strokeStyle = Art.rgba('#000000', 0.12); c.lineWidth = Math.max(0.6, h * 0.012); c.beginPath(); c.moveTo(-h * 0.04, -h * 0.48); c.lineTo(-h * 0.06, -h * 0.26); c.moveTo(h * 0.05, -h * 0.48); c.lineTo(h * 0.07, -h * 0.26); c.stroke();
+    /* gâtul și capul (puțin mai mic decât la un desen animat: ~1/7 din înălțime) */
+    const hr = h * 0.082, hx = h * 0.012, hy = -h * 0.905 + br * h * 0.003, nod = Math.sin(t * 0.8 + ph * 1.7) * 0.06 + gest * 0.05;
+    limbC(c, 0, -h * 0.8, hx * 0.5, -h * 0.85, h * 0.028, h * 0.026, skinD);
+    c.save(); c.translate(hx, hy); c.rotate(nod);
+    c.beginPath(); c.moveTo(-hr * 0.85, -hr * 0.2); c.bezierCurveTo(-hr * 0.9, -hr * 1.05, hr * 0.7, -hr * 1.15, hr * 0.86, -hr * 0.25);
+    c.lineTo(hr * 1.08, hr * 0.12); c.lineTo(hr * 0.86, hr * 0.22); c.quadraticCurveTo(hr * 0.9, hr * 0.62, hr * 0.62, hr * 0.85); c.quadraticCurveTo(hr * 0.1, hr * 1.02, -hr * 0.35, hr * 0.78); c.quadraticCurveTo(-hr * 0.95, hr * 0.45, -hr * 0.85, -hr * 0.2); c.closePath();
+    const hg = c.createLinearGradient(-hr, -hr, hr, hr); hg.addColorStop(0, S(skin, 0.12)); hg.addColorStop(1, S(skin, -0.2)); c.fillStyle = hg; c.fill(); c.strokeStyle = Art.ink(skin); c.lineWidth = lw; c.stroke();
+    /* părul sau pălăria */
+    c.beginPath(); c.moveTo(-hr * 0.92, hr * 0.35); c.bezierCurveTo(-hr * 1.1, -hr * 0.9, hr * 0.55, -hr * 1.35, hr * 0.92, -hr * 0.3); c.quadraticCurveTo(hr * 0.5, -hr * 0.55, hr * 0.05, -hr * 0.35); c.quadraticCurveTo(-hr * 0.2, hr * 0.0, -hr * 0.45, hr * 0.42); c.closePath();
+    c.fillStyle = hat || hair; c.fill();
+    if (hat) { c.fillStyle = S(hat, -0.15); c.beginPath(); c.ellipse(hr * 0.05, -hr * 0.42, hr * 1.12, hr * 0.2, -0.08, 0, 7); c.fill(); }
+    else { c.strokeStyle = S(hair, 0.3); c.lineWidth = Math.max(0.5, hr * 0.1); c.beginPath(); c.moveTo(-hr * 0.6, -hr * 0.45); c.quadraticCurveTo(-hr * 0.1, -hr * 0.95, hr * 0.5, -hr * 0.62); c.stroke(); }
+    /* urechea, ochiul (clipește), sprânceana, gura */
+    c.fillStyle = S(skin, -0.12); c.beginPath(); c.ellipse(-hr * 0.12, hr * 0.12, hr * 0.15, hr * 0.22, 0, 0, 7); c.fill();
+    const bl = ((t + ph * 1.37) % (3.1 + ph * 0.4)) < 0.14;
+    c.fillStyle = '#20140c';
+    if (bl) c.fillRect(hr * 0.42, hr * 0.0, hr * 0.26, Math.max(0.6, hr * 0.06));
+    else { c.beginPath(); c.ellipse(hr * 0.55, -hr * 0.02, hr * 0.1, hr * 0.13, 0, 0, 7); c.fill(); }
+    c.strokeStyle = S(hair, 0.1); c.lineWidth = Math.max(0.5, hr * 0.1); c.beginPath(); c.moveTo(hr * 0.36, -hr * 0.28); c.lineTo(hr * 0.74, -hr * 0.26); c.stroke();
+    c.strokeStyle = Art.rgba('#6a2a20', 0.7); c.lineWidth = Math.max(0.5, hr * 0.08); c.beginPath(); c.moveTo(hr * 0.62, hr * 0.5); c.lineTo(hr * 0.82, hr * 0.47); c.stroke();
+    c.restore();
+    /* brațul din față: atârnă și din când în când gesticulează */
+    const ea = 0.15 + gest * 0.5, sx = h * 0.01, sy = -h * 0.77, ex = sx + Math.sin(0.08) * h * 0.15, ey = sy + h * 0.15;
+    const wx = ex + Math.sin(ea) * h * 0.14, wy = ey + Math.cos(ea) * h * 0.14;
+    limbC(c, sx, sy, ex, ey, h * 0.04, h * 0.032, S(robe, -0.06)); limbC(c, ex, ey, wx, wy, h * 0.03, h * 0.026, skin);
+    c.beginPath(); c.arc(wx, wy, h * 0.03, 0, 7); c.fillStyle = skin; c.fill();
     c.restore();
   }
   function hills(c, W, y, amp, col, seed, step) { c.beginPath(); c.moveTo(0, y + amp * 3); for (let x = 0; x <= W + 8; x += step || 8) c.lineTo(x, y - amp * (0.5 + 0.5 * Art.noise1(x / W * 3 + seed))); c.lineTo(W, y + amp * 3); c.closePath(); c.fillStyle = col; c.fill(); }
-  function sky(c, W, H, a, b) { const g = c.createLinearGradient(0, 0, 0, H * 0.75); g.addColorStop(0, a); g.addColorStop(1, b); c.fillStyle = g; c.fillRect(0, 0, W, H); }
+  function sky(c, W, H, kind) { const sc = Art.SCENE[kind === 'smog' ? 'day' : kind] || Art.SCENE.day, g = c.createLinearGradient(0, 0, 0, H * 0.75); g.addColorStop(0, sc[0]); g.addColorStop(1, sc[1]); c.fillStyle = g; c.fillRect(0, 0, W, H); if (kind === 'smog') { c.fillStyle = 'rgba(150,140,125,0.35)'; c.fillRect(0, 0, W, H); } }
   function ground(c, W, H, gy, a, b) { const g = c.createLinearGradient(0, gy, 0, H); g.addColorStop(0, a); g.addColorStop(1, b); c.fillStyle = g; c.fillRect(0, gy, W, H - gy); }
   function tree(c, x, y, h, col, kind) {
     c.save(); c.translate(x, y);
@@ -134,7 +187,7 @@
   /* ================= dioramele epocilor (coordonate locale 0..W, 0..H; k = scara) ================= */
   const SCENES = [
     { from: -12100, name: 'Tabără de vânători', draw(c, W, H, k, t, gy, cx) {
-      sky(c, W, H, '#e8a46a', '#f6dcb0'); hills(c, W, gy - 40 * k, 22 * k, '#a8907a', 1); hills(c, W, gy - 12 * k, 12 * k, '#8a8a5a', 4);
+      sky(c, W, H, 'dusk'); hills(c, W, gy - 40 * k, 22 * k, '#a8907a', 1); hills(c, W, gy - 12 * k, 12 * k, '#8a8a5a', 4);
       ground(c, W, H, gy, '#9a9a5a', '#6a6a3a');
       for (const [dx, s] of [[-150, 1], [-200, 0.7], [170, 0.9], [215, 0.7]]) tree(c, cx + dx * k, gy + 2 * k, 52 * k * s, '#4a6a4a', 'pine');
       for (const [dx, s] of [[-70, 1], [55, 0.85]]) {   /* corturi din piei pe pari */
@@ -149,7 +202,7 @@
       person(c, cx - 24 * k, gy + 14 * k, 26 * k, '#8a6a44', '#a87a58', t, 0); person(c, cx + 25 * k, gy + 15 * k, 24 * k, '#7a5a3a', '#9a6a48', t, 2);
     } },
     { from: -9700, name: 'Göbekli Tepe', draw(c, W, H, k, t, gy, cx) {
-      sky(c, W, H, '#8ab4d8', '#f0e2c0'); hills(c, W, gy - 30 * k, 18 * k, '#c8b088', 2);
+      sky(c, W, H, 'day'); hills(c, W, gy - 30 * k, 18 * k, '#c8b088', 2);
       ground(c, W, H, gy, '#c8a870', '#9a7a48');
       c.beginPath(); c.ellipse(cx, gy + 8 * k, 140 * k, 26 * k, 0, 0, 7); c.fillStyle = '#b89a68'; c.fill();
       c.beginPath(); c.ellipse(cx, gy + 10 * k, 120 * k, 20 * k, 0, 0, 7); c.fillStyle = '#a88a5a'; c.fill();
@@ -163,7 +216,7 @@
       person(c, cx - 140 * k, gy + 16 * k, 26 * k, '#8a6a44', '#a87a58', t, 1); person(c, cx + 140 * k, gy + 16 * k, 26 * k, '#7a5a3a', '#9a6a48', t, 3);
     } },
     { from: -9000, name: 'Sat de agricultori', draw(c, W, H, k, t, gy, cx) {
-      sky(c, W, H, '#79b0e0', '#e6f0e0'); hills(c, W, gy - 34 * k, 18 * k, '#9ab08a', 3); hills(c, W, gy - 10 * k, 8 * k, '#8aa86a', 6);
+      sky(c, W, H, 'day'); hills(c, W, gy - 34 * k, 18 * k, '#9ab08a', 3); hills(c, W, gy - 10 * k, 8 * k, '#8aa86a', 6);
       ground(c, W, H, gy, '#9ab05a', '#6a8a3a');
       /* lan de grâu care se leagănă */
       const fx0 = cx + 20 * k, fx1 = Math.min(W - 10 * k, cx + 220 * k);
@@ -184,7 +237,7 @@
       person(c, cx + 5 * k, gy + 20 * k, 26 * k, '#a8784a', '#b88a62', t, 1);
     } },
     { from: -7200, name: 'Sat mare (Çatalhöyük, Cucuteni)', draw(c, W, H, k, t, gy, cx) {
-      sky(c, W, H, '#7ab0de', '#eee6d2'); hills(c, W, gy - 30 * k, 16 * k, '#a8b08a', 5);
+      sky(c, W, H, 'day'); hills(c, W, gy - 30 * k, 16 * k, '#a8b08a', 5);
       ground(c, W, H, gy, '#b8a066', '#8a7040');
       const B = [[-150, 30, 34], [-112, 22, 46], [-70, 34, 36], [-30, 26, 52], [12, 30, 40], [50, 22, 48], [88, 32, 34], [126, 26, 42], [164, 30, 30]];
       for (const [dx, w, h] of B) {   /* case de chirpici lipite, cu intrare pe acoperiș */
@@ -199,7 +252,7 @@
       person(c, cx - 175 * k, gy + 22 * k, 26 * k, '#9a6a3a', '#b88a62', t, 0); person(c, cx + 80 * k, gy + 24 * k, 24 * k, '#7a8a5a', '#a87a58', t, 2);
     } },
     { from: -3600, name: 'Sumer: zigurat, roată și scriere', draw(c, W, H, k, t, gy, cx) {
-      sky(c, W, H, '#8ab8e0', '#f4e4bc'); ground(c, W, H, gy, '#d8b878', '#a88850');
+      sky(c, W, H, 'day'); ground(c, W, H, gy, '#d8b878', '#a88850');
       c.fillStyle = '#5a9ad0'; c.beginPath(); c.moveTo(0, gy + 30 * k); c.quadraticCurveTo(W * 0.5, gy + 20 * k, W, gy + 34 * k); c.lineTo(W, H); c.lineTo(0, H); c.fill();
       const L = [[150, 26], [112, 22], [76, 20]]; let y = gy;
       for (const [w, h] of L) { c.beginPath(); c.rect(cx - w * k / 2, y - h * k, w * k, h * k); fillV(c, '#c89a62', cx - w * k / 2, 0, cx + w * k / 2, 0, 0.15, 0.3); edge(c, 'rgba(90,60,30,0.5)'); c.strokeStyle = 'rgba(110,75,40,0.35)'; c.lineWidth = 1; c.beginPath(); for (let i = 1; i < 4; i++) { c.moveTo(cx - w * k / 2, y - h * k * i / 4); c.lineTo(cx + w * k / 2, y - h * k * i / 4); } c.stroke(); y -= h * k; }
@@ -215,7 +268,7 @@
       tree(c, cx + 190 * k, gy + 2 * k, 50 * k, '#4a8a3a', 'palm'); tree(c, cx - 200 * k, gy + 2 * k, 44 * k, '#4a8a3a', 'palm');
     } },
     { from: -3150, name: 'Egiptul Antic', draw(c, W, H, k, t, gy, cx) {
-      sky(c, W, H, '#6aa6dc', '#f6e2b0'); ground(c, W, H, gy, '#e2c07a', '#b89050');
+      sky(c, W, H, 'day'); ground(c, W, H, gy, '#e2c07a', '#b89050');
       c.fillStyle = '#f6d56a'; c.beginPath(); c.arc(cx + 150 * k, gy - 110 * k, 13 * k, 0, 7); c.fill();
       for (const [dx, s] of [[-90, 1], [10, 0.75], [85, 0.5]]) {    /* piramidele de la Giza */
         const x = cx + dx * k, w = 80 * k * s, h = 92 * k * s;
@@ -234,7 +287,7 @@
       person(c, cx - 130 * k, gy + 18 * k, 26 * k, '#f2ead6', '#a8704a', t, 0, '#2a2a2a');
     } },
     { from: -1200, name: 'Grecia antică', draw(c, W, H, k, t, gy, cx) {
-      sky(c, W, H, '#5aa0e0', '#dcecf6'); c.fillStyle = '#3a7ab8'; c.fillRect(0, gy - 26 * k, W, 26 * k);
+      sky(c, W, H, 'day'); c.fillStyle = '#3a7ab8'; c.fillRect(0, gy - 26 * k, W, 26 * k);
       hills(c, W, gy - 10 * k, 18 * k, '#a8a878', 7);
       c.beginPath(); c.moveTo(cx - 170 * k, gy + 4 * k); c.quadraticCurveTo(cx - 120 * k, gy - 40 * k, cx - 60 * k, gy - 44 * k); c.lineTo(cx + 90 * k, gy - 44 * k); c.quadraticCurveTo(cx + 150 * k, gy - 40 * k, cx + 190 * k, gy + 4 * k); c.closePath(); fillV(c, '#b8a47a', 0, gy - 44 * k, 0, gy, 0.1, 0.2);
       ground(c, W, H, gy, '#a8a46a', '#7a7a48');
@@ -247,7 +300,7 @@
       person(c, cx - 90 * k, gy + 18 * k, 26 * k, '#f4f0e6', '#c89a72', t, 0); person(c, cx + 120 * k, gy + 20 * k, 25 * k, '#4a6ab0', '#c89a72', t, 2);
     } },
     { from: -100, name: 'Roma: apeduct și drum', draw(c, W, H, k, t, gy, cx) {
-      sky(c, W, H, '#6aa8e2', '#eaf0e6'); hills(c, W, gy - 36 * k, 20 * k, '#8aa87a', 8); hills(c, W, gy - 12 * k, 10 * k, '#7a9a5a', 9);
+      sky(c, W, H, 'day'); hills(c, W, gy - 36 * k, 20 * k, '#8aa87a', 8); hills(c, W, gy - 12 * k, 10 * k, '#7a9a5a', 9);
       ground(c, W, H, gy, '#8aa85a', '#5a7a3a');
       const ax0 = 0, ax1 = W, ah = 76 * k, top = gy - ah;   /* apeduct pe două niveluri de arcade */
       c.beginPath(); c.rect(ax0, top, ax1 - ax0, ah + 2 * k);
@@ -262,7 +315,7 @@
       tree(c, cx - 170 * k, gy + 20 * k, 44 * k, '#2f5a32', 'cypress'); tree(c, cx + 160 * k, gy + 22 * k, 50 * k, '#2f5a32', 'cypress');
     } },
     { from: 476, name: 'Evul Mediu: castel', draw(c, W, H, k, t, gy, cx) {
-      sky(c, W, H, '#7aa8d4', '#e8eef0'); hills(c, W, gy - 26 * k, 14 * k, '#8aa07a', 10);
+      sky(c, W, H, 'day'); hills(c, W, gy - 26 * k, 14 * k, '#8aa07a', 10);
       c.beginPath(); c.moveTo(cx - 190 * k, gy + 4 * k); c.quadraticCurveTo(cx - 60 * k, gy - 30 * k, cx + 10 * k, gy - 32 * k); c.quadraticCurveTo(cx + 110 * k, gy - 28 * k, cx + 210 * k, gy + 4 * k); c.closePath(); fillV(c, '#7a9a5a', 0, gy - 32 * k, 0, gy, 0.12, 0.2);
       ground(c, W, H, gy, '#7a9a4a', '#56762e');
       const st = '#bab2a2', by = gy - 28 * k;
@@ -276,7 +329,7 @@
       person(c, cx - 110 * k, gy + 24 * k, 26 * k, '#3a5a8a', '#c89a72', t, 0); person(c, cx + 110 * k, gy + 26 * k, 26 * k, '#7a3a3a', '#c89a72', t, 2, '#5a4030');
     } },
     { from: 1450, name: 'Port și corăbii', draw(c, W, H, k, t, gy, cx) {
-      sky(c, W, H, '#6aa8e0', '#e4eef4'); c.fillStyle = '#3a80c0'; c.fillRect(0, gy - 8 * k, W, H - gy + 8 * k);
+      sky(c, W, H, 'day'); c.fillStyle = '#3a80c0'; c.fillRect(0, gy - 8 * k, W, H - gy + 8 * k);
       c.strokeStyle = 'rgba(255,255,255,0.35)'; c.lineWidth = 1; c.beginPath(); for (let r = 0; r < 4; r++) for (let x = ((t * 8 + r * 20) % 40) - 40; x < W; x += 40 * k) { const y = gy + r * 12 * k + 6 * k; c.moveTo(x, y); c.quadraticCurveTo(x + 6 * k, y - 2 * k, x + 12 * k, y); } c.stroke();
       const qx = cx - 200 * k; c.fillStyle = '#8a7a66'; c.fillRect(qx, gy - 4 * k, 150 * k, 10 * k);
       const HS = [[0, 38, '#e8dcc0', '#a8482a'], [28, 46, '#f0e6cc', '#8a3a24'], [58, 34, '#e0d0b0', '#a8482a'], [86, 42, '#ece0c4', '#7a3420'], [114, 36, '#e8d8bc', '#a8482a']];
@@ -294,7 +347,7 @@
       person(c, qx + 130 * k, gy - 4 * k, 24 * k, '#2a3a5a', '#c89a72', t, 1, '#1a1a1a');
     } },
     { from: 1760, name: 'Revoluția industrială', draw(c, W, H, k, t, gy, cx) {
-      sky(c, W, H, '#9aa8b8', '#e6dccc'); hills(c, W, gy - 18 * k, 10 * k, '#8a9078', 11);
+      sky(c, W, H, 'smog'); hills(c, W, gy - 18 * k, 10 * k, '#8a9078', 11);
       ground(c, W, H, gy, '#7a7a5a', '#5a5a42');
       const fx = cx - 120 * k, fw = 170 * k;   /* fabrică de cărămidă cu acoperiș în dinți de fierăstrău */
       c.beginPath(); c.moveTo(fx, gy + 2 * k); c.lineTo(fx, gy - 40 * k); for (let i = 0; i < 5; i++) { const x = fx + i * fw / 5; c.lineTo(x + fw / 5 * 0.7, gy - 62 * k); c.lineTo(x + fw / 5 * 0.7, gy - 40 * k); c.lineTo(x + fw / 5, gy - 40 * k); } c.lineTo(fx + fw, gy + 2 * k); c.closePath(); fillV(c, '#a8583a', fx, 0, fx + fw, 0, 0.12, 0.25); edge(c, 'rgba(60,25,10,0.5)');
@@ -313,7 +366,7 @@
       person(c, cx + 150 * k, gy + 16 * k, 26 * k, '#3a3a4a', '#c89a72', t, 0, '#1a1a1a'); person(c, cx + 175 * k, gy + 16 * k, 23 * k, '#7a3a4a', '#c89a72', t, 2);
     } },
     { from: 1900, name: 'Orașul secolului XX', draw(c, W, H, k, t, gy, cx) {
-      sky(c, W, H, '#5aa0e6', '#d6ecfa'); ground(c, W, H, gy, '#7a8a7a', '#5a665a');
+      sky(c, W, H, 'day'); ground(c, W, H, gy, '#7a8a7a', '#5a665a');
       const B = [[-200, 40, 70, '#c8b8a0'], [-155, 34, 110, '#a8b4c4'], [-115, 44, 84, '#d8c8a8'], [-62, 30, 150, '#b8c4d0'], [-26, 40, 96, '#c8a888'], [20, 36, 128, '#9fb0c4'], [62, 44, 76, '#d0c0a4'], [110, 34, 118, '#b0bccc'], [150, 40, 90, '#c8b098'], [195, 36, 66, '#a8b8c8']];
       for (const [dx, w, h0, col] of B) { const h = h0 * 0.55, x = cx + dx * k, y = gy - h * k; c.beginPath(); c.rect(x - w * k / 2, y, w * k, h * k + 2 * k); fillV(c, col, x - w * k / 2, 0, x + w * k / 2, 0, 0.12, 0.25); edge(c, 'rgba(50,55,70,0.45)'); c.fillStyle = 'rgba(60,80,110,0.55)'; for (let r = 0; r < h / 12 - 1; r++) for (let q = 0; q < w / 10; q++) c.fillRect(x - w * k / 2 + (3 + q * 10) * k, y + (6 + r * 12) * k, 5 * k, 6 * k); }
       const tx = cx - 62 * k, ty = gy - 150 * 0.55 * k; poly(c, [[tx - 8 * k, ty], [tx, ty - 26 * k], [tx + 8 * k, ty]]); c.fillStyle = '#c8d0d8'; c.fill(); c.strokeStyle = '#8a96a6'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(tx, ty - 26 * k); c.lineTo(tx, ty - 40 * k); c.stroke();
@@ -323,7 +376,7 @@
       person(c, cx + 80 * k, gy + 34 * k, 26 * k, '#2a4a7a', '#c89a72', t, 0); person(c, cx + 104 * k, gy + 34 * k, 24 * k, '#8a4a6a', '#c89a72', t, 2);
     } },
     { from: 1990, name: 'Lumea conectată', draw(c, W, H, k, t, gy, cx) {
-      sky(c, W, H, '#14204a', '#3a4a8a'); ground(c, W, H, gy, '#2a3048', '#1a1e30');
+      sky(c, W, H, 'night'); ground(c, W, H, gy, '#2a3048', '#1a1e30');
       c.fillStyle = 'rgba(255,255,255,0.75)'; let sd = 5; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647; for (let i = 0; i < 26; i++) { c.beginPath(); c.arc(rnd() * W, rnd() * (gy - 60 * k), 0.9, 0, 7); c.fill(); }
       c.fillStyle = '#e8e4d0'; c.beginPath(); c.arc(cx + 165 * k, gy - 100 * k, 9 * k, 0, 7); c.fill();
       /* satelit pe orbită */
@@ -371,7 +424,7 @@
       api.pointer({ down: (px, py) => { if (!lay) layout(); let best = -1, bd = Math.max(22, lay.medR * 1.5); M.forEach((m, i) => { const mx = lay.x0 + lay.w * xOf(m.y), my = markY(i), d = Math.hypot(px - mx, py - my); if (d < bd) { bd = d; best = i; } }); if (best >= 0) { sel = best; x = xOf(M[best].y); sl.set(x); play = false; bP.innerHTML = '▶ Derulează'; api.say(M[best].e + ' <b>' + M[best].n + '</b> (' + yTxt(M[best].y) + '). ' + M[best].t, 22000); } else if (py > lay.perY) { x = clamp((px - lay.x0) / lay.w, 0, 1); sl.set(x); play = false; } } });
       /* diorama: scena curentă + trecere lină spre următoarea (randată separat, apoi suprapusă) */
       let off = null, sceneA = -1, fadeK = 1, prevScene = -1;
-      function drawScene(c, i, w, h, t) { const k = Math.min(h / 165, w / 380), gy = h * 0.76; c.save(); SCENES[i].draw(c, w, h, k, t, gy, w / 2); c.restore(); }
+      function drawScene(c, i, w, h, t) { const k = Math.min(h / 165, w / 380), gy = h * 0.76; SCX = w / 2; LWC = Math.max(0.8, Art.lineW(api.unit) * 0.6); c.save(); SCENES[i].draw(c, w, h, k, t, gy, w / 2); c.restore(); }
       let lastInfo = '';
       function frame(dt, t) {
         if (play) { x = Math.min(1, x + dt * 0.03); sl.set(x); if (x >= 1) { play = false; bP.innerHTML = '↺ De la început'; } }
@@ -382,7 +435,7 @@
         PER.forEach((p) => {
           const a = X(p[1]), b = X(p[2]), w = Math.max(2, b - a - 1.5);
           Art.roundRectPath(ctx, a, L.perY, w, L.perH, Math.min(6, w / 2)); ctx.fillStyle = p[3]; ctx.fill();
-          const fz = Math.max(10.5, Math.min(13, L.perH * 0.55)); ctx.save(); ctx.font = Art.font(fz, 700); const tw = ctx.measureText(p[0]).width; ctx.restore();
+          const fz = Math.max(12, Math.min(13, L.perH * 0.55)); ctx.save(); ctx.font = Art.font(fz, 700); const tw = ctx.measureText(p[0]).width; ctx.restore();
           if (tw + 8 < w) Art.text(ctx, p[0], a + w / 2, L.perY + L.perH / 2 + 0.5, { size: fz, halo: false });
         });
         const cur = PER.find((p) => yr >= p[1] && yr < p[2]) || PER[PER.length - 1];
@@ -409,7 +462,7 @@
         } else drawScene(ctx, sceneA, dw, dh, t);
         ctx.restore();
         ctx.save(); Art.roundRectPath(ctx, dx0, dy0, dw, dh, rr); ctx.strokeStyle = 'rgba(255,255,255,0.16)'; ctx.lineWidth = 1; ctx.stroke(); ctx.restore();
-        Art.label(ctx, SCENES[sceneA].name, dx0 + 10, dy0 + 10 + L.fSm * 0.9, { size: L.fSm, align: 'left', bg: 'rgba(16,18,30,0.72)', border: false });
+        Art.label(ctx, SCENES[sceneA].name, dx0 + 10, dy0 + 10 + Art.labelSize(api.unit) * 0.9, { size: Art.labelSize(api.unit), align: 'left', bg: Art.LABEL_BG, border: false });
         /* populația: curbă netedă */
         const pY = L.popY, pH = L.popH, base = pY + pH, yOfP = (pp) => base - (pH - 22) * Math.pow(pp / 8.1e9, 0.55);
         Art.roundRectPath(ctx, L.x0, pY, L.w, pH, 12); ctx.fillStyle = '#1c1a28'; ctx.fill();
