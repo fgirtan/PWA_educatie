@@ -475,3 +475,9 @@ kbd {
 .art-emot { background: radial-gradient(circle at 50% 50%, #ffd166 0 6%, transparent 7%), linear-gradient(90deg, #d83a3a 0 24%, transparent 24% 76%, #3a6ad8 76%), #0c1330; }
 .art-train { background: linear-gradient(180deg, #2c6aa8 0 55%, #4c8a3c 55%); }
 .art-train::after { content:""; position:absolute; left:14%; right:14%; top:36%; height:22%; background:#c0392b; border-radius:8px 14px 4px 4px; box-shadow: -60px 0 0 -4px #3a6ab8; }
+.art-heart { background: radial-gradient(circle at 38% 52%, #7aa0ff 0 14%, transparent 15%), radial-gradient(circle at 62% 52%, #ff6a77 0 16%, transparent 17%), radial-gradient(circle at 50% 50%, rgba(255,90,110,.25), transparent 70%), #190d16; }
+.art-lungs { background: radial-gradient(ellipse 18% 36% at 36% 55%, #ffb0c0 0 70%, transparent 72%), radial-gradient(ellipse 18% 36% at 64% 55%, #ffb0c0 0 70%, transparent 72%), linear-gradient(90deg, transparent 48%, #c9d6ee 48% 52%, transparent 52%), #0d1626; }
+.art-skel { background: radial-gradient(circle at 50% 24%, #ece6d6 0 12%, transparent 13%), linear-gradient(90deg, transparent 48%, #ece6d6 48% 52%, transparent 52%), radial-gradient(ellipse 22% 24% at 50% 62%, rgba(236,230,214,.8) 0 60%, transparent 62%), #10162b; }
+.art-dig { background: linear-gradient(135deg, #1a1020, #0a0710); }
+.art-dig::after { content:"🍎"; position:absolute; left:46%; top:20%; font-size:44px; }
+.art-brain { background: radial-gradient(ellipse 40% 34% at 50% 48%, #e8683a 0 28%, #e8c33a 29% 52%, #4a8be8 53% 66%, transparent 68%), #10101e; }
