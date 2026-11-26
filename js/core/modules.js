@@ -145,7 +145,24 @@
     $('#home').classList.remove('hidden');
   }
 
+  /* meniul de secțiuni: iconițe mari care duc la câmpul cu toate modulele */
+  function showSection(id) {
+    const hub = $('#hub');
+    document.querySelectorAll('.sec-view').forEach((v) => v.classList.add('hidden'));
+    if (id) { hub.classList.add('hidden'); $('#sec-' + id).classList.remove('hidden'); try { sessionStorage.setItem('sec', id); } catch (e) { } }
+    else { hub.classList.remove('hidden'); try { sessionStorage.removeItem('sec'); } catch (e) { } }
+    const home = $('#home'); if (home) home.scrollTop = 0;
+  }
+  window.showSection = showSection;
   window.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.sec-tile').forEach((t) => {
+      const id = t.getAttribute('data-section');
+      const n = document.querySelectorAll('#sec-' + id + ' .card').length;
+      const c = t.querySelector('.sec-count'); if (c) c.textContent = n + (n === 1 ? ' activitate' : ' activități');
+      t.addEventListener('click', () => showSection(id));
+    });
+    document.querySelectorAll('.sec-back').forEach((b) => b.addEventListener('click', () => showSection(null)));
+    try { const last = sessionStorage.getItem('sec'); if (last && $('#sec-' + last)) showSection(last); } catch (e) { }
     document.querySelectorAll('[data-module]').forEach((el) => {
       el.addEventListener('click', () => openModule(el.getAttribute('data-module')));
     });
