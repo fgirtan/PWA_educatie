@@ -9,18 +9,18 @@
   const ageOf = (x) => Math.pow(1 - x, 2) * MAXA;
   const ageText = (a) => a >= 1e6 ? fmt(a / 1e6, 1) + ' mil. ani' : a >= 1000 ? fmt(Math.round(a / 100) * 100, 0) + ' de ani' : a > 50 ? fmt(a, 0) + ' de ani' : 'azi';
   const SP = [
-    { n: 'Sahelanthropus', s: 7.0e6, e: 6.0e6, h: 1.1, br: 360, w: 'Ciad (Africa)', c: '#a07a5a', t: 'Cel mai vechi posibil strămoș al omului. Craniul lui, găsit în Ciad, arată că poate mergea pe două picioare, deși avea creier cât al unui cimpanzeu.' },
-    { n: 'Ardipithecus', s: 4.5e6, e: 4.3e6, h: 1.2, br: 320, w: 'Etiopia', c: '#a8804a', t: 'Trăia în păduri și umbla și pe două picioare, și prin copaci. Avea degetul mare de la picior opus, ca să se agațe de crengi.' },
-    { n: 'Australopithecus (Lucy)', s: 3.9e6, e: 2.9e6, h: 1.2, br: 450, w: 'Etiopia, Tanzania', c: '#b8883a', t: 'Faimoasa „Lucy” (3,2 mil. ani) mergea drept pe două picioare, dar avea încă brațe lungi. Creierul ei era cam de 3 ori mai mic decât al nostru. Urmele ei de pași s-au păstrat în cenușă vulcanică.' },
-    { n: 'Paranthropus', s: 2.3e6, e: 1.2e6, h: 1.35, br: 520, w: 'Africa de Est', c: '#8a6a3a', t: 'Avea maxilare uriașe și dinți mari, pentru a mesteca plante dure. Nu e strămoșul nostru direct — o ramură care a dispărut.' },
-    { n: 'Homo habilis', s: 2.4e6, e: 1.4e6, h: 1.3, br: 610, w: 'Africa', c: '#c8903a', t: '„Omul îndemânatic”: primul din genul Homo, asociat cu primele unelte de piatră cioplită. Creierul începe să crească.' },
-    { n: 'Homo erectus', s: 1.9e6, e: 1.1e5, h: 1.7, br: 950, w: 'Africa, Asia, Europa', c: '#d8a040', t: '„Omul în picioare”: a trăit aproape 2 milioane de ani! Primul care a ieșit din Africa, a folosit securi de piatră și a ținut focul sub control (acum cel puțin 400.000 de ani).' },
-    { n: 'Homo heidelbergensis', s: 7.0e5, e: 2.0e5, h: 1.75, br: 1250, w: 'Africa, Europa', c: '#e0b050', t: 'Înalt și puternic, cu creier mare. Vâna animale mari cu sulițe de lemn. Probabil strămoșul comun al neanderthalienilor și al nostru.' },
-    { n: 'Homo naledi', s: 3.35e5, e: 2.36e5, h: 1.4, br: 560, w: 'Africa de Sud', c: '#9a7aa0', t: 'Mic de statură și cu creier mic, dar cu mâini și picioare moderne. A fost descoperit într-o peșteră adâncă din Africa de Sud.' },
-    { n: 'Neanderthalienii', s: 4.0e5, e: 4.0e4, h: 1.65, br: 1450, w: 'Europa, Asia de Vest', c: '#7aa0c0', t: 'Puternici, adaptați la frig, cu creier chiar mai mare decât al nostru. Făceau focuri, haine, unelte și își îngropau morții. Mulți oameni de azi au 1–2% ADN neanderthalian. Au trăit și pe teritoriul României.' },
-    { n: 'Denisovanii', s: 2.0e5, e: 5.0e4, h: 1.7, br: 1400, w: 'Asia', c: '#6ab0a0', t: 'O specie „misterioasă”, cunoscută mai ales din ADN și câteva oase găsite într-o peșteră din Siberia. Unii oameni din Asia și Oceania au și ADN denisovan.' },
-    { n: 'Homo floresiensis', s: 1.0e5, e: 5.0e4, h: 1.06, br: 420, w: 'Insula Flores (Indonezia)', c: '#c07a8a', t: '„Hobbitul”: avea doar ~1 metru înălțime! A trăit pe o insulă izolată, unde corpul s-a micșorat în timp.' },
-    { n: 'Homo sapiens (noi)', s: 3.0e5, e: 0, h: 1.7, br: 1350, w: 'Africa → tot globul', c: '#ffe27a', t: 'Noi! Primii au apărut în Africa acum ~300.000 de ani. Ne deosebim prin limbaj complex, artă (picturi în peșteri) și cooperare în grupuri mari. Suntem singura specie umană rămasă. În România, „Omul de la Peștera cu Oase” (40.000 de ani) e unul dintre cei mai vechi sapiens din Europa.' }
+    { n: 'Sahelanthropus', look: { lean: .35, arm: .9, brow: 1, jaw: 1, snout: .4, fur: true, skin: '#6a4a38', hair: '#2a1c14' }, s: 7.0e6, e: 6.0e6, h: 1.1, br: 360, w: 'Ciad (Africa)', c: '#a07a5a', t: 'Cel mai vechi posibil strămoș al omului. Craniul lui, găsit în Ciad, arată că poate mergea pe două picioare, deși avea creier cât al unui cimpanzeu.' },
+    { n: 'Ardipithecus', look: { lean: .3, arm: .85, brow: .9, snout: .35, fur: true, skin: '#6e4c36', hair: '#2a1c14' }, s: 4.5e6, e: 4.3e6, h: 1.2, br: 320, w: 'Etiopia', c: '#a8804a', t: 'Trăia în păduri și umbla și pe două picioare, și prin copaci. Avea degetul mare de la picior opus, ca să se agațe de crengi.' },
+    { n: 'Australopithecus (Lucy)', look: { lean: .22, arm: .75, brow: .8, snout: .3, fur: true, skin: '#7a5238', hair: '#2a1c14' }, s: 3.9e6, e: 2.9e6, h: 1.2, br: 450, w: 'Etiopia, Tanzania', c: '#b8883a', t: 'Faimoasa „Lucy” (3,2 mil. ani) mergea drept pe două picioare, dar avea încă brațe lungi. Creierul ei era cam de 3 ori mai mic decât al nostru. Urmele ei de pași s-au păstrat în cenușă vulcanică.' },
+    { n: 'Paranthropus', look: { lean: .2, arm: .6, brow: 1, jaw: 1.2, crest: .25, snout: .2, skin: '#6a4630', hair: '#2a1c14' }, s: 2.3e6, e: 1.2e6, h: 1.35, br: 520, w: 'Africa de Est', c: '#8a6a3a', t: 'Avea maxilare uriașe și dinți mari, pentru a mesteca plante dure. Nu e strămoșul nostru direct — o ramură care a dispărut.' },
+    { n: 'Homo habilis', look: { lean: .15, arm: .6, brow: .7, snout: .2, nose: 1, skin: '#8a5c3c', hair: '#2a1c14' }, s: 2.4e6, e: 1.4e6, h: 1.3, br: 610, w: 'Africa', c: '#c8903a', t: '„Omul îndemânatic”: primul din genul Homo, asociat cu primele unelte de piatră cioplită. Creierul începe să crească.' },
+    { n: 'Homo erectus', look: { lean: .06, arm: .45, brow: 1, snout: .12, nose: 1, skin: '#9a6a44', hair: '#2a1c14' }, s: 1.9e6, e: 1.1e5, h: 1.7, br: 950, w: 'Africa, Asia, Europa', c: '#d8a040', t: '„Omul în picioare”: a trăit aproape 2 milioane de ani! Primul care a ieșit din Africa, a folosit securi de piatră și a ținut focul sub control (acum cel puțin 400.000 de ani).' },
+    { n: 'Homo heidelbergensis', look: { lean: .04, arm: .4, brow: .9, snout: .1, nose: 1, skin: '#a07048', hair: '#3a2616' }, s: 7.0e5, e: 2.0e5, h: 1.75, br: 1250, w: 'Africa, Europa', c: '#e0b050', t: 'Înalt și puternic, cu creier mare. Vâna animale mari cu sulițe de lemn. Probabil strămoșul comun al neanderthalienilor și al nostru.' },
+    { n: 'Homo naledi', look: { lean: .1, arm: .65, brow: .6, nose: 1, skin: '#8a5a3a', hair: '#2a1c14' }, s: 3.35e5, e: 2.36e5, h: 1.4, br: 560, w: 'Africa de Sud', c: '#9a7aa0', t: 'Mic de statură și cu creier mic, dar cu mâini și picioare moderne. A fost descoperit într-o peșteră adâncă din Africa de Sud.' },
+    { n: 'Neanderthalienii', look: { lean: .05, arm: .38, brow: .95, snout: .1, nose: 2, build: 1.2, skin: '#d0a888', hair: '#6a4a2a' }, s: 4.0e5, e: 4.0e4, h: 1.65, br: 1450, w: 'Europa, Asia de Vest', c: '#7aa0c0', t: 'Puternici, adaptați la frig, cu creier chiar mai mare decât al nostru. Făceau focuri, haine, unelte și își îngropau morții. Mulți oameni de azi au 1–2% ADN neanderthalian. Au trăit și pe teritoriul României.' },
+    { n: 'Denisovanii', look: { lean: .05, arm: .4, brow: .8, nose: 1, skin: '#b88862', hair: '#1a1008' }, s: 2.0e5, e: 5.0e4, h: 1.7, br: 1400, w: 'Asia', c: '#6ab0a0', t: 'O specie „misterioasă”, cunoscută mai ales din ADN și câteva oase găsite într-o peșteră din Siberia. Unii oameni din Asia și Oceania au și ADN denisovan.' },
+    { n: 'Homo floresiensis', look: { lean: .1, arm: .6, brow: .6, nose: 1, skin: '#8a5a3a', hair: '#2a1c14' }, s: 1.0e5, e: 5.0e4, h: 1.06, br: 420, w: 'Insula Flores (Indonezia)', c: '#c07a8a', t: '„Hobbitul”: avea doar ~1 metru înălțime! A trăit pe o insulă izolată, unde corpul s-a micșorat în timp.' },
+    { n: 'Homo sapiens (noi)', look: { lean: 0, arm: .38, brow: .1, nose: 1, skin: '#c8905a', hair: '#2a1a10', cloth: '#4a7a9a' }, s: 3.0e5, e: 0, h: 1.7, br: 1350, w: 'Africa → tot globul', c: '#ffe27a', t: 'Noi! Primii au apărut în Africa acum ~300.000 de ani. Ne deosebim prin limbaj complex, artă (picturi în peșteri) și cooperare în grupuri mari. Suntem singura specie umană rămasă. În România, „Omul de la Peștera cu Oase” (40.000 de ani) e unul dintre cei mai vechi sapiens din Europa.' }
   ];
   const PER = [['Paleolitic inferior', 3.3e6, 3.0e5, '#7a5a3a'], ['Paleolitic mijlociu', 3.0e5, 5.0e4, '#a07a3a'], ['Paleolitic superior', 5.0e4, 1.17e4, '#c8a050'], ['Mezolitic', 1.17e4, 8.0e3, '#6aa0a0'], ['Neolitic', 8.0e3, 5.0e3, '#6ac080']];
   defineModule({
@@ -41,19 +41,14 @@
         const W = api.freeW, top = api.cy - api.unit + 2, free = api.unit * 2;
         const labelW = W < 520 ? 88 : 140, cx0 = labelW + 6, cw = W - cx0 - 10, perY = top + 6, perH = 18, rowY = perY + perH + 8;
         const rowH = clamp((free * 0.5) / SP.length, 13, 24);
-        lay = { W: W, top: top, labelW: labelW, cx0: cx0, cw: cw, perY: perY, perH: perH, rowY: rowY, rowH: rowH, figBase: api.cy + api.unit - 26, free: free };
+        lay = { W: W, top: top, labelW: labelW, cx0: cx0, cw: cw, perY: perY, perH: perH, rowY: rowY, rowH: rowH, figBase: api.cy + api.unit - 34, free: free };
       }
       api.pointer({ down: (px, py) => { if (!lay) layout(); const i = Math.floor((py - lay.rowY) / lay.rowH); if (i >= 0 && i < SP.length) { sel = SP[i]; x = clamp(xOf((sel.s + sel.e) / 2), 0, 1); sl.set(x); play = false; bP.innerHTML = '▶ Derulează'; api.say('<b>' + sel.n + '</b> · ' + ageText(sel.s) + ' – ' + ageText(sel.e) + ' · ' + sel.w + '. ' + sel.t + ' <i>Înălțime ~' + fmt(sel.h, 2) + ' m, creier ~' + sel.br + ' cm³.</i>', 20000); } else if (px > lay.cx0 && py < lay.rowY) { x = clamp((px - lay.cx0) / lay.cw, 0, 1); sl.set(x); play = false; } } });
-      function person(px, base, h, sc, col, br, label, gl) {
-        const hp = h * sc, hr = hp * 0.075;
-        ctx.save(); ctx.globalAlpha = gl;
-        ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = Math.max(3, hp * 0.05); ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.arc(px, base - hp + hr * (1 + br / 3000), hr * (0.75 + br / 2400), 0, 7); ctx.fill();               // cap (cu cât creier mai mare, cu atât mai mare)
-        const neck = base - hp + hr * 2.4, hip = base - hp * 0.5; ctx.beginPath(); ctx.moveTo(px, neck); ctx.lineTo(px, hip); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(px - hp * 0.2, neck + hp * 0.06); ctx.lineTo(px, neck + 2); ctx.lineTo(px + hp * 0.2, neck + hp * 0.06); ctx.moveTo(px - hp * 0.2, neck + hp * 0.06); ctx.lineTo(px - hp * 0.24, hip - 4); ctx.moveTo(px + hp * 0.2, neck + hp * 0.06); ctx.lineTo(px + hp * 0.24, hip - 4); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(px, hip); ctx.lineTo(px - hp * 0.12, base); ctx.moveTo(px, hip); ctx.lineTo(px + hp * 0.12, base); ctx.stroke();
-        ctx.restore();
-        ctx.fillStyle = '#fff'; ctx.font = '600 10px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillText(label, px, base + 12); ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.fillText(fmt(h, 2) + ' m', px, base + 23);
+      function person(px, base, p, figH, label, t) {
+        const sp = Object.assign({ h: p.h, brain: p.br }, p.look);
+        ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.beginPath(); ctx.ellipse(px, base + 1, figH * 0.2, figH * 0.035, 0, 0, 6.3); ctx.fill();
+        window.Creatures.hominin(ctx, px, base, figH / 100, sp, t, 1);
+        ctx.fillStyle = '#fff'; ctx.font = '600 10px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillText(label, px, base + 13); ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.fillText(fmt(p.h, 2) + ' m · creier ' + p.br + ' cm³', px, base + 24);
       }
       function frame(dt, t) {
         if (play) { x = Math.min(1, x + dt * 0.04); sl.set(x); if (x >= 1) { play = false; bP.innerHTML = '↺ De la început'; } }
@@ -76,9 +71,9 @@
         const cxp = L.cx0 + L.cw * x; ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cxp, L.perY - 2); ctx.lineTo(cxp, L.rowY + SP.length * L.rowH); ctx.stroke();
         ctx.fillStyle = '#ffd166'; ctx.font = '700 11px system-ui,sans-serif'; ctx.textAlign = cxp > L.W - 70 ? 'right' : 'left'; ctx.fillText(ageText(age), cxp + (cxp > L.W - 70 ? -4 : 4), L.rowY + SP.length * L.rowH + 14);
         /* siluete pentru speciile contemporane */
-        const sc = Math.min(L.free * 0.2, 90) / 1.8, n = alive.length;
-        ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fillRect(10, L.figBase - 1.8 * sc, L.W - 20, 1); ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.font = '600 9px system-ui,sans-serif'; ctx.textAlign = 'left'; ctx.fillText('1,8 m', 12, L.figBase - 1.8 * sc - 3);
-        alive.forEach((p, i) => person(L.W * (i + 0.5) / Math.max(n, 1), L.figBase, p.h, sc, p.c, p.br, p.n.split(' (')[0].replace('Homo ', 'H. '), 1));
+        const figH = Math.min(L.free * 0.25, 130), n = alive.length;
+        ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fillRect(10, L.figBase - figH, L.W - 20, 1); ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.font = '600 9px system-ui,sans-serif'; ctx.textAlign = 'left'; ctx.fillText('1,8 m', 12, L.figBase - figH - 3);
+        alive.forEach((p, i) => person(L.W * (i + 0.5) / Math.max(n, 1), L.figBase, p, figH, p.n.split(' (')[0].replace('Homo ', 'H. '), t));
         if (!n) { ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.font = '600 13px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillText('Pe vremea aceea încă nu existau strămoși ai omului cunoscuți.', L.W / 2, L.figBase - 40); }
         info.innerHTML = n ? '<b>' + ageText(age) + ':</b> ' + alive.map((p) => p.n.split(' (')[0]).join(', ') + (n > 1 ? ' — <b>' + n + ' specii trăiau în același timp</b>' : '') : 'Niciun strămoș cunoscut.';
       }

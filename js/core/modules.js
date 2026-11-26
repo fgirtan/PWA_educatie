@@ -9,7 +9,7 @@
   window.defineModule = function (d) { MODS[d.id] = d; };
 
   const $ = (s) => document.querySelector(s);
-  let cur = null;
+  let cur = null, curApi = null;
 
   function openModule(id) {
     const def = MODS[id];
@@ -20,7 +20,9 @@
     $('#mod-title').textContent = def.title;
     $('#mod-sub').textContent = def.sub || '';
     const panel = $('#mod-panel'); panel.innerHTML = '';
-    const info = $('#mod-info'); info.innerHTML = ''; info.classList.remove('show');
+    const info = $('#mod-info'), infoText = $('#mod-info-text'); infoText.innerHTML = ''; info.classList.remove('show'); let lastSay = '';
+    $('#mod-crumb').textContent = (window.UX && UX.sectionName(id) ? UX.sectionName(id) + ' › ' : '') + def.title;
+    $('#mod-canvas').setAttribute('aria-label', def.title + '. ' + (def.sub || ''));
     const canvas = $('#mod-canvas');
     const ctx = canvas.getContext('2d');
     const cleanups = [];
@@ -43,7 +45,7 @@
         api.unit = Math.min(freeW, freeH) / 2;
       },
       say: function (html, ms) {
-        info.innerHTML = html;
+        lastSay = html; infoText.innerHTML = html;
         info.classList.add('show');
         clearTimeout(api._sayT);
         if (ms) api._sayT = setTimeout(() => info.classList.remove('show'), ms);
@@ -91,6 +93,8 @@
           canvas.removeEventListener('pointerup', u); canvas.removeEventListener('pointercancel', u);
         });
       },
+      reshow: function () { if (lastSay) { infoText.innerHTML = lastSay; info.classList.add('show'); clearTimeout(api._sayT); } },
+      hideSay: function () { info.classList.remove('show'); clearTimeout(api._sayT); },
       onCleanup: function (fn) { cleanups.push(fn); }
     };
 
@@ -127,6 +131,8 @@
     }
     raf = requestAnimationFrame(loop);
 
+    curApi = api;
+    if (window.UX) UX.onOpen(id, def.title);
     cur = {
       stop: function () {
         alive = false;
@@ -139,7 +145,7 @@
   }
 
   function closeModule(silent) {
-    if (cur) { cur.stop(); cur = null; }
+    if (cur) { cur.stop(); cur = null; curApi = null; if (window.UX) UX.onClose(); }
     if (silent) return;
     $('#module').classList.add('hidden');
     $('#home').classList.remove('hidden');
@@ -154,6 +160,7 @@
     const home = $('#home'); if (home) home.scrollTop = 0;
   }
   window.showSection = showSection;
+  window.openModule = openModule;
   window.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.sec-tile').forEach((t) => {
       const id = t.getAttribute('data-section');
@@ -167,6 +174,9 @@
       el.addEventListener('click', () => openModule(el.getAttribute('data-module')));
     });
     $('#mod-back').addEventListener('click', () => closeModule());
+    $('#mod-help').addEventListener('click', () => { if (curApi) curApi.reshow(); });
+    $('#mod-info-x').addEventListener('click', (e) => { e.stopPropagation(); if (curApi) curApi.hideSay(); });
+    $('#mod-full').addEventListener('click', () => { const d = document, el = d.documentElement; if (!d.fullscreenElement) (el.requestFullscreen || el.webkitRequestFullscreen || function () {}).call(el); else (d.exitFullscreen || d.webkitExitFullscreen || function () {}).call(d); });
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && cur) closeModule();
     });
