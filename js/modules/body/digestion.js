@@ -36,6 +36,7 @@
       ];
       const stOf = (x) => ST.findIndex((s) => x >= s.a && x < s.b) < 0 ? ST.length - 1 : ST.findIndex((s) => x >= s.a && x < s.b);
       let lastSt = -1;
+      const FR = []; for (let i = 0; i < 18; i++) FR.push({ a: i * 2.399, r: 0.25 + 0.75 * ((i * 0.618) % 1), k: (i * 0.37) % 1, sp: 0.5 + ((i * 0.29) % 1) });
       const r1 = api.row('');
       const bE = api.button(r1, '🍎 Mănâncă', () => { u = 0; playing = true; bE.innerHTML = '🍎 Mănâncă din nou'; lastSt = -1; });
       const sl = api.slider(r1, { label: 'Timpul după masă', min: 0, max: 1, step: 0.001, value: 0, fmt: () => timeText(), onInput: (v) => { u = v; playing = false; } });
@@ -65,8 +66,30 @@
         /* mâncarea */
         const p = polyAt(poly, u), si = stOf(u);
         const foodCol = si === 0 ? '#e83a3a' : si === 1 ? '#d9563a' : si === 2 ? '#d8b88a' : si === 3 ? '#e8d4a8' : '#9a6a3a';
-        if (si === 3 || si === 2) for (let i = 0; i < 6; i++) { const q = polyAt(poly, clamp(u - i * 0.012, 0, 1)); ctx.fillStyle = foodCol; ctx.beginPath(); ctx.arc(X(q.x), Y(q.y), U * 0.025 * (1 - i * 0.1), 0, 7); ctx.fill(); }
-        ctx.fillStyle = foodCol; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), U * (si <= 1 ? 0.04 : si === 2 ? 0.055 : 0.035), 0, 7); ctx.fill(); ctx.stroke();
+        if (si === 3) for (let i = 0; i < 6; i++) { const q = polyAt(poly, clamp(u - i * 0.012, 0, 1)); ctx.fillStyle = foodCol; ctx.beginPath(); ctx.arc(X(q.x), Y(q.y), U * 0.025 * (1 - i * 0.1), 0, 7); ctx.fill(); }
+        if (si !== 2) { ctx.fillStyle = foodCol; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), U * (si <= 1 ? 0.04 : 0.035), 0, 7); ctx.fill(); ctx.stroke(); }
+        else {
+          /* în stomac mărul se sparge în bucăți, se amestecă cu acid și devine pastă */
+          const k = clamp((u - ST[2].a) / (ST[2].b - ST[2].a), 0, 1), ent = polyAt(poly, ST[2].a + 0.008);
+          const scx = X(0.12), scy = Y(-0.37), cs = Math.cos(0.6), sn = Math.sin(0.6);
+          ctx.save(); ctx.fillStyle = 'rgba(190,220,80,' + 0.28 * k + ')'; ctx.beginPath(); ctx.ellipse(scx, scy, U * 0.2, U * 0.13, 0.6, 0, 7); ctx.fill(); ctx.restore();
+          if (k < 0.12) { ctx.fillStyle = '#e83a3a'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(lerp(X(ent.x), scx, k / 0.12 * 0.5), lerp(Y(ent.y), scy, k / 0.12 * 0.5), U * 0.045, 0, 7); ctx.fill(); ctx.stroke(); }
+          else {
+            const m = clamp((k - 0.12) / 0.5, 0, 1);                          // 0 → bucăți mari, 1 → împrăștiate și mici
+            for (let i = 0; i < FR.length; i++) {
+              const f = FR[i], px0 = lerp(X(ent.x), scx, 0.5), py0 = lerp(Y(ent.y), scy, 0.5);
+              const lx = Math.cos(f.a + t * 0.4 * f.sp) * f.r * U * 0.17, ly = Math.sin(f.a + t * 0.4 * f.sp) * f.r * U * 0.09;
+              const tx = scx + lx * cs - ly * sn, ty = scy + lx * sn + ly * cs, e = 1 - Math.pow(1 - m, 2);
+              const sz = U * (0.03 + 0.02 * f.k) * (1 - 0.62 * clamp((k - 0.2) / 0.8, 0, 1));
+              const mush = clamp((k - 0.25) / 0.6, 0, 1);
+              ctx.fillStyle = 'rgb(' + Math.round(lerp(f.k > 0.5 ? 232 : 245, 214, mush)) + ',' + Math.round(lerp(f.k > 0.5 ? 70 : 226, 184, mush)) + ',' + Math.round(lerp(f.k > 0.5 ? 60 : 190, 138, mush)) + ')';
+              ctx.beginPath(); ctx.arc(lerp(px0, tx, e), lerp(py0, ty, e), sz, 0, 7); ctx.fill();
+            }
+            /* bule de acid */
+            for (let i = 0; i < 9; i++) { const ph = ((t * 0.5 + i / 9) % 1), bx = scx + Math.sin(i * 5.1) * U * 0.13, by = scy + U * 0.07 - ph * U * 0.16; ctx.fillStyle = 'rgba(200,235,100,' + 0.6 * (1 - ph) * clamp(k * 2, 0, 1) + ')'; ctx.beginPath(); ctx.arc(bx, by, 2 + (i % 3), 0, 7); ctx.fill(); }
+            if (k > 0.2) { ctx.fillStyle = '#d6f08a'; ctx.font = '600 11px system-ui,sans-serif'; ctx.textAlign = 'left'; ctx.fillText('acid + mișcări → pastă (chim)', X(0.34), Y(-0.37)); }
+          }
+        }
         /* nutrienți care trec în sânge (intestinul subțire) */
         if (si === 3) for (let i = 0; i < 10; i++) { const k = ((t * 0.8 + i / 10) % 1); ctx.fillStyle = 'rgba(255,90,100,' + (1 - k) + ')'; ctx.beginPath(); ctx.arc(X(p.x) + 0.12 * U * k * (i % 2 ? 1 : -1), Y(p.y) - 0.02 * U * k, 3, 0, 7); ctx.fill(); }
         if (si === 3) { ctx.fillStyle = '#ff8a94'; ctx.font = '600 11px system-ui,sans-serif'; ctx.textAlign = 'left'; ctx.fillText('nutrienți → sânge', X(0.3), Y(p.y)); }

@@ -32,15 +32,15 @@
       const info = document.createElement('div'); info.className = 'mod-readout'; r2.appendChild(info);
       api.say('Inima e o pompă cu <b>4 camere</b>. Partea dreaptă trimite sângele <b style="color:#7aa0ff">sărac în oxigen</b> la plămâni; partea stângă trimite sângele <b style="color:#ff6a77">bogat în oxigen</b> în tot corpul. Atinge o cameră ca să afli mai multe!', 14000);
 
-      const PTS = [[-0.55, -0.45, 'b'], [-0.28, -0.12, 'b'], [-0.24, 0.2, 'b'], [-0.18, -0.35, 'b'], [-0.32, -0.72, 'b'], [0.0, -0.82, 'r'], [0.32, -0.72, 'r'], [0.18, -0.35, 'r'], [0.26, -0.12, 'r'], [0.26, 0.2, 'r'], [0.55, -0.2, 'r'], [0.8, 0.3, 'r'], [0.55, 0.8, 'b'], [-0.55, 0.8, 'b'], [-0.8, 0.2, 'b']];
+      const PTS = [[-0.55, -0.45, 'b'], [-0.2, -0.02, 'b'], [-0.16, 0.3, 'b'], [-0.18, -0.35, 'b'], [-0.32, -0.72, 'b'], [0.0, -0.82, 'r'], [0.32, -0.72, 'r'], [0.18, -0.35, 'r'], [0.22, -0.02, 'r'], [0.18, 0.3, 'r'], [0.55, -0.2, 'r'], [0.8, 0.3, 'r'], [0.55, 0.8, 'b'], [-0.55, 0.8, 'b'], [-0.8, 0.2, 'b']];
       const poly = mkPoly(PTS.map((p) => [p[0], p[1]]), true);
       const col = (c, a) => c === 'r' ? 'rgba(255,77,90,' + a + ')' : 'rgba(80,125,255,' + a + ')';
       const bump = (p, a, b) => p >= a && p < b ? Math.sin(Math.PI * (p - a) / (b - a)) : 0;
       const CH = [
-        { n: 'Atriul drept', x: -0.27, y: -0.1, r: 0.12, c: 'b', t: 'Aici intră sângele sărac în oxigen, venit din corp prin venele mari (cave).' },
-        { n: 'Ventriculul drept', x: -0.24, y: 0.2, r: 0.15, c: 'b', t: 'Pompează sângele spre plămâni, ca să ia oxigen proaspăt.' },
-        { n: 'Atriul stâng', x: 0.26, y: -0.1, r: 0.12, c: 'r', t: 'Primește sângele bogat în oxigen de la plămâni.' },
-        { n: 'Ventriculul stâng', x: 0.26, y: 0.2, r: 0.17, c: 'r', t: 'Cea mai puternică cameră: împinge sângele prin aortă în tot corpul, până în degetul mic de la picior. Are pereții cei mai groși.' }
+        { n: 'Atriul drept', x: -0.2, y: -0.02, r: 0.12, c: 'b', t: 'Aici intră sângele sărac în oxigen, venit din corp prin venele mari (cave).' },
+        { n: 'Ventriculul drept', x: -0.16, y: 0.3, r: 0.15, c: 'b', t: 'Pompează sângele spre plămâni, ca să ia oxigen proaspăt.' },
+        { n: 'Atriul stâng', x: 0.22, y: -0.02, r: 0.12, c: 'r', t: 'Primește sângele bogat în oxigen de la plămâni.' },
+        { n: 'Ventriculul stâng', x: 0.18, y: 0.3, r: 0.17, c: 'r', t: 'Cea mai puternică cameră: împinge sângele prin aortă în tot corpul, până în degetul mic de la picior. Are pereții cei mai groși.' }
       ];
       api.pointer({ down: (x, y) => { const U = api.unit; for (const c of CH) if (Math.hypot(x - (api.cx + c.x * U), y - (api.cy + c.y * U)) < c.r * U * 1.3) { api.say('<b>' + c.n + '.</b> ' + c.t, 9000); return; } const lung = Math.hypot(x - api.cx, y - (api.cy - 0.78 * U)) < 0.4 * U; if (lung) api.say('<b>Plămânii.</b> Aici sângele lasă dioxidul de carbon și ia oxigen: devine din albastru, roșu.', 9000); if (y > api.cy + 0.7 * U) api.say('<b>Corpul.</b> În capilare, sângele lasă oxigenul mușchilor, creierului și organelor și devine din nou albastru. Un ciclu complet durează ~1 minut.', 9000); } });
       function frame(dt, t) {
@@ -57,10 +57,33 @@
         ctx.fillStyle = 'rgba(255,170,190,0.18)'; ctx.beginPath(); ctx.ellipse(X(0), Y(-0.77), U * 0.5, U * 0.14, 0, 0, 7); ctx.fill();
         ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.font = '700 12px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillText('Plămâni', X(0), Y(-0.9)); ctx.fillText('Restul corpului', X(0), Y(0.92));
         ctx.fillText('din corp', X(-0.8), Y(-0.07)); ctx.fillText('spre corp', X(0.8), Y(0.1));
-        /* camere */
-        for (const c of CH) { const s = c.y < 0 ? 1 - 0.14 * A : 1 - 0.16 * V; ctx.fillStyle = col(c.c, 0.95); ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(X(c.x), Y(c.y), U * c.r * s, U * c.r * s * 1.12, 0, 0, 7); ctx.fill(); ctx.stroke(); }
-        ctx.fillStyle = '#fff'; ctx.font = '700 ' + Math.round(U * 0.05 + 6) + 'px system-ui,sans-serif';
-        ctx.fillText('AD', X(-0.27), Y(-0.09)); ctx.fillText('VD', X(-0.24), Y(0.22)); ctx.fillText('AS', X(0.26), Y(-0.09)); ctx.fillText('VS', X(0.26), Y(0.22));
+        /* inima: siluetă anatomică, perete de mușchi și cavități */
+        const hx = X(0), hy = Y(0.12), hsx = U * 0.5, hsy = U * 0.54, beat = 1 + 0.05 * V + 0.02 * A;
+        const heartPath = () => { ctx.beginPath(); ctx.moveTo(0.05 * hsx, -0.42 * hsy); ctx.bezierCurveTo(-0.05 * hsx, -0.9 * hsy, -1.0 * hsx, -0.85 * hsy, -0.98 * hsx, -0.15 * hsy); ctx.bezierCurveTo(-0.97 * hsx, 0.35 * hsy, -0.4 * hsx, 0.65 * hsy, 0.25 * hsx, 1.0 * hsy); ctx.bezierCurveTo(0.95 * hsx, 0.55 * hsy, 1.0 * hsx, 0.1 * hsy, 0.98 * hsx, -0.15 * hsy); ctx.bezierCurveTo(0.96 * hsx, -0.8 * hsy, 0.15 * hsx, -0.9 * hsy, 0.05 * hsx, -0.42 * hsy); ctx.closePath(); };
+        ctx.save(); ctx.translate(hx, hy); ctx.scale(beat, beat);
+        ctx.shadowColor = 'rgba(255,60,80,0.35)'; ctx.shadowBlur = 24;
+        const wall = ctx.createLinearGradient(-hsx, -hsy, hsx, hsy); wall.addColorStop(0, '#d0606c'); wall.addColorStop(0.6, '#a83242'); wall.addColorStop(1, '#6e1a2a');
+        heartPath(); ctx.fillStyle = wall; ctx.fill(); ctx.shadowBlur = 0;
+        ctx.save(); heartPath(); ctx.clip();
+        /* cavitățile: albastre (dreapta inimii, în stânga ecranului) și roșii */
+        const cav = (c, rx, ry, rot, shrink) => { const g = ctx.createRadialGradient((c.x * U) - 6, (c.y - 0.12) * U - 8, 2, c.x * U, (c.y - 0.12) * U, Math.max(rx, ry) * U); const base = c.c === 'r' ? ['#ff6a77', '#c8283a'] : ['#7a9cff', '#2f4fc4']; g.addColorStop(0, base[0]); g.addColorStop(1, base[1]); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(c.x * U, (c.y - 0.12) * U, rx * U * shrink, ry * U * shrink, rot, 0, 7); ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 2; ctx.stroke(); };
+        cav(CH[0], 0.115, 0.13, 0, 1 - 0.16 * A); cav(CH[1], 0.12, 0.21, 0.12, 1 - 0.22 * V);
+        cav(CH[2], 0.105, 0.12, 0, 1 - 0.16 * A); cav(CH[3], 0.1, 0.2, -0.12, 1 - 0.3 * V);   // ventricul stâng: cavitate mai mică, perete mai gros
+        /* valve atrioventriculare: se deschid la diastolă */
+        const open = V < 0.08 ? 1 : 0;
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+        for (const vx of [-0.18, 0.2]) { const y0 = (0.12 - 0.12) * U + 0.04 * U; ctx.beginPath(); if (open) { ctx.moveTo((vx - 0.09) * U, y0); ctx.lineTo((vx - 0.04) * U, y0 + 0.05 * U); ctx.moveTo((vx + 0.09) * U, y0); ctx.lineTo((vx + 0.04) * U, y0 + 0.05 * U); } else { ctx.moveTo((vx - 0.1) * U, y0); ctx.lineTo((vx + 0.1) * U, y0); } ctx.stroke(); }
+        /* vase coronare pe suprafață */
+        ctx.strokeStyle = 'rgba(255,170,120,0.55)'; ctx.lineWidth = 2.2;
+        ctx.beginPath(); ctx.moveTo(0.02 * hsx, -0.3 * hsy); ctx.bezierCurveTo(0.2 * hsx, -0.1 * hsy, 0.4 * hsx, 0.2 * hsy, 0.25 * hsx, 0.78 * hsy); ctx.moveTo(-0.15 * hsx, -0.2 * hsy); ctx.bezierCurveTo(-0.5 * hsx, 0.1 * hsy, -0.5 * hsx, 0.4 * hsy, -0.1 * hsx, 0.78 * hsy); ctx.stroke();
+        /* luciu */
+        const sh = ctx.createRadialGradient(-0.4 * hsx, -0.55 * hsy, 2, -0.3 * hsx, -0.4 * hsy, hsx * 0.9); sh.addColorStop(0, 'rgba(255,255,255,0.28)'); sh.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = sh; ctx.fillRect(-hsx, -hsy, hsx * 2, hsy * 2.2);
+        ctx.restore();
+        heartPath(); ctx.strokeStyle = 'rgba(40,0,10,0.75)'; ctx.lineWidth = 3; ctx.stroke();
+        ctx.restore();
+        ctx.fillStyle = '#fff'; ctx.font = '700 ' + Math.round(U * 0.05 + 6) + 'px system-ui,sans-serif'; ctx.textAlign = 'center';
+        for (const [c, t2] of [[CH[0], 'AD'], [CH[1], 'VD'], [CH[2], 'AS'], [CH[3], 'VS']]) ctx.fillText(t2, X(c.x), Y(c.y) + 5);
+        ctx.font = '600 ' + Math.round(U * 0.035 + 5) + 'px system-ui,sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.fillText('sept', X(0.01), Y(0.55)); ctx.fillText('valve', X(0.02), Y(0.18));
         /* globule */
         for (let i = 0; i < 70; i++) {
           const u = (flowU + i / 70) % 1, p = polyAt(poly, u), c = PTS[Math.min(p.i, PTS.length - 1)][2];

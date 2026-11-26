@@ -34,20 +34,41 @@
         { n: 'Clavicula', k: 's', x1: -0.2, y1: -0.62, x2: 0.2, y2: -0.62, w: 0.015, t: 'Leagă umărul de stern. E cel mai des fracturat os din corp, mai ales la copii!' },
         { n: 'Humerus', k: 's', x1: -0.22, y1: -0.6, x2: -0.33, y2: -0.28, w: 0.028, mirror: true, t: 'Osul brațului, de la umăr la cot.' },
         { n: 'Radius și ulna', k: 's', x1: -0.33, y1: -0.27, x2: -0.4, y2: 0.04, w: 0.024, mirror: true, t: 'Cele două oase ale antebrațului. Ele se răsucesc una peste alta când întorci palma.' },
-        { n: 'Mâna', k: 'e', x: -0.42, y: 0.1, rx: 0.045, ry: 0.07, mirror: true, t: 'O mână are 27 de oase! Într-un singur picior sunt 26.' },
         { n: 'Bazinul', k: 'e', x: 0, y: 0.02, rx: 0.2, ry: 0.1, t: 'Susține partea de sus a corpului și ține organele. Se leagă de coapse.' },
         { n: 'Femurul', k: 's', x1: -0.1, y1: 0.07, x2: -0.14, y2: 0.44, w: 0.04, mirror: true, t: 'Osul coapsei: cel mai lung și mai puternic os din corp — cam un sfert din înălțimea ta!' },
         { n: 'Rotula', k: 'e', x: -0.14, y: 0.48, rx: 0.035, ry: 0.035, mirror: true, t: 'Osul rotund din fața genunchiului, care îl apără.' },
-        { n: 'Tibia și fibula', k: 's', x1: -0.14, y1: 0.52, x2: -0.14, y2: 0.86, w: 0.03, mirror: true, t: 'Oasele gambei. Tibia e osul gros, cel pe care îl simți în față, sub genunchi.' },
-        { n: 'Laba piciorului', k: 'e', x: -0.16, y: 0.93, rx: 0.07, ry: 0.035, mirror: true, t: 'Oasele piciorului te ajută să stai drept și să mergi, ca niște arcuri.' }
+        { n: 'Tibia și fibula', k: 's', x1: -0.14, y1: 0.52, x2: -0.14, y2: 0.86, w: 0.03, mirror: true, t: 'Oasele gambei. Tibia e osul gros, cel pe care îl simți în față, sub genunchi.' }
       ];
+      /* mâna și laba piciorului, cu fiecare os: încheietură, palmă/talpă, degete */
+      (function () {
+        const D = Math.PI / 180, fan = (x, y, ang, lens, n, w, w2) => { let cx = x, cy = y; const out = []; lens.forEach((L) => { out.push({ n: n, k: 's', x1: cx, y1: cy, x2: cx + Math.sin(ang * D) * L, y2: cy + Math.cos(ang * D) * L, w: w, mirror: true, t: w2 }); cx += Math.sin(ang * D) * L; cy += Math.cos(ang * D) * L; }); return out; };
+        const TC = 'Încheietura mâinii are 8 oase mici (carpiene), așezate în două rânduri. Ele fac mâna atât de mobilă.';
+        const TM = 'Cele 5 oase ale palmei (metacarpiene), câte unul pentru fiecare deget.';
+        const TF = 'Fiecare deget are 3 falange, iar degetul mare doar 2: în total 14 oase în degetele unei mâini. Ele îți dau precizie la scris, la desenat și la prins.';
+        B.push({ n: 'Carpiene (încheietura)', k: 'e', x: -0.405, y: 0.085, rx: 0.035, ry: 0.022, mirror: true, t: TC });
+        const hx = -0.405, hy = 0.1;
+        [[-38, 0.035, [0.026, 0.02]], [-14, 0.062, [0.03, 0.02, 0.015]], [-2, 0.066, [0.034, 0.022, 0.016]], [10, 0.06, [0.03, 0.02, 0.015]], [24, 0.052, [0.024, 0.016, 0.013]]].forEach(([a, mc, ph]) => {
+          fan(hx, hy, a, [mc], 'Metacarpiene (palma)', 0.008, TM).forEach((b) => B.push(b));
+          const bx = hx + Math.sin(a * D) * mc, by = hy + Math.cos(a * D) * mc;
+          fan(bx, by, a * 0.8, ph, 'Falangele mâinii (degetele)', 0.0065, TF).forEach((b) => B.push(b));
+        });
+        const TT = 'Laba are 7 oase tarsiene. Cel mai mare e calcaneul, osul călcâiului, care duce greutatea corpului.';
+        const TMT = 'Cele 5 oase lungi din mijlocul labei (metatarsiene) formează bolta piciorului.';
+        const TFT = 'Degetele piciorului au 14 oase, ca la mână, dar mai scurte. Degetul mare te ajută să te împingi când mergi.';
+        B.push({ n: 'Tarsiene (laba, călcâiul)', k: 'e', x: -0.14, y: 0.925, rx: 0.045, ry: 0.032, mirror: true, t: TT });
+        [[0.045, 0.034, [0.03, 0.022]], [0.022, 0.044, [0.015, 0.011, 0.008]], [0.0, 0.046, [0.014, 0.01, 0.008]], [-0.02, 0.042, [0.013, 0.009, 0.008]], [-0.04, 0.038, [0.012, 0.009, 0.007]]].forEach(([dx, mt, ph]) => {
+          const x0 = -0.14 - 0.0, y0 = 0.945, x1 = -0.14 + dx, y1 = y0 + mt;
+          B.push({ n: 'Metatarsiene (talpa)', k: 's', x1: x0 + dx * 0.25, y1: y0, x2: x1, y2: y1, w: 0.009, mirror: true, t: TMT });
+          let cx = x1, cy = y1; ph.forEach((L) => { B.push({ n: 'Falangele piciorului (degetele)', k: 's', x1: cx, y1: cy, x2: cx + dx * 0.15, y2: cy + L, w: 0.007, mirror: true, t: TFT }); cx += dx * 0.15; cy += L; });
+        });
+      })();
       const r1 = api.row('');
       const bQ = api.button(r1, '🎯 Joc: găsește osul', () => { quiz = quiz ? null : pick(); bQ.classList.toggle('on', !!quiz); score = tries = 0; if (quiz) api.say('Atinge osul numit! Începe: <b>' + quiz.n + '</b>', 6000); else api.say('Joc oprit. Atinge un os ca să afli despre el.', 4000); });
       const info = document.createElement('div'); info.className = 'mod-readout'; r1.appendChild(info);
       api.say('Un adult are <b>206 oase</b>; un nou-născut are ~300, dintre care multe se sudează pe parcurs. Cel mai mic os, <b>scărița</b> din ureche, are 3 mm. Atinge un os!', 12000);
-      const pick = () => B[Math.floor(Math.random() * B.length)];
+      const pick = () => { const u = B.filter((b, i) => B.findIndex((c) => c.n === b.n) === i); return u[Math.floor(Math.random() * u.length)]; };
       function hit(x, y) {
-        const U = api.unit, cx = api.cx, cy = api.cy; let best = null, bd = 1e9;
+        const U = api.unit * 0.88, cx = api.cx, cy = api.cy - api.unit * 0.04; let best = null, bd = 1e9;
         for (const b of B) for (const sg of b.mirror ? [-1, 1] : [1]) {
           let d;
           if (b.k === 'e') { const dx = (x - (cx + sg * b.x * U)) / (b.rx * U + 8), dy = (y - (cy + b.y * U)) / (b.ry * U + 8); d = Math.hypot(dx, dy) - 1; }
@@ -56,16 +77,16 @@
         }
         return best;
       }
-      api.pointer({ down: (x, y) => { const b = hit(x, y); if (!b) return; sel = b; if (quiz) { tries++; if (b === quiz) { score++; api.say('✅ <b>Corect!</b> ' + b.n + '. ' + b.t, 6000); quiz = pick(); setTimeout(() => api.say('Acum: <b>' + quiz.n + '</b>', 3000), 2500); } else api.say('❌ Asta e <b>' + b.n + '</b>. Încearcă din nou: <b>' + quiz.n + '</b>', 4000); } else api.say('<b>' + b.n + '.</b> ' + b.t, 14000); } });
+      api.pointer({ down: (x, y) => { const b = hit(x, y); if (!b) return; sel = b; if (quiz) { tries++; if (b.n === quiz.n) { score++; api.say('✅ <b>Corect!</b> ' + b.n + '. ' + b.t, 6000); quiz = pick(); setTimeout(() => api.say('Acum: <b>' + quiz.n + '</b>', 3000), 2500); } else api.say('❌ Asta e <b>' + b.n + '</b>. Încearcă din nou: <b>' + quiz.n + '</b>', 4000); } else api.say('<b>' + b.n + '.</b> ' + b.t, 14000); } });
       function frame(dt, t) {
         bg(api, '#10162b', '#05080f');
-        const U = api.unit, cx = api.cx, cy = api.cy;
+        const U = api.unit * 0.88, cx = api.cx, cy = api.cy - api.unit * 0.04;
         ctx.lineCap = 'round';
-        const style = (b) => { const on = sel === b; ctx.fillStyle = on ? '#ffe9a0' : '#ece6d6'; ctx.strokeStyle = on ? '#ffb020' : '#7a7260'; ctx.lineWidth = on ? 3 : 1.5; };
+        const style = (b) => { const on = sel && sel.n === b.n; ctx.fillStyle = on ? '#ffe9a0' : '#ece6d6'; ctx.strokeStyle = on ? '#ffb020' : '#7a7260'; ctx.lineWidth = on ? 3 : 1.5; };
         for (const b of B) for (const sg of b.mirror ? [-1, 1] : [1]) {
           style(b);
           if (b.k === 'e') { ctx.beginPath(); ctx.ellipse(cx + sg * b.x * U, cy + b.y * U, b.rx * U, b.ry * U, 0, 0, 7); ctx.fill(); ctx.stroke(); }
-          else { ctx.strokeStyle = sel === b ? '#ffb020' : '#7a7260'; ctx.lineWidth = b.w * U * 2 + 3; ctx.beginPath(); ctx.moveTo(cx + sg * b.x1 * U, cy + b.y1 * U); ctx.lineTo(cx + sg * b.x2 * U, cy + b.y2 * U); ctx.stroke(); ctx.strokeStyle = sel === b ? '#ffe9a0' : '#ece6d6'; ctx.lineWidth = b.w * U * 2; ctx.stroke(); }
+          else { ctx.strokeStyle = sel && sel.n === b.n ? '#ffb020' : '#7a7260'; ctx.lineWidth = b.w * U * 2 + 3; ctx.beginPath(); ctx.moveTo(cx + sg * b.x1 * U, cy + b.y1 * U); ctx.lineTo(cx + sg * b.x2 * U, cy + b.y2 * U); ctx.stroke(); ctx.strokeStyle = sel && sel.n === b.n ? '#ffe9a0' : '#ece6d6'; ctx.lineWidth = b.w * U * 2; ctx.stroke(); }
         }
         /* detalii: coaste (arcuri) și vertebre */
         ctx.strokeStyle = '#7a7260'; ctx.lineWidth = 2;
