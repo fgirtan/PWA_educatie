@@ -481,3 +481,7 @@ kbd {
 .art-dig { background: linear-gradient(135deg, #1a1020, #0a0710); }
 .art-dig::after { content:"🍎"; position:absolute; left:46%; top:20%; font-size:44px; }
 .art-brain { background: radial-gradient(ellipse 40% 34% at 50% 48%, #e8683a 0 28%, #e8c33a 29% 52%, #4a8be8 53% 66%, transparent 68%), #10101e; }
+.art-phone { background: radial-gradient(ellipse 14% 38% at 50% 52%, #2f5aa8 0 70%, transparent 72%), linear-gradient(90deg, transparent 40%, #8aa0c8 40% 41%, transparent 41% 59%, #8aa0c8 59% 60%, transparent 60%), #0b1330; }
+.art-cam { background: radial-gradient(circle at 50% 52%, #0b1330 0 12%, #4aa3e0 13% 22%, #2a3050 23% 30%, transparent 31%), linear-gradient(#10162b,#10162b); }
+.art-car { background: linear-gradient(180deg, #2c6aa8 0 62%, #444 62%); }
+.art-car::after { content:""; position:absolute; left:26%; right:26%; top:36%; height:22%; background:#d94034; border-radius:12px 18px 6px 6px; box-shadow: 0 0 0 0 #000; }

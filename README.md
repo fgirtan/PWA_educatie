@@ -59,20 +59,35 @@ Pentru proiector: tasta <kbd>F</kbd> (ecran complet).
 ## Structura
 
 ```
-univers-app/
 ├── index.html              interfața
 ├── css/style.css           stiluri (contrast mare, text mare — pentru proiector)
-├── js/data.js              datele astronomice de bază și textele în română
-├── js/data-extra.js        obiectele adăugate ulterior (sateliți, comete, sonde, roveri, galaxii)
-├── js/sky.js               constelațiile și harta cerului
-├── js/textures.js          texturi procedurale (planete, nebuloase, galaxii)
-├── js/app.js               motorul: orbite Kepler, zoom, click, tur, joc, voce
+├── js/
+│   ├── data.js             datele astronomice de bază și textele în română
+│   ├── data-extra.js       obiectele adăugate ulterior (sateliți, comete, sonde, roveri, galaxii)
+│   ├── sky.js              constelațiile și harta cerului
+│   ├── textures.js         texturi procedurale (planete, nebuloase, galaxii)
+│   ├── app.js              motorul Sistemului Solar: orbite Kepler, zoom, click, tur, joc, voce
+│   ├── core/modules.js     cadrul comun pentru module (canvas, panou de comenzi, bula de text)
+│   └── modules/            modulele interactive, câte un fișier pe modul
+│       ├── space/          gaură neagră, explozii cosmice, gravitație, Big Bang
+│       ├── earth/          Pământul în timp, relief, vulcani, straturi, oceane
+│       ├── body/           inimă, plămâni, schelet, digestie, creier
+│       ├── tech/           circuit electric, calculator (biți), telefon, aparat foto
+│       ├── mechanics/      mecanisme, motor termic, motor electric
+│       └── vehicles/       avion, tren, mașină
 ├── photos/                 fotografiile reale + credits.json (autor și licență)
 ├── sw.js                   service worker (funcționare offline)
 ├── manifest.webmanifest    configurația PWA
 ├── icons/                  iconițele aplicației
 └── serve.py                server local pentru dezvoltare
 ```
+
+### Cum adaugi un modul nou
+
+1. Creează `js/modules/<categorie>/<id>.js` cu `defineModule({ id, title, sub, start(api) { … return { frame(dt, t) {…} }; } })`.
+   `api` oferă `canvas`, `ctx`, `cx/cy/unit/freeW` (zona liberă a ecranului), `say()` (bula de text),
+   `row()`, `button()`, `slider()` (comenzile din panoul de jos) și `pointer()` (atingeri).
+2. Adaugă un card în `index.html` cu `data-module="<id>"`, tag-ul `<script>` și intrarea din `ASSETS` din `sw.js`.
 
 ## Cum adaugi sau modifici conținut
 
