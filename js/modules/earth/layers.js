@@ -28,7 +28,7 @@
       const r1 = api.row('');
       const sl = api.slider(r1, { label: 'Adâncimea', min: 0, max: 1, step: 0.001, value: 0, fmt: () => fmtN(depth) + ' km', onInput: (v) => { depth = Math.pow(v, 2.2) * 6371; drilling = false; } });
       api.button(r1, '⛏️ Sapă singur', () => { drilling = true; if (depth >= 6370) { depth = 0; } });
-      api.button(r1, '💥 Cutremur', () => { quake = { t: 0 }; if (navigator.vibrate) navigator.vibrate([180, 60, 220, 60, 300, 80, 160]); api.say('<b>Unde seismice.</b> Undele P (verzi) trec prin tot Pământul. Undele S (roșii) NU trec prin nucleul extern — așa au aflat oamenii de știință că e lichid!', 10000); });
+      api.button(r1, '💥 Cutremur', () => { quake = { t: 0 }; api.say('<b>Unde seismice.</b> Undele P (verzi) trec prin tot Pământul. Undele S (roșii) NU trec prin nucleul extern — așa au aflat oamenii de știință că e lichid!', 10000); });
       const info = api.row('');
       const readout = document.createElement('div'); readout.className = 'mod-readout'; info.appendChild(readout);
       api.say('Trage de glisor ca să sapi spre centrul Pământului. Atinge un strat ca să afli despre el. Cea mai adâncă gaură făcută de oameni (Kola, Rusia) are doar 12 km!', 9000);
