@@ -30,6 +30,8 @@
       function typeSay() { api.say(explosive() > 0.55 ? '<b>Magmă groasă + gaze</b> = gazele nu pot scăpa și se adună ca într-o sticlă de suc scuturată… la erupție — <b>explozie</b>!' : '<b>Magmă fluidă</b>: gazele scapă ușor, deci lava curge liniștit pe pantă — erupție <b>efuzivă</b>.', 6000); }
       api.say('Alege tipul de magmă și apasă <b>Pornește erupția</b>. Vezi cum crește presiunea în camera magmatică!', 8000);
 
+      /* tremur natural: unde netede cu frecvențe diferite (nu zgomot aleator la fiecare cadru) */
+      const nz = (t, k, ph) => 0.5 * Math.sin(t * 6.7 * k + ph) + 0.3 * Math.sin(t * 11.9 * k + ph * 2.3 + 1.7) + 0.2 * Math.sin(t * 19.3 * k + ph * 0.6 + 0.4);
       function frame(dt, t) {
         const W = api.W, H = api.H, cx = api.cx, gy = api.cy + api.unit * 0.35, ex = explosive();
         if (ptime && !erupt) { press += dt * (0.12 + 0.1 * gas); sl.set(Math.min(1, press)); }
@@ -48,7 +50,7 @@
           if (press < 0.04) { erupt = 0; api.say('Erupția s-a oprit. Camera magmatică s-a golit și se va umple din nou în timp.', 7000); }
         }
         shake = Math.max(0, shake - dt * 0.9);
-        const sx = (erupt || (ptime && press > 0.3) ? (Math.random() - 0.5) * (4 + 14 * shake + press * 5) : 0), sy = sx * 0.6;
+        const shk = erupt || (ptime && press > 0.3) ? (3 + 11 * shake + press * 4) * 0.5 : 0, sx = nz(t, 1, 0.9) * shk * 1.6, sy = nz(t, 1.3, 3.1) * shk * 0.8;
         ctx.save(); ctx.translate(sx, sy);
         ctx.fillStyle = erupt && ex > 0.55 ? '#2a2830' : '#7ab6e8'; const sk = ctx.createLinearGradient(0, 0, 0, gy); sk.addColorStop(0, erupt && ex > 0.55 ? '#1a1820' : '#2c6aa8'); sk.addColorStop(1, erupt && ex > 0.55 ? '#4a4048' : '#bfe0f5'); ctx.fillStyle = sk; ctx.fillRect(-10, -10, W + 20, gy + 10);
         /* sol */

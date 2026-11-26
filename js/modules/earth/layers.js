@@ -34,6 +34,8 @@
       api.say('Trage de glisor ca să sapi spre centrul Pământului. Atinge un strat ca să afli despre el. Cea mai adâncă gaură făcută de oameni (Kola, Rusia) are doar 12 km!', 9000);
       api.pointer({ down: (x, y) => { const dx = x - api.cx, dy = y - api.cy, r = Math.hypot(dx, dy) / (api.unit * 0.86) * 6371; if (r < 6371) { const li = layerOf(6371 - r); selLayer = li; api.say('<b>' + LAY[li].n + '</b> (' + fmtN(LAY[li].a) + '–' + fmtN(LAY[li].b) + ' km). ' + LAY[li].t, 12000); } } });
       let lastL = -1;
+      /* tremur natural: unde netede cu frecvențe diferite (nu zgomot aleator la fiecare cadru) */
+      const nz = (t, k, ph) => 0.5 * Math.sin(t * 6.7 * k + ph) + 0.3 * Math.sin(t * 11.9 * k + ph * 2.3 + 1.7) + 0.2 * Math.sin(t * 19.3 * k + ph * 0.6 + 0.4);
       function frame(dt, t) {
         if (drilling) { depth = Math.min(6371, depth + dt * 330 + depth * dt * 0.12); sl.set(Math.pow(depth / 6371, 1 / 2.2)); if (depth >= 6371) drilling = false; }
         if (quake) { quake.t += dt; if (quake.t > 9) quake = null; }
@@ -41,7 +43,13 @@
         ctx.fillStyle = '#02030a'; ctx.fillRect(0, 0, api.W, api.H); drawStars(api, ST);
         /* cutremur: tot desenul tremură, tot mai slab pe măsură ce undele se sting */
         ctx.save();
-        if (quake) { const amp = 14 * Math.max(0, 1 - quake.t / 7) * (quake.t < 0.4 ? quake.t / 0.4 : 1); ctx.translate((Math.random() - 0.5) * amp * 2, (Math.random() - 0.5) * amp * 2); }
+        if (quake) {
+          const q = quake.t, jolt = Math.exp(-Math.pow((q - 0.35) / 0.18, 2)) * 5;                       // prima zdruncinătură (unda P)
+          const main = (q < 0.7 ? 0 : Math.min(1, (q - 0.7) / 0.9)) * Math.exp(-Math.max(0, q - 2.4) / 1.7) * 11;   // scuturarea principală (unda S), apoi se stinge lent
+          const amp = jolt + main;
+          ctx.translate(nz(q, 1, 0.3) * amp, nz(q, 1.25, 2.1) * amp * 0.42);
+          ctx.rotate(nz(q, 0.8, 4.2) * amp * 0.0011);
+        }
         const px = (km) => km / 6371 * R;
         /* câmp magnetic */
         ctx.strokeStyle = 'rgba(140,200,255,0.28)'; ctx.lineWidth = 1.5;
