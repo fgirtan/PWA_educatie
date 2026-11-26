@@ -6,11 +6,24 @@ defineModule({
   start: function (api) {
     const ctx = api.ctx, TAU = Math.PI * 2;
     let strength = 1, objs = [], aim = null, orbits = 0, fell = 0, lost = 0, flash = 0;
+    /* zoom: o „cameră” peste desen. Fizica rămâne în coordonatele de la zoom 1 (centrate pe stea). */
+    const ZMIN = 0.25, ZMAX = 4;
+    let zoom = 1, zt = 1, pinch = null, pinched = false;
+    const toWorld = (x, y) => [api.cx + (x - api.cx) / zoom, api.cy + (y - api.cy) / zoom];
+    const zlog = (z) => (Math.log(z) - Math.log(ZMIN)) / (Math.log(ZMAX) - Math.log(ZMIN));   // 0..1 pentru glisor
+    const zexp = (v) => Math.exp(Math.log(ZMIN) + v * (Math.log(ZMAX) - Math.log(ZMIN)));
+    let zsl = null;
+    const setZoom = (z) => { zt = Math.max(ZMIN, Math.min(ZMAX, z)); if (zsl) zsl.set(zlog(zt)); };
     const COLS = ['#7fd1ff', '#ffb36b', '#b7ff8a', '#ff8fb8', '#d8b4ff', '#ffe27a'];
     const GM = () => Math.pow(2 * Math.PI / 6, 2) * Math.pow(api.unit * 0.55, 3) * strength;   // pe raza R0 orbita durează 6 s
     const r1 = api.row('');
     api.slider(r1, { label: 'Masa stelei', min: 0.25, max: 4, step: 0.01, value: 1, fmt: (v) => (v < 1.2 ? 'cât Soarele ×' : 'de ') + v.toFixed(2), onInput: (v) => { strength = v; } });
     api.button(r1, '🧹 Curăță', () => { objs = []; });
+    const r2 = api.row('');
+    api.button(r2, '−', () => setZoom(zt / 1.5), { cls: 'zoom-btn' });
+    zsl = api.slider(r2, { label: 'Zoom', min: 0, max: 1, step: 0.001, value: zlog(1), fmt: (v) => '×' + (zexp(v) < 1 ? zexp(v).toFixed(2) : zexp(v).toFixed(1)), onInput: (v) => { zt = zexp(v); } });
+    api.button(r2, '+', () => setZoom(zt * 1.5), { cls: 'zoom-btn' });
+    api.button(r2, '⟲ Zoom normal', () => setZoom(1));
     api.button(r1, '🪐 Sistem gata făcut', () => { objs = []; [0.3, 0.5, 0.75, 1.0].forEach((k, i) => { const r = api.unit * k; objs.push(mk(api.cx + r, api.cy, 0, -Math.sqrt(GM() / r), COLS[i])); }); });
     function mk(x, y, vx, vy, col) {
       return { x: x, y: y, vx: vx, vy: vy, col: col, tr: [], ang: 0, last: Math.atan2(y - api.cy, x - api.cx), done: 0,
@@ -18,12 +31,13 @@ defineModule({
     }
     api.say('<b>Atinge</b> ca să pui o planetă pe orbită circulară. <b>Trage</b> ca să-i dai viteza și direcția ta. Ce se întâmplă dacă e prea lentă? Dar prea rapidă?', 9000);
     api.pointer({
-      down: (x, y) => { aim = { x0: x, y0: y, x1: x, y1: y }; },
-      move: (x, y) => { if (aim) { aim.x1 = x; aim.y1 = y; } },
-      up: (x, y) => {
-        if (!aim) return;
+      down: (sx, sy) => { if (pinch) return; pinched = false; const [x, y] = toWorld(sx, sy); aim = { x0: x, y0: y, x1: x, y1: y }; },
+      move: (sx, sy) => { if (aim && !pinch) { const [x, y] = toWorld(sx, sy); aim.x1 = x; aim.y1 = y; } },
+      up: (sx, sy) => {
+        if (!aim || pinched) { aim = null; return; }
+        const [x, y] = toWorld(sx, sy);
         const col = COLS[Math.floor(Math.random() * COLS.length)], dx = x - aim.x0, dy = y - aim.y0;
-        if (Math.hypot(dx, dy) < 12) {
+        if (Math.hypot(dx, dy) * zoom < 12) {
           const ddx = aim.x0 - api.cx, ddy = aim.y0 - api.cy, r = Math.hypot(ddx, ddy) || 1, v = Math.sqrt(GM() / r);
           objs.push(mk(aim.x0, aim.y0, -ddy / r * v, ddx / r * v, col));
         } else objs.push(mk(aim.x0, aim.y0, dx * 1.2, dy * 1.2, col));
@@ -31,6 +45,19 @@ defineModule({
         aim = null;
       }
     });
+
+    /* rotița mouse-ului și ciupitul cu două degete */
+    const cv = api.canvas;
+    const onWheel = (e) => { e.preventDefault(); setZoom(zt * Math.exp(-e.deltaY * 0.0015)); };
+    const tdist = (e) => Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    const onTS = (e) => { if (e.touches.length === 2) { pinch = { d0: tdist(e), z0: zt }; pinched = true; aim = null; e.preventDefault(); } };
+    const onTM = (e) => { if (pinch && e.touches.length === 2) { setZoom(pinch.z0 * tdist(e) / pinch.d0); e.preventDefault(); } };
+    const onTE = (e) => { if (e.touches.length < 2) pinch = null; };
+    cv.addEventListener('wheel', onWheel, { passive: false });
+    cv.addEventListener('touchstart', onTS, { passive: false });
+    cv.addEventListener('touchmove', onTM, { passive: false });
+    cv.addEventListener('touchend', onTE); cv.addEventListener('touchcancel', onTE);
+    api.onCleanup(() => { cv.removeEventListener('wheel', onWheel); cv.removeEventListener('touchstart', onTS); cv.removeEventListener('touchmove', onTM); cv.removeEventListener('touchend', onTE); cv.removeEventListener('touchcancel', onTE); });
 
     /* ---------- fundal pre-randat: cer adânc cu nebuloase discrete ---------- */
     /* fundal curat: gradient blând + câteva stele fixe, discrete */
@@ -62,7 +89,7 @@ defineModule({
       if (sparks.length > 400) sparks.splice(0, sparks.length - 400);
     }
 
-    const pr = (o) => api.unit * 0.022 * o.sz + 3;     // raza desenată a unei planete
+    const pr = (o) => Math.max(api.unit * 0.022 * o.sz + 3, 4 / zoom);     // raza desenată (minim ~4 px pe ecran la orice zoom)
 
     function drawTrail(o) {
       const n = o.tr.length / 2; if (n < 3) return;
@@ -72,7 +99,7 @@ defineModule({
         const i0 = c * per, i1 = Math.min(n - 1, (c + 1) * per); if (i1 <= i0) continue;
         const k = (c + 1) / chunks;
         ctx.strokeStyle = Art.rgba(o.col, 0.04 + 0.5 * k * k);
-        ctx.lineWidth = 0.8 + base * 0.7 * k;
+        ctx.lineWidth = (0.8 + base * 0.7 * k) / Math.sqrt(zoom);   // pe ecran: puțin mai groasă la zoom in, mai subțire la zoom out
         ctx.beginPath(); ctx.moveTo(o.tr[i0 * 2], o.tr[i0 * 2 + 1]);
         for (let i = i0 + 1; i <= i1; i++) ctx.lineTo(o.tr[i * 2], o.tr[i * 2 + 1]);
         ctx.stroke();
@@ -109,7 +136,7 @@ defineModule({
     /* câmpul gravitațional, sugerat discret: inele care „curg” spre stea */
     function drawField(cx, cy) {
       const U = api.unit;
-      ctx.save(); ctx.lineWidth = 1;
+      ctx.save(); ctx.lineWidth = 1 / zoom;
       for (let i = 1; i <= 5; i++) {
         const r = U * 0.22 * i * i * 0.45 + U * 0.12;
         ctx.strokeStyle = 'rgba(150,175,235,' + (0.07 * Math.min(1.5, strength) * (1 - i / 6)).toFixed(3) + ')';
@@ -133,15 +160,17 @@ defineModule({
         o.ang += d; o.last = an;
         if (Math.abs(o.ang) >= (o.done + 1) * 6.283) { o.done++; orbits++; api.say('🎉 <b>Orbită completă!</b> Planeta s-a întors de unde a plecat.', 3500); }
         o.tr.push(o.x, o.y); if (o.tr.length > 700) o.tr.splice(0, 2);
-        if (Math.hypot(o.x - cx, o.y - cy) > api.unit * 4.5) { o.dead = 2; lost++; api.say('🚀 A scăpat în spațiu! Viteza ei a depășit <b>viteza de evadare</b>.', 4000); }
+        if (Math.hypot(o.x - cx, o.y - cy) > api.unit * 9) { o.dead = 2; lost++; api.say('🚀 A scăpat în spațiu! Viteza ei a depășit <b>viteza de evadare</b>.', 4000); }
       }
       objs = objs.filter((o) => !o.dead);
       for (let i = sparks.length - 1; i >= 0; i--) { const p = sparks[i]; p.age += dt; if (p.age > p.life) { sparks.splice(i, 1); continue; } p.vx *= 0.96; p.vy *= 0.96; p.x += p.vx * dt; p.y += p.vy * dt; }
 
+      zoom = Art.damp(zoom, zt, 10, dt); if (Math.abs(zoom - zt) < 1e-4) zoom = zt;
       ctx.drawImage(background(), 0, 0, api.W, api.H);
+      ctx.save(); ctx.translate(cx, cy); ctx.scale(zoom, zoom); ctx.translate(-cx, -cy);   // camera
       drawField(cx, cy);
       /* cercul orbitei circulare de referință */
-      ctx.save(); ctx.strokeStyle = 'rgba(200,220,255,0.13)'; ctx.lineWidth = 1.2; ctx.setLineDash([3, 9]); ctx.beginPath(); ctx.arc(cx, cy, api.unit * 0.55, 0, TAU); ctx.stroke(); ctx.restore();
+      ctx.save(); ctx.strokeStyle = 'rgba(200,220,255,0.13)'; ctx.lineWidth = 1.2 / zoom; ctx.setLineDash([3 / zoom, 9 / zoom]); ctx.beginPath(); ctx.arc(cx, cy, api.unit * 0.55, 0, TAU); ctx.stroke(); ctx.restore();
 
       ctx.save();
       for (const o of objs) drawTrail(o);
@@ -151,16 +180,17 @@ defineModule({
 
       if (sparks.length) {
         ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
-        for (const p of sparks) { const a = 1 - p.age / p.life; ctx.strokeStyle = 'rgba(255,' + Math.round(160 + 80 * a) + ',90,' + a.toFixed(2) + ')'; ctx.lineWidth = 1 + 2 * a; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx * 0.05, p.y - p.vy * 0.05); ctx.stroke(); }
+        for (const p of sparks) { const a = 1 - p.age / p.life; ctx.strokeStyle = 'rgba(255,' + Math.round(160 + 80 * a) + ',90,' + a.toFixed(2) + ')'; ctx.lineWidth = (1 + 2 * a) / zoom; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx * 0.05, p.y - p.vy * 0.05); ctx.stroke(); }
         ctx.restore();
       }
       flash = Math.max(0, flash - dt * 2);
 
       if (aim) {
         const len = Math.hypot(aim.x1 - aim.x0, aim.y1 - aim.y0);
-        ctx.fillStyle = '#7dffb0'; ctx.beginPath(); ctx.arc(aim.x0, aim.y0, 4, 0, TAU); ctx.fill();
-        if (len > 12) Art.arrow(ctx, aim.x0, aim.y0, aim.x1, aim.y1, { color: 'rgba(125,255,176,0.9)', width: 3, dash: [8, 6] });
+        ctx.fillStyle = '#7dffb0'; ctx.beginPath(); ctx.arc(aim.x0, aim.y0, 4 / zoom, 0, TAU); ctx.fill();
+        if (len * zoom > 12) Art.arrow(ctx, aim.x0, aim.y0, aim.x1, aim.y1, { color: 'rgba(125,255,176,0.9)', width: 3 / zoom, dash: [8 / zoom, 6 / zoom] });
       }
+      ctx.restore();   // camera
       const fz = Art.fs(api.unit, 0.04, 13);
       Art.label(ctx, 'Orbite complete: ' + orbits, api.freeW - 14, 80, { size: fz, align: 'right', color: '#ffe8a8' });
       Art.label(ctx, 'Căzute: ' + fell + ' · Scăpate: ' + lost, api.freeW - 14, 80 + fz * 2.1, { size: fz, align: 'right' });
