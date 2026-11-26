@@ -458,3 +458,9 @@ kbd {
 .art-volcano { background: radial-gradient(circle at 50% 12%, #ffb347 0 8%, rgba(255,90,30,.7) 14%, transparent 30%), linear-gradient(180deg, #2c3a5c 0 62%, #5a4636 62%), #1a2036; clip-path: none; }
 .art-layers { background: radial-gradient(circle at 50% 60%, #fff1b5 0 12%, #f5a623 13% 26%, #d2531c 27% 46%, #8b6d4a 47% 50%, transparent 51%), #070b1a; }
 .art-ocean { background: linear-gradient(180deg, #2ea8dc 0, #1260a0 35%, #020c28 70%, #000 100%); }
+.art-bb { background: radial-gradient(circle at 50% 50%, #fff 0 4%, #ffe9a8 8%, #ff8a3c 22%, #5a2a8a 44%, rgba(20,10,60,0) 70%), #05060f; }
+
+/* pe ecran lat, textul explicativ stă într-un panou în dreapta */
+@media (min-width: 900px) {
+  #mod-info { left: auto; right: 16px; top: 74px; width: 340px; max-width: 340px; margin: 0; font-size: 16px; line-height: 1.5; padding: 14px 16px; }
+}

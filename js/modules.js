@@ -31,12 +31,15 @@
       W: 0, H: 0, DPR: 1, cx: 0, cy: 0, unit: 100,
       /* zona liberă a ecranului (între bara de sus și panoul de jos) */
       layout: function () {
-        const infoH = info.classList.contains('show') ? info.offsetHeight + 8 : 0;
+        const shown = info.classList.contains('show');
+        const side = shown && window.matchMedia('(min-width: 900px)').matches;   // pe ecran lat: panou în dreapta
+        const infoH = shown && !side ? info.offsetHeight + 8 : 0;
         const top = 62 + infoH;
         const freeH = Math.max(120, api.H - top - panelH);
-        api.cx = api.W / 2;
+        const freeW = side ? api.W - 372 : api.W;
+        api.cx = freeW / 2;
         api.cy = top + freeH / 2;
-        api.unit = Math.min(api.W, freeH) / 2;
+        api.unit = Math.min(freeW, freeH) / 2;
       },
       say: function (html, ms) {
         info.innerHTML = html;
