@@ -43,8 +43,8 @@
     id: 'earthtime', title: 'Pământul în timp', sub: 'De acum 4,6 miliarde de ani până azi',
     start: function (api) {
       const ctx = api.ctx, ST = stars(140);
-      let s = 0, spin = 0, lastEra = -1, playing = false;
-      const S = 150, off = document.createElement('canvas'); off.width = off.height = S;
+      let s = 0, spin = 0, tilt = 0.25, vSpin = 0, vTilt = 0, idle = 99, dragging = false, zoom = 1, lastEra = -1, playing = false;
+      const S = 210, off = document.createElement('canvas'); off.width = off.height = S;
       const octx = off.getContext('2d'), img = octx.createImageData(S, S);
       const ma = () => 4600 * Math.pow(1 - s, 3);
       const eraIdx = () => { const m = ma(); let k = 0; for (let i = 0; i < ERAS.length; i++) if (m <= ERAS[i].ma) k = i; return k; };
@@ -68,13 +68,14 @@
         const ocean = lava ? [255, 90, 30] : m > 2400 ? [60, 100, 70] : mix([40, 90, 140], [30, 100, 190], 0.5);
         const oc = m > 3800 ? (m > 2400 ? [62, 106, 82] : mix([62, 106, 82], [28, 98, 188], (2400 - m) / 1900)) : ocean;
         const landC = lava ? [60, 30, 25] : m > 470 ? [138, 120, 100] : mix([138, 120, 100], [70, 150, 70], (470 - m) / 150);
-        const cs = Math.cos(spin), sn = Math.sin(spin);
+        const cs = Math.cos(spin), sn = Math.sin(spin), ct = Math.cos(tilt), st = Math.sin(tilt);
         for (let j = 0; j < S; j++) for (let i = 0; i < S; i++) {
           const nx = (i + 0.5 - h) / h, ny = (j + 0.5 - h) / h, r2 = nx * nx + ny * ny, o = (j * S + i) * 4;
           if (r2 > 1) { d[o + 3] = 0; continue; }
           const z = Math.sqrt(1 - r2), y = -ny;
-          const xr = nx * cs + z * sn, zr = -nx * sn + z * cs;
-          const lon = Math.atan2(xr, zr) * 57.2958, lat = Math.asin(y) * 57.2958;
+          const y1 = y * ct - z * st, z1 = y * st + z * ct;
+          const xr = nx * cs + z1 * sn, zr = -nx * sn + z1 * cs;
+          const lon = Math.atan2(xr, zr) * 57.2958, lat = Math.asin(clamp(y1, -1, 1)) * 57.2958;
           const cl = Math.cos(lat * 0.01745);
           const noise = 0.5 * Math.sin(lon * 0.11 + 1.3) * Math.cos(lat * 0.17) + 0.35 * Math.sin(lon * 0.29 - lat * 0.23) + 0.2 * Math.sin(lon * 0.6 + lat * 0.5);
           let land = lat < -77 && m < 540 ? true : false;
@@ -87,19 +88,43 @@
           if (lava) { const gl = 0.5 + 0.5 * Math.sin(lon * 0.4 + lat * 0.7 + spin * 3); c = land ? mix([50, 28, 24], [120, 50, 30], gl) : mix([255, 70, 20], [255, 190, 60], gl); }
           else {
             if (snow || Math.abs(lat) > (m < 3 ? 74 : 80)) c = mix(c, [235, 242, 250], snow ? 0.95 : 0.85);
-            if (m < 3800) { const cn = Math.sin(lon * 0.21 + spin * 1.5) * Math.cos(lat * 0.33 + 1) + Math.sin(lon * 0.5 - lat * 0.4); if (cn > 1.05) c = mix(c, [255, 255, 255], clamp((cn - 1.05) * 2.2, 0, 0.6)); }
+            if (m < 3800) { const cn = Math.sin(lon * 0.09 + 2) * Math.cos(lat * 0.14 + 1) + 0.8 * Math.sin(lon * 0.17 - lat * 0.11) * Math.cos(lat * 0.2) + 0.5 * Math.sin(lon * 0.31 + lat * 0.27); if (cn > 0.75) c = mix(c, [255, 255, 255], clamp((cn - 0.75) * 1.6, 0, 0.55)); }
           }
           const sh = 0.28 + 0.8 * clamp(nx * -0.45 + y * 0.45 + z * 0.75, 0, 1);
           d[o] = c[0] * sh; d[o + 1] = c[1] * sh; d[o + 2] = c[2] * sh; d[o + 3] = 255;
         }
         octx.putImageData(img, 0, 0);
       }
+      /* control: trage cu mouse-ul / degetul ca să rotești globul; rotița = zoom */
+      let lx = 0, ly = 0, lt = 0;
+      api.pointer({
+        down: (x, y) => { dragging = true; lx = x; ly = y; lt = performance.now(); vSpin = 0; vTilt = 0; },
+        move: (x, y) => {
+          const dx = x - lx, dy = y - ly, now = performance.now(), dtm = Math.max(1, now - lt) / 1000, k = 2.4 / (api.unit * 0.82 * zoom);
+          spin -= dx * k; tilt = clamp(tilt - dy * k, -1.35, 1.35);
+          vSpin = vSpin * 0.6 - dx * k / dtm * 0.4; vTilt = vTilt * 0.6 - dy * k / dtm * 0.4;
+          lx = x; ly = y; lt = now;
+        },
+        up: () => { dragging = false; if (performance.now() - lt > 120) { vSpin = 0; vTilt = 0; } }
+      });
+      const onWheel = (e) => { e.preventDefault(); zoom = clamp(zoom * Math.exp(-e.deltaY * 0.0015), 0.6, 1.7); };
+      api.canvas.addEventListener('wheel', onWheel, { passive: false });
+      api.onCleanup(() => api.canvas.removeEventListener('wheel', onWheel));
+      r2.appendChild(Object.assign(document.createElement('span'), { className: 'mod-rt', textContent: 'Trage pe glob ca să-l rotești · rotița mouse-ului = zoom' }));
+      api.button(r2, '🔍+', () => { zoom = clamp(zoom * 1.2, 0.6, 1.7); });
+      api.button(r2, '🔍−', () => { zoom = clamp(zoom / 1.2, 0.6, 1.7); });
+      api.button(r2, '↺ Glob', () => { spin = 0; tilt = 0.25; zoom = 1; vSpin = vTilt = 0; });
       function sayEra() { const k = eraIdx(); if (k === lastEra) return; lastEra = k; api.say(ERAS[k].e + ' <b>' + ERAS[k].n + '.</b> ' + ERAS[k].t); }
 
       function frame(dt, t) {
         if (playing) { s = Math.min(1, s + dt / 40); sl.set(s); if (s >= 1) { playing = false; bP.innerHTML = '↺ De la început'; } }
-        spin += dt * 0.35;
-        const m = ma(), cx = api.cx, cy = api.cy, R = api.unit * 0.82;
+        if (dragging) { idle = 0; } else {
+          idle += dt;
+          spin += vSpin * dt; tilt = clamp(tilt + vTilt * dt, -1.35, 1.35);
+          const damp = Math.exp(-dt * 3.5); vSpin *= damp; vTilt *= damp;
+          if (idle > 3) { spin += dt * 0.35; tilt += (0.25 - tilt) * Math.min(1, dt * 0.8); }
+        }
+        const m = ma(), cx = api.cx, cy = api.cy, R = api.unit * 0.82 * zoom;
         ctx.fillStyle = '#02030a'; ctx.fillRect(0, 0, api.W, api.H); drawStars(api, ST);
         renderGlobe(); sayEra();
         /* atmosfera */
@@ -116,7 +141,7 @@
         if (m < 69 && m > 63) { const k = 1 - Math.abs(m - 66) / 3; ctx.globalCompositeOperation = 'lighter'; const fg = ctx.createRadialGradient(cx - R * 0.35, cy + R * 0.15, 0, cx - R * 0.35, cy + R * 0.15, R * 0.6); fg.addColorStop(0, 'rgba(255,220,150,' + k + ')'); fg.addColorStop(1, 'rgba(255,120,40,0)'); ctx.fillStyle = fg; ctx.beginPath(); ctx.arc(cx - R * 0.35, cy + R * 0.15, R * 0.6, 0, 7); ctx.fill(); ctx.globalCompositeOperation = 'source-over'; }
         if (m > 3900) for (let i = 0; i < 3; i++) { const a = (t * 0.9 + i * 2.1) % 3, px = cx + R * (1.2 - a * 0.6) * (i % 2 ? -1 : 1), py = cy - R * (1.1 - a * 0.5); ctx.strokeStyle = 'rgba(255,200,120,0.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + (i % 2 ? 24 : -24), py - 18); ctx.stroke(); }
         ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.font = '700 22px system-ui,sans-serif';
-        ctx.fillText(m >= 1 ? 'Acum ' + maText(m) : 'Azi', cx, api.cy - api.unit - 6 < 90 ? 92 : api.cy - api.unit - 6);
+        ctx.fillText(m >= 1 ? 'Acum ' + maText(m) : 'Azi', cx, api.cy - api.unit + 14);
         ctx.font = '38px system-ui,sans-serif'; ctx.fillText(ERAS[eraIdx()].e, api.W - 34, 84);
       }
       return { frame: frame };
