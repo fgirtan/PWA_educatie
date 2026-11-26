@@ -28,7 +28,7 @@
 
     const api = {
       canvas: canvas, ctx: ctx, panel: panel,
-      W: 0, H: 0, DPR: 1, cx: 0, cy: 0, unit: 100,
+      W: 0, H: 0, DPR: 1, cx: 0, cy: 0, unit: 100, freeW: 0,
       /* zona liberă a ecranului (între bara de sus și panoul de jos) */
       layout: function () {
         const shown = info.classList.contains('show');
@@ -37,6 +37,7 @@
         const top = 62 + infoH;
         const freeH = Math.max(120, api.H - top - panelH);
         const freeW = side ? api.W - 372 : api.W;
+        api.freeW = freeW;
         api.cx = freeW / 2;
         api.cy = top + freeH / 2;
         api.unit = Math.min(freeW, freeH) / 2;

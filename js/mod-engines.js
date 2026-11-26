@@ -38,7 +38,7 @@
         const cyc = ((th % (4 * Math.PI)) + 4 * Math.PI) % (4 * Math.PI);       // 0..720°
         const stroke = Math.floor(cyc / Math.PI), u = (cyc % Math.PI) / Math.PI;
         const a = th;                                                              // unghi manivelă
-        const U = api.unit, W = api.W, cx = api.cx, top = api.cy - U * 0.95;
+        const U = api.unit, W = api.freeW, cx = api.cx, top = api.cy - U * 0.95;
         bg(api, '#10162b', '#05080f');
         if (stroke !== lastStroke) { lastStroke = stroke; api.say('<b style="color:' + STROKES[stroke].c + '">' + STROKES[stroke].n + '</b> — ' + STROKES[stroke].t); if (stroke === 2) flash = 1; if (stroke === 3) for (let i = 0; i < 22; i++) parts.push({ x: 0, y: 0, k: Math.random(), kind: 'ex' }); if (stroke === 0) for (let i = 0; i < 22; i++) parts.push({ x: 0, y: 0, k: Math.random(), kind: 'in' }); }
         flash = Math.max(0, flash - dt * 1.5);
@@ -145,7 +145,7 @@
         ctx.fillStyle = '#333'; ctx.fillRect(kx - kr - 22, ky - 6, 22, 12); ctx.fillRect(kx + kr, ky - 6, 22, 12);
         ctx.fillStyle = '#fff'; ctx.font = '600 11px system-ui,sans-serif'; ctx.fillText('comutator', kx, ky + kr + 22);
         /* ventilator pe ax */
-        if (fan) { const fx = Math.min(api.W - 44, kx + kr + 90), fy = ky; ctx.save(); ctx.translate(fx, fy); ctx.rotate(phi); for (let i = 0; i < 4; i++) { ctx.rotate(Math.PI / 2); ctx.fillStyle = 'rgba(120,200,255,0.8)'; ctx.beginPath(); ctx.ellipse(0, -26, 9, 24, 0, 0, 7); ctx.fill(); } ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, 6, 0, 7); ctx.fill(); ctx.restore(); }
+        if (fan) { const fx = Math.min(api.freeW - 44, kx + kr + 90), fy = ky; ctx.save(); ctx.translate(fx, fy); ctx.rotate(phi); for (let i = 0; i < 4; i++) { ctx.rotate(Math.PI / 2); ctx.fillStyle = 'rgba(120,200,255,0.8)'; ctx.beginPath(); ctx.ellipse(0, -26, 9, 24, 0, 0, 7); ctx.fill(); } ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, 6, 0, 7); ctx.fill(); ctx.restore(); }
         const rpm = Math.abs(w) / (2 * Math.PI) * 60;
         info.innerHTML = '<b>Viteza:</b> ' + fmt(rpm, 0) + ' rot/min · <b>Sens:</b> ' + (Math.abs(w) < 0.4 ? 'oprit' : w * rev > 0 ? '↻' : '↺') + (commut ? '' : ' · <i>fără comutator oscilează</i>');
       }
@@ -221,12 +221,12 @@
           for (let i = 0; i < 6; i++) { const x = ((i * 320 - dist * 1.0) % (W + 640) + W + 640) % (W + 640) - 200; ctx.beginPath(); ctx.moveTo(x, gy); ctx.lineTo(x, wy - 14); ctx.moveTo(x - 30, wy - 6); ctx.lineTo(x + 30, wy - 6); ctx.stroke(); }
           ctx.strokeStyle = '#111'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(0, wy); ctx.lineTo(W, wy); ctx.stroke();
           /* tren */
-          const sc = clamp(W / 560, 0.55, 1.15), tx = W * 0.62;
+          const FW = api.freeW, sc = clamp(FW / 560, 0.55, 1.15), tx = FW * 0.62;
           drawLoco(tx, gy, v, sc);
           /* scânteie la pantograf */
           if (thr > 0.05 && !brake && v > 1) { ctx.fillStyle = 'rgba(160,220,255,0.9)'; ctx.fillRect(tx + (60 - 4) * sc, wy - 3 + (Math.random() - 0.5) * 2, 8, 6); }
           /* diagrama fluxului de energie (sus-stânga) */
-          const dx0 = 16, dy0 = api.cy - api.unit + 6, bw = Math.min(W - 32, 360), bh = 54;
+          const dx0 = 16, dy0 = api.cy - api.unit + 6, bw = Math.min(api.freeW - 32, 360), bh = 54;
           ctx.fillStyle = 'rgba(8,14,34,0.82)'; rrect(ctx, dx0, dy0, bw, bh + 10, 10); ctx.fill();
           const names = ['Fir de contact', 'Pantograf', 'Transformator', 'Motoare', 'Roți'], nodes = names.map((n, i) => dx0 + 24 + (bw - 48) * i / 4);
           flow += dt * (brake ? -1 : 1) * Math.min(1, (thr * (brake ? 0 : 1) + (brake ? Math.min(1, v / 60) : 0)) * 1.2 + 0.0) * 1.2;

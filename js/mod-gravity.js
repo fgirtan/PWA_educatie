@@ -62,7 +62,7 @@ defineModule({
       ctx.fillStyle = '#ffd36b'; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.fill();
       if (aim && Math.hypot(aim.x1 - aim.x0, aim.y1 - aim.y0) > 12) { ctx.strokeStyle = '#7dffb0'; ctx.lineWidth = 3; ctx.setLineDash([8, 6]); ctx.beginPath(); ctx.moveTo(aim.x0, aim.y0); ctx.lineTo(aim.x1, aim.y1); ctx.stroke(); ctx.setLineDash([]); }
       ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.font = '600 14px system-ui,sans-serif'; ctx.textAlign = 'right';
-      ctx.fillText('Orbite complete: ' + orbits, api.W - 14, 80); ctx.fillText('Căzute: ' + fell + ' · Scăpate: ' + lost, api.W - 14, 100);
+      ctx.fillText('Orbite complete: ' + orbits, api.freeW - 14, 80); ctx.fillText('Căzute: ' + fell + ' · Scăpate: ' + lost, api.freeW - 14, 100);
     }
     return { frame: frame };
   }

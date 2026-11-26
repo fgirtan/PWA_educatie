@@ -309,7 +309,7 @@ defineModule({
       }
       /* contor */
       ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.font = '600 14px system-ui, sans-serif'; ctx.textAlign = 'right';
-      ctx.fillText('Înghițite: ' + swallowed, W - 14, 80);
+      ctx.fillText('Înghițite: ' + swallowed, api.freeW - 14, 80);
     }
 
     return { frame: frame, resize: () => setMass(logM) };

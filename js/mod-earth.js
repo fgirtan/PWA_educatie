@@ -174,7 +174,7 @@
       const PEAKS = [['Turnul Burj Khalifa', 0.828, '#9fb0c8', 'Cea mai înaltă clădire: 828 m.'], ['Vf. Moldoveanu', 2.544, '#7ea36b', 'Cel mai înalt vârf din România: 2.544 m.'], ['Mont Blanc', 4.806, '#a9c4de', 'Cel mai înalt vârf din Alpi: 4.806 m.'], ['Everest', 8.849, '#e8eef7', 'Cel mai înalt munte deasupra nivelului mării: 8.849 m. Avionul de pasageri zboară mai sus!'], ['Mauna Kea (de la bază)', 10.2, '#6c8a5a', 'Vulcan din Hawaii: doar 4.207 m deasupra mării, dar 10.200 m de la baza lui de pe fundul oceanului.'], ['Olympus Mons (Marte)', 21.9, '#c9694a', 'Vulcanul de pe Marte: 21,9 km — aproape de 2,5 ori Everestul!']];
       api.pointer({ down: (x, y) => { if (mode !== 'heights') return; const L = peakLayout(); let best = -1; L.forEach((p, i) => { if (Math.abs(x - p.x) < p.w / 2 && y > p.y - 10) best = i; }); if (best >= 0) { compPick = best; api.say('<b>' + PEAKS[best][0] + '.</b> ' + PEAKS[best][3]); } } });
       function peakLayout() {
-        const W = api.W, base = api.cy + api.unit * 0.88, maxH = api.unit * 1.7, n = PEAKS.length, w = Math.min(90, (W - 20) / n);
+        const W = api.freeW, base = api.cy + api.unit * 0.88, maxH = api.unit * 1.7, n = PEAKS.length, w = Math.min(90, (W - 20) / n);
         return PEAKS.map((p, i) => ({ x: W * (i + 0.5) / n, w: w, y: base - p[1] / 21.9 * maxH, base: base }));
       }
       /* relieful: înălțimea suprafeței (km, +sus) la poziția u ∈[0,1] */
@@ -191,7 +191,7 @@
         const W = api.W, H = api.H; ctx.fillStyle = '#0b1230'; ctx.fillRect(0, 0, W, H);
         const g0 = ctx.createLinearGradient(0, 0, 0, H); g0.addColorStop(0, '#2c6aa8'); g0.addColorStop(0.55, '#a9d2ee'); g0.addColorStop(1, '#d6ebf7'); ctx.fillStyle = g0; ctx.fillRect(0, 0, W, api.cy + api.unit * 0.4);
         if (mode === 'heights') return drawHeights(t);
-        const x0 = 8, x1 = W - 8, cw = x1 - x0, base = api.cy + api.unit * 0.25, km = api.unit * 1.5 / 22 * 2.2;
+        const x0 = 8, x1 = api.freeW - 8, cw = x1 - x0, base = api.cy + api.unit * 0.25, km = api.unit * 1.5 / 22 * 2.2;
         const N = 90, sea = 0;
         /* apă (rift târziu și subducție: ocean în stânga) */
         const oceanLeft = mode === 'subduction', riftSea = mode === 'rift' && T > 14;
@@ -543,7 +543,7 @@
         ctx.fillStyle = '#2a4a6a'; ctx.beginPath(); ctx.arc(sx + 8, sY - 2, 5, 0, 7); ctx.fill(); ctx.fillStyle = '#ffd166'; ctx.fillRect(sx - 4, sY - 18, 8, 8); ctx.fillStyle = '#7a5a10'; ctx.fillRect(sx - 30, sY - 3, 7, 6);
         /* repere de adâncime (în dreapta) */
         ctx.textAlign = 'right'; ctx.font = '600 11px system-ui,sans-serif';
-        for (const m of MARK) { const y = yOf(m[0]); if (y > 70 && y < H - 4) { ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.setLineDash([4, 5]); ctx.beginPath(); ctx.moveTo(W - 160, y); ctx.lineTo(W - 4, y); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = '#fff'; ctx.fillText(m[1] + ' · ' + fmtN(m[0]) + ' m', W - 6, y - 4); } }
+        for (const m of MARK) { const y = yOf(m[0]); if (y > 70 && y < H - 4) { ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.setLineDash([4, 5]); ctx.beginPath(); ctx.moveTo(api.freeW - 160, y); ctx.lineTo(api.freeW - 4, y); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = '#fff'; ctx.fillText(m[1] + ' · ' + fmtN(m[0]) + ' m', api.freeW - 6, y - 4); } }
         /* tablou de bord */
         const press = 1 + depth / 10, temp = depth < 100 ? 20 - depth * 0.1 : depth < 1000 ? 10 - (depth - 100) / 900 * 6 : 3 + 1.0 * Math.min(1, (depth - 1000) / 9000) * -1;
         ctx.fillStyle = 'rgba(8,14,34,0.78)'; ctx.fillRect(10, 70, 148, 62); ctx.textAlign = 'left'; ctx.fillStyle = '#fff'; ctx.font = '600 12px system-ui,sans-serif';

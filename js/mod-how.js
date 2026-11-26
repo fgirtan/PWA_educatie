@@ -29,7 +29,7 @@
       api.say('Curentul curge din baterie, prin becuri, înapoi la baterie. Încearcă: oprește întrerupătorul, schimbă serie/paralel, crește tensiunea… dar ai grijă să nu arzi becurile!', 12000);
 
       function geom() {
-        const W = api.W, x0 = W * 0.14, x1 = W * 0.86, y0 = api.cy - api.unit * 0.55, y1 = api.cy + api.unit * 0.55;
+        const W = api.freeW, x0 = W * 0.14, x1 = W * 0.86, y0 = api.cy - api.unit * 0.55, y1 = api.cy + api.unit * 0.55;
         return { x0: x0, x1: x1, y0: y0, y1: y1 };
       }
       /* drumul electronilor (polilinie) pentru ramura k */
@@ -223,7 +223,7 @@
       };
       function setMode(m) { mode = m; for (const k in bs) bs[k].classList.toggle('on', k === m); api.say(MSG[m], 14000); }
       function layout() {
-        const rows = mode === 'col' ? 3 : 1, W = api.W, cell = Math.min(60, (W - 20) / 8.6), gap = cell * 0.12;
+        const rows = mode === 'col' ? 3 : 1, W = api.freeW, cell = Math.min(60, (W - 20) / 8.6), gap = cell * 0.12;
         const total = 8 * cell + 7 * gap, x0 = (W - total) / 2;
         const rh = cell * 1.9, y0 = api.cy - (rows * rh) / 2 + (mode === 'col' ? 0 : -api.unit * 0.1);
         return { rows: rows, cell: cell, gap: gap, x0: x0, y0: y0, rh: rh };
@@ -233,7 +233,7 @@
       setMode('num');
       function frame(dt, t) {
         bg(api, '#0a1226', '#05080f');
-        const L = layout(), W = api.W;
+        const L = layout(), W = api.freeW;
         for (let r = 0; r < L.rows; r++) {
           for (let i = 0; i < 8; i++) {
             const bx = L.x0 + i * (L.cell + L.gap), by = L.y0 + r * L.rh + L.cell * 0.3, on = bits[r * 8 + i], val = 128 >> i;
@@ -304,7 +304,7 @@
       }
       function frame(dt, t) {
         bg(api, '#0b1330', '#05080f');
-        const W = api.W, cx = api.cx, cy = api.cy, U = api.unit;
+        const W = api.freeW, cx = api.cx, cy = api.cy, U = api.unit;
         if (mode === 'gears') {
           thA += rpm * Math.PI * 2 * dt;
           const m = Math.min(U * 0.12, (W - 30) / ((nA + nB + nC) * 0.5 + 8) * 0.5);        // „modulul”: raza = m·n/2

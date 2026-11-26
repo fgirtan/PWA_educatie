@@ -215,7 +215,7 @@ defineModule({
         ctx.globalCompositeOperation = 'source-over';
         booms = booms.filter((b) => b.age < b.dur);
         ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.font = '600 14px system-ui,sans-serif'; ctx.textAlign = 'right';
-        ctx.fillText('Explozii: ' + count, api.W - 14, 80);
+        ctx.fillText('Explozii: ' + count, api.freeW - 14, 80);
         if (!count) { ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.font = '18px system-ui,sans-serif'; ctx.fillText('Atinge cerul!', api.cx, api.cy); }
       }
     }
