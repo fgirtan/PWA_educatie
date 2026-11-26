@@ -135,10 +135,12 @@
         if (stall && !stallSaid) { stallSaid = true; api.say('⚠️ <b>Angajare!</b> Unghiul e prea mare: aerul nu mai urmează aripa, se face vâltoare, iar portanța scade brusc.', 8000); }
         if (!stall) stallSaid = false;
         bg(api, alt > 0.7 ? '#1b3f7d' : '#3d85c8', alt > 0.7 ? '#4a86c4' : '#b9dcf5');
+        /* scena e oglindită: avionul zboară spre dreapta, aerul trece spre stânga */
+        ctx.save(); ctx.translate(2 * cx, 0); ctx.scale(-1, 1);
         /* nori și sol care se mișcă */
-        for (const c of clouds) { c.x -= dt * v * 0.35 * c.s; if (c.x < -0.2) { c.x = 1.2; c.y = Math.random() * 0.8; } ctx.fillStyle = 'rgba(255,255,255,0.7)'; const cx2 = c.x * W, cy2 = (c.y * 0.6 + 0.05 + (alt - 0.5) * 0.25) * H + 40; for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.arc(cx2 + k * 22, cy2 + (k % 2) * 6, 22 + (k % 3) * 6, 0, 7); ctx.fill(); } }
+        for (const c of clouds) { c.x += dt * v * 0.35 * c.s; if (c.x > 1.2) { c.x = -0.2; c.y = Math.random() * 0.8; } ctx.fillStyle = 'rgba(255,255,255,0.7)'; const cx2 = c.x * W, cy2 = (c.y * 0.6 + 0.05 + (alt - 0.5) * 0.25) * H + 40; for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.arc(cx2 + k * 22, cy2 + (k % 2) * 6, 22 + (k % 3) * 6, 0, 7); ctx.fill(); } }
         const gy = cy + U * 0.9 + (0.5 - alt) * U * 0.5;
-        if (alt < 0.2) { ctx.fillStyle = '#4c8a3c'; ctx.fillRect(0, gy, W, H - gy); ctx.fillStyle = '#555'; ctx.fillRect(0, gy + 4, W, 10); ctx.fillStyle = '#fff'; for (let i = 0; i < 12; i++) ctx.fillRect(((i * 110 - t * v * 260) % (W + 110) + W + 110) % (W + 110) - 40, gy + 8, 50, 2); }
+        if (alt < 0.2) { ctx.fillStyle = '#4c8a3c'; ctx.fillRect(-W, gy, W * 3, H - gy); ctx.fillStyle = '#555'; ctx.fillRect(-W, gy + 4, W * 3, 10); ctx.fillStyle = '#fff'; for (let i = 0; i < 12; i++) ctx.fillRect(((i * 110 + t * v * 260) % (W + 110) + W + 110) % (W + 110) - 40, gy + 8, 50, 2); }
         const py = cy - U * 0.05 + (0.5 - alt) * U * 0.45;
         /* aripa (profil) rotită cu unghiul */
         const chord = U * 1.25;
@@ -185,6 +187,8 @@
         /* o linie de referință spre direcția aerului */
         ctx.strokeStyle = 'rgba(255,80,80,0.0)'; ctx.restore();
         ctx.restore();
+        ctx.restore();
+        ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.font = '700 13px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillText('avionul zboară spre dreapta →', cx, api.cy - api.unit + 14);
         /* săgeți de forță */
         const arrow = (x, y, dy, col, txt) => { ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + dy); ctx.stroke(); const s = dy < 0 ? -1 : 1; ctx.beginPath(); ctx.moveTo(x, y + dy + s * 14); ctx.lineTo(x - 9, y + dy); ctx.lineTo(x + 9, y + dy); ctx.fill(); ctx.font = '700 13px system-ui,sans-serif'; ctx.textAlign = 'left'; ctx.fillText(txt, x + 14, y + dy / 2 + 4); };
         arrow(cx + U * 0.25, py, -lift * 280, '#7dffb0', 'Portanță');
