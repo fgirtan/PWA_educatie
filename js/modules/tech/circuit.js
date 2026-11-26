@@ -19,7 +19,7 @@
         fan: { n: 'Ventilator', R: 8, e: '🌀', tip: '<b>Ventilatorul</b> are un motor mic: cu cât primește mai multă putere, cu atât se rotește mai repede.' },
         buz: { n: 'Sonerie', R: 14, e: '🔔', tip: '<b>Soneria</b> transformă curentul în sunet. Dacă nu auzi nimic, ridică volumul telefonului!' }
       };
-      let on = true, par = false, V = 6, comps = [], rmv = false, flowT = 0, aud = null, audLevel = 0;
+      let on = true, par = false, V = 6, comps = [], rmv = false, flowT = 0, aud = null, audLevel = 0, soundOn = false;
       const MAXC = 20, CAP = 5;                        // componente maxime; capacitatea bateriei (Ah)
       let bats = [1], charge = 1, tscale = 150, elapsed = 0, energy = 0, drained = false, Veff = 6;
       const mk = (type) => ({ type: type, burnt: false, ang: 0 });
@@ -32,6 +32,7 @@
       const r1 = api.row('');
       const bSw = api.button(r1, '🔘 Întrerupător: PORNIT', () => { on = !on; bSw.innerHTML = on ? '🔘 Întrerupător: PORNIT' : '⚪ Întrerupător: OPRIT'; api.say(on ? 'Circuitul e <b>închis</b>: curentul poate trece.' : 'Circuitul e <b>deschis</b>: curentul nu are pe unde trece, deci nu se aprinde nimic!', 6000); });
       const bMode = api.button(r1, '➡️ În serie', () => { par = !par; bMode.innerHTML = par ? '🔀 În paralel' : '➡️ În serie'; api.say(par ? '<b>Paralel:</b> fiecare componentă are propriul drum și primește toată tensiunea. Dacă una se arde, celelalte merg (așa e instalația din casă).' : '<b>Serie:</b> componentele sunt pe același drum și își împart tensiunea. Dacă una se arde, toate se opresc (ca la ghirlandele vechi).', 9000); });
+      const bSnd = api.button(r1, '🔇 Sunet: oprit', () => { soundOn = !soundOn; bSnd.innerHTML = soundOn ? '🔊 Sunet: pornit' : '🔇 Sunet: oprit'; if (soundOn) api.say('Soneria face acum un bip scurt. Cu cât primește mai multă putere, cu atât bipul e mai tare.', 5000); });
       const bRm = api.button(r1, '🗑️ Scoate componente', () => { rmv = !rmv; bRm.classList.toggle('on', rmv); bRm.innerHTML = rmv ? '✋ Atinge o componentă ca s-o scoți' : '🗑️ Scoate componente'; if (rmv) api.say('Mod scoatere: <b>atinge o componentă</b> ca s-o ștergi din circuit.', 5000); });
       api.button(r1, '🔧 Repară', () => { comps.forEach((c) => { c.burnt = false; }); api.say('Componentele arse au fost înlocuite!', 2500); });
       api.button(r1, '🧹 Golește', () => { comps = []; });
@@ -171,8 +172,8 @@
         if (S.short) { ctx.fillStyle = '#ff6a5a'; ctx.font = '700 16px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillText('⚠ SCURTCIRCUIT: curentul nu trece prin nimic și bateria se încinge!', g.W / 2, api.cy - api.unit * 0.12); for (let k = 0; k < 6; k++) { ctx.fillStyle = 'rgba(255,200,80,' + Math.random() + ')'; ctx.fillRect(g.x0 + (Math.random() - 0.5) * 30, by + (Math.random() - 0.5) * 80, 3, 3); } }
         /* sonerie: sunet proporțional cu puterea */
         let lvl = 0; comps.forEach((c, i) => { if (c.type === 'buz' && !c.burnt) lvl = Math.max(lvl, clamp(S.P[i] / 4, 0, 1)); });
-        if (lvl > 0 && !aud) { try { const AC = window.AudioContext || window.webkitAudioContext; const ac = new AC(), o = ac.createOscillator(), gn = ac.createGain(); o.type = 'square'; o.frequency.value = 520; gn.gain.value = 0; o.connect(gn); gn.connect(ac.destination); o.start(); aud = { ac: ac, o: o, g: gn }; } catch (e) { aud = { dead: true }; } }
-        if (aud && aud.g) aud.g.gain.setTargetAtTime(lvl * 0.03 * ((Math.sin(tm * 14) > 0) ? 1 : 0.2), aud.ac.currentTime, 0.02);
+        if (soundOn && lvl > 0 && !aud) { try { const AC = window.AudioContext || window.webkitAudioContext; const ac = new AC(), o = ac.createOscillator(), gn = ac.createGain(); o.type = 'sine'; o.frequency.value = 523; gn.gain.value = 0; o.connect(gn); gn.connect(ac.destination); o.start(); aud = { ac: ac, o: o, g: gn }; } catch (e) { aud = { dead: true }; } }
+        if (aud && aud.g) { const beep = (tm % 0.7) < 0.16 ? 1 : 0; aud.g.gain.setTargetAtTime(soundOn ? lvl * 0.05 * beep : 0, aud.ac.currentTime, 0.012); }
         const left = S.I > 0 ? bats.reduce((a, c) => a + c, 0) * CAP / S.I : Infinity, ft = (h) => !isFinite(h) ? '—' : h < 1 ? fmt(h * 60, 0) + ' min' : fmt(h, 1) + ' ore';
         info.innerHTML = (S.short ? '<b>Scurtcircuit!</b> ' : '') + '<b>Curent:</b> ' + fmt(S.I, 2) + ' A · <b>Componente:</b> ' + n + '/' + MAXC + ' · <b>Baterii:</b> ' + bats.length + ' (' + Math.round(charge * 100) + '%)' + (S.I > 0 ? ' · se golește în ~<b>' + ft(left) + '</b>' : ' · <i>nu curge curent</i>') + ' · <b>Energie consumată:</b> ' + fmt(energy, 1) + ' Wh · <b>Timp trecut:</b> ' + ft(elapsed);
       }
