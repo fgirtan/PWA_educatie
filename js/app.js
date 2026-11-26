@@ -1829,5 +1829,11 @@ window.addEventListener('DOMContentLoaded', () => {
 if ('serviceWorker' in navigator && !location.search.includes('nosw')) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch(() => { });
+    /* când apare o versiune nouă, reîncarcă o singură dată */
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloaded || !navigator.serviceWorker.controller) return;
+      reloaded = true; location.reload();
+    });
   });
 }
