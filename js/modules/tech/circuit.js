@@ -60,9 +60,9 @@
         led: { n: 'LED', R: 30, e: '🔴', tip: '<b>LED-ul</b> luminează cu puțin curent, dar se arde ușor! Dacă îl pui direct pe baterie, pocnește. Pune un <b>rezistor</b> în serie cu el ca să-l protejezi.' },
         rez: { n: 'Rezistor', R: 12, e: '🟫', tip: '<b>Rezistorul</b> „strânge” curentul: cu cât are rezistență mai mare, cu atât trece mai puțin curent. Se încălzește (ca o plită!).' },
         fan: { n: 'Ventilator', R: 8, e: '🌀', tip: '<b>Ventilatorul</b> are un motor mic: cu cât primește mai multă putere, cu atât se rotește mai repede.' },
-        buz: { n: 'Sonerie', R: 14, e: '🔔', tip: '<b>Soneria</b> transformă curentul în sunet. Dacă nu auzi nimic, ridică volumul telefonului!' }
+        buz: { n: 'Sonerie', R: 14, e: '🔔', tip: '<b>Soneria</b> transformă curentul în vibrații: cu cât primește mai multă putere, cu atât undele ei sunt mai puternice.' }
       };
-      let on = true, par = false, V = 6, comps = [], rmv = false, flowT = 0, aud = null, audLevel = 0;
+      let on = true, par = false, V = 6, comps = [], rmv = false, flowT = 0;
       const MAXC = 20, CAP = 5;                        // componente maxime; capacitatea bateriei (Ah)
       let bats = [1], charge = 1, tscale = 150, elapsed = 0, energy = 0, drained = false, Veff = 6;
       let swAng = 0, shortK = 0;                       // animații: pârghia întrerupătorului, strălucirea scurtcircuitului
@@ -389,12 +389,9 @@
         }
         /* sonerie: sunet proporțional cu puterea */
         let lvl = 0; comps.forEach((c, i) => { if (c.type === 'buz' && !c.burnt) lvl = Math.max(lvl, clamp(S.P[i] / 4, 0, 1)); });
-        if (lvl > 0 && !aud) { try { const AC = window.AudioContext || window.webkitAudioContext; const ac = new AC(), o = ac.createOscillator(), gn = ac.createGain(); o.type = 'square'; o.frequency.value = 520; gn.gain.value = 0; o.connect(gn); gn.connect(ac.destination); o.start(); aud = { ac: ac, o: o, g: gn }; } catch (e) { aud = { dead: true }; } }
-        if (aud && aud.g) aud.g.gain.setTargetAtTime(lvl * 0.03 * ((Math.sin(tm * 14) > 0) ? 1 : 0.2), aud.ac.currentTime, 0.02);
         const left = S.I > 0 ? bats.reduce((a, c) => a + c, 0) * CAP / S.I : Infinity, ft = (h) => !isFinite(h) ? '—' : h < 1 ? fmt(h * 60, 0) + ' min' : fmt(h, 1) + ' ore';
         info.innerHTML = (S.short ? '<b>Scurtcircuit!</b> ' : '') + '<b>Curent:</b> ' + fmt(S.I, 2) + ' A · <b>Componente:</b> ' + n + '/' + MAXC + ' · <b>Baterii:</b> ' + bats.length + ' (' + Math.round(charge * 100) + '%)' + (S.I > 0 ? ' · se golește în ~<b>' + ft(left) + '</b>' : ' · <i>nu curge curent</i>') + ' · <b>Energie consumată:</b> ' + fmt(energy, 1) + ' Wh · <b>Timp trecut:</b> ' + ft(elapsed);
       }
-      api.onCleanup(() => { if (aud && aud.g) { try { aud.g.gain.value = 0; aud.o.stop(); aud.ac.close(); } catch (e) { } } });
       return { frame: frame };
     }
   });

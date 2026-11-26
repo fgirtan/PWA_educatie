@@ -530,9 +530,13 @@ body.sky-mode .date-box { display: none; }
 #mod-info::after { content: "atinge ca să închizi"; display: block; margin-top: 6px; font-size: 11.5px; color: var(--faint); font-weight: 700; }
 body.texts-off #mod-info { display: none !important; }
 
+/* butoanele din dreapta barei modulului */
+#mod-help { margin-left: auto; }
+.mod-bar .icon { background: var(--glass); }
+
 /* comutatorul „Text” din bara modulului */
 .text-toggle {
-  position: relative; margin-left: auto; flex: 0 0 auto;
+  position: relative; flex: 0 0 auto;
   display: inline-flex; align-items: center; gap: 7px; height: 44px; padding: 0 14px;
   border-radius: 999px; border: 1px solid var(--line); background: var(--glass);
   font-size: 14px; font-weight: 800; color: var(--txt);
@@ -650,6 +654,7 @@ body.texts-off #mod-info { display: none !important; }
   /* module */
   .back-btn span { display: none; }
   .text-toggle span { display: none; }
+  #mod-full { display: none; }
   .text-toggle { width: 44px; padding: 0; justify-content: center; }
   .back-btn { width: 44px; padding: 0; justify-content: center; }
   .mod-titles strong { font-size: 16.5px; }
@@ -690,6 +695,55 @@ body.texts-off #mod-info { display: none !important; }
   #tour { bottom: 74px; }
   .sec-tile { min-height: 260px; }
 }
+
+/* ================= PROGRES, CĂUTARE, MĂRIME TEXT (js/core/ux.js) ================= */
+#ux-bar {
+  display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: center;
+  margin: 26px 0 28px; padding: 14px 16px; border-radius: var(--r);
+  background: var(--surface); border: 1px solid var(--line);
+}
+.ux-search {
+  flex: 1 1 300px; display: flex; align-items: center; gap: 10px; padding: 0 14px; min-height: 48px;
+  border-radius: 14px; background: rgba(255, 255, 255, .06); border: 1px solid var(--line); color: var(--dim);
+}
+.ux-search:focus-within { border-color: var(--accent); color: var(--txt); }
+.ux-search input { flex: 1; min-width: 0; background: none; border: 0; outline: none; color: var(--txt); font: inherit; font-size: 16px; min-height: 44px; }
+.ux-search input::placeholder { color: var(--faint); }
+#ux-resume { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+#ux-progress { flex: 0 1 240px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700; color: var(--dim); }
+#ux-progress b { color: var(--accent-2); }
+#ux-progress .pbar { height: 8px; border-radius: 99px; background: rgba(255, 255, 255, .1); overflow: hidden; }
+#ux-progress i { display: block; height: 100%; width: 0; background: var(--accent-2); border-radius: 99px; transition: width .5s ease; }
+.ux-tools { display: flex; align-items: center; gap: 6px; }
+.ux-tools .icon { font-size: 15px; font-weight: 800; }
+#ux-size-val { min-width: 42px; text-align: center; color: var(--dim); font-size: 13px; font-weight: 700; }
+#ux-res-wrap { margin-top: 4px; }
+.ux-res-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.ux-res-head h2 { margin: 0; font-size: 22px; font-weight: 850; }
+.res-list { display: flex; flex-direction: column; gap: 10px; }
+.res {
+  display: flex; align-items: center; gap: 14px; text-align: left; padding: 12px 16px; min-height: 64px;
+  border-radius: 16px; border: 1px solid var(--line); background: var(--surface); transition: border-color .15s;
+}
+.res:hover { border-color: var(--accent); }
+.res-ico { flex: 0 0 14px; height: 14px; border-radius: 50%; background: var(--c1); }
+.res b { display: block; font-size: 17px; } .res small { color: var(--dim); }
+.res em { margin-left: auto; font-style: normal; font-size: 18px; }
+.card.done { border-color: color-mix(in srgb, var(--accent-2) 55%, transparent); }
+.badge-done {
+  position: absolute; top: 12px; right: 12px; z-index: 2; padding: 4px 10px; border-radius: 99px;
+  background: var(--accent-2); color: #2a1800; font-weight: 800; font-size: 12px;
+}
+.card-feature .badge-done { left: auto; }
+#ux-toast {
+  position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 60;
+  transform: translate(-50%, 160%); max-width: min(92vw, 560px); padding: 14px 20px; border-radius: 16px;
+  background: var(--surface-solid); border: 1px solid var(--accent-2); color: var(--txt); font-weight: 700; font-size: 15px;
+  box-shadow: var(--shadow); transition: transform .35s ease; pointer-events: none;
+}
+#ux-toast.show { transform: translate(-50%, 0); }
+@media (max-width: 560px) { #ux-bar { padding: 12px; gap: 10px; } #ux-progress { flex: 1 1 100%; } .badge-done { top: 8px; right: 8px; } }
+@media (prefers-contrast: more) { :root { --line: rgba(255, 255, 255, .6); --dim: #e0e8ff; } }
 
 /* ?thumb=1 — doar desenul, pentru imaginile cardurilor */
 body.thumb .mod-bar { visibility: hidden !important; }

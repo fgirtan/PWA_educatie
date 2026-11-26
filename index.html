@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<link rel="stylesheet" href="css/style.css?v=42">
+<link rel="stylesheet" href="css/style.css?v=43">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -389,7 +389,9 @@
   <header class="mod-bar">
     <button id="mod-back" class="back-btn" title="Înapoi (Esc)"><svg class="i" aria-hidden="true"><use href="#i-back"/></svg><span>Înapoi</span></button>
     <div class="mod-titles"><span id="mod-crumb" class="crumb"></span><strong id="mod-title"></strong><small id="mod-sub"></small></div>
+    <button id="mod-help" class="icon" title="Arată din nou explicația" aria-label="Arată din nou explicația"><svg class="i" aria-hidden="true"><use href="#i-help"/></svg></button>
     <button id="mod-text" class="text-toggle" aria-pressed="true" title="Arată / ascunde textele explicative (T)"><svg class="i" aria-hidden="true"><use href="#i-text"/></svg><span>Text</span></button>
+    <button id="mod-full" class="icon" title="Ecran complet (F)" aria-label="Ecran complet"><svg class="i" aria-hidden="true"><use href="#i-full"/></svg></button>
   </header>
   <div id="mod-info" role="status" aria-live="polite"></div>
   <div id="mod-panel"></div>
@@ -539,41 +541,42 @@
   </div>
 </main>
 
-<script src="js/data.js?v=42"></script>
-<script src="js/data-extra.js?v=42"></script>
-<script src="js/textures.js?v=42"></script>
-<script src="js/sky.js?v=42"></script>
-<script src="js/app.js?v=42"></script>
-<script src="js/core/art.js?v=42"></script>
-<script src="js/core/creatures.js?v=42"></script>
-<script src="js/core/modules.js?v=42"></script>
-<script src="js/modules/body/brain.js?v=42"></script>
-<script src="js/modules/body/digestion.js?v=42"></script>
-<script src="js/modules/body/heart.js?v=42"></script>
-<script src="js/modules/body/lungs.js?v=42"></script>
-<script src="js/modules/body/skeleton.js?v=42"></script>
-<script src="js/modules/earth/civ.js?v=42"></script>
-<script src="js/modules/earth/earthtime.js?v=42"></script>
-<script src="js/modules/earth/human.js?v=42"></script>
-<script src="js/modules/earth/layers.js?v=42"></script>
-<script src="js/modules/earth/lifeevo.js?v=42"></script>
-<script src="js/modules/earth/ocean.js?v=42"></script>
-<script src="js/modules/earth/relief.js?v=42"></script>
-<script src="js/modules/earth/volcano.js?v=42"></script>
-<script src="js/modules/mechanics/engine.js?v=42"></script>
-<script src="js/modules/mechanics/mechanics.js?v=42"></script>
-<script src="js/modules/space/bigbang.js?v=42"></script>
-<script src="js/modules/space/blackhole.js?v=42"></script>
-<script src="js/modules/space/explosions.js?v=42"></script>
-<script src="js/modules/space/gravity.js?v=42"></script>
-<script src="js/modules/tech/binary.js?v=42"></script>
-<script src="js/modules/tech/camera.js?v=42"></script>
-<script src="js/modules/tech/circuit.js?v=42"></script>
-<script src="js/modules/tech/phone.js?v=42"></script>
-<script src="js/modules/tech/solar.js?v=42"></script>
-<script src="js/modules/vehicles/airplane.js?v=42"></script>
-<script src="js/modules/vehicles/car.js?v=42"></script>
-<script src="js/modules/vehicles/emotor.js?v=42"></script>
-<script src="js/modules/vehicles/train.js?v=42"></script>
+<script src="js/data.js?v=43"></script>
+<script src="js/data-extra.js?v=43"></script>
+<script src="js/textures.js?v=43"></script>
+<script src="js/sky.js?v=43"></script>
+<script src="js/app.js?v=43"></script>
+<script src="js/core/art.js?v=43"></script>
+<script src="js/core/creatures.js?v=43"></script>
+<script src="js/core/modules.js?v=43"></script>
+<script src="js/core/ux.js?v=43"></script>
+<script src="js/modules/body/brain.js?v=43"></script>
+<script src="js/modules/body/digestion.js?v=43"></script>
+<script src="js/modules/body/heart.js?v=43"></script>
+<script src="js/modules/body/lungs.js?v=43"></script>
+<script src="js/modules/body/skeleton.js?v=43"></script>
+<script src="js/modules/earth/civ.js?v=43"></script>
+<script src="js/modules/earth/earthtime.js?v=43"></script>
+<script src="js/modules/earth/human.js?v=43"></script>
+<script src="js/modules/earth/layers.js?v=43"></script>
+<script src="js/modules/earth/lifeevo.js?v=43"></script>
+<script src="js/modules/earth/ocean.js?v=43"></script>
+<script src="js/modules/earth/relief.js?v=43"></script>
+<script src="js/modules/earth/volcano.js?v=43"></script>
+<script src="js/modules/mechanics/engine.js?v=43"></script>
+<script src="js/modules/mechanics/mechanics.js?v=43"></script>
+<script src="js/modules/space/bigbang.js?v=43"></script>
+<script src="js/modules/space/blackhole.js?v=43"></script>
+<script src="js/modules/space/explosions.js?v=43"></script>
+<script src="js/modules/space/gravity.js?v=43"></script>
+<script src="js/modules/tech/binary.js?v=43"></script>
+<script src="js/modules/tech/camera.js?v=43"></script>
+<script src="js/modules/tech/circuit.js?v=43"></script>
+<script src="js/modules/tech/phone.js?v=43"></script>
+<script src="js/modules/tech/solar.js?v=43"></script>
+<script src="js/modules/vehicles/airplane.js?v=43"></script>
+<script src="js/modules/vehicles/car.js?v=43"></script>
+<script src="js/modules/vehicles/emotor.js?v=43"></script>
+<script src="js/modules/vehicles/train.js?v=43"></script>
 </body>
 </html>

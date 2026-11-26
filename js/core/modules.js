@@ -21,7 +21,7 @@
   window.defineModule = function (d) { MODS[d.id] = d; };
 
   const $ = (s) => document.querySelector(s);
-  let cur = null;
+  let cur = null, curApi = null;
 
   function openModule(id) {
     const def = MODS[id];
@@ -42,7 +42,7 @@
       $('#mod-crumb').textContent = st ? st.textContent : '';
     } else $('#mod-crumb').textContent = '';
     const panel = $('#mod-panel'); panel.innerHTML = '';
-    const info = $('#mod-info'); info.innerHTML = ''; info.classList.remove('show');
+    const info = $('#mod-info'); info.innerHTML = ''; info.classList.remove('show'); let lastSay = '';
     const canvas = $('#mod-canvas');
     const ctx = canvas.getContext('2d');
     const cleanups = [];
@@ -65,6 +65,7 @@
         api.unit = Math.min(freeW, freeH) / 2;
       },
       say: function (html, ms) {
+        lastSay = html;
         info.innerHTML = html;
         info.classList.add('show');
         clearTimeout(api._sayT);
@@ -114,6 +115,7 @@
           canvas.removeEventListener('pointerup', u); canvas.removeEventListener('pointercancel', u);
         });
       },
+      reshow: function () { if (!lastSay) return; if (textsOff()) setTexts(true, true); info.innerHTML = lastSay; info.classList.add('show'); clearTimeout(api._sayT); markNew(false); api.layout(); if (inst && inst.resize) inst.resize(); },
       onCleanup: function (fn) { cleanups.push(fn); }
     };
 
@@ -152,6 +154,8 @@
       raf = requestAnimationFrame(loop);
     }
     raf = requestAnimationFrame(loop);
+    curApi = api;
+    if (window.UX) UX.onOpen(id, def.title);
 
     cur = {
       stop: function () {
@@ -165,7 +169,7 @@
   }
 
   function closeModule(silent) {
-    if (cur) { cur.stop(); cur = null; }
+    if (cur) { cur.stop(); cur = null; curApi = null; if (window.UX) UX.onClose(); }
     if (silent) return;
     $('#module').classList.add('hidden');
     $('#home').classList.remove('hidden');
@@ -219,6 +223,8 @@
     if (/[?&]thumb=1/.test(location.search)) document.body.classList.add('thumb');
     let pref = 'on'; try { pref = localStorage.getItem('texts') || 'on'; } catch (e) { }
     setTexts(pref !== 'off', false);
+    const mhelp = $('#mod-help'); if (mhelp) mhelp.addEventListener('click', () => { if (curApi) curApi.reshow(); });
+    const mfull = $('#mod-full'); if (mfull) mfull.addEventListener('click', () => { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => { }); else document.exitFullscreen().catch(() => { }); });
     const tt = $('#mod-text');
     if (tt) tt.addEventListener('click', () => { const on = textsOff(); setTexts(on, true); if (on) { const inf = $('#mod-info'); if (inf.innerHTML) inf.classList.add('show'); window.dispatchEvent(new Event('resize')); } });
     window.addEventListener('keydown', (e) => { if ((e.key === 't' || e.key === 'T') && cur && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) $('#mod-text').click(); });

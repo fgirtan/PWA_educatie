@@ -81,6 +81,8 @@
         });
       }
 
+      /* tremur natural: unde netede cu frecvențe diferite (nu zgomot aleator la fiecare cadru) */
+      const nz = (t, k, ph) => 0.5 * Math.sin(t * 6.7 * k + ph) + 0.3 * Math.sin(t * 11.9 * k + ph * 2.3 + 1.7) + 0.2 * Math.sin(t * 19.3 * k + ph * 0.6 + 0.4);
       function frame(dt, t) {
         const W = api.W, H = api.H, cx = api.cx, U = api.unit, gy = api.cy + U * 0.35, ex = explosive();
         if (ptime && !erupt) { press += dt * (0.12 + 0.1 * gas); sl.set(Math.min(1, press)); }
@@ -105,7 +107,7 @@
         shake = Math.max(0, shake - dt * 0.9);
         dark = A.damp(dark, erupt && ex > 0.55 ? 1 : Math.min(0.6, ash.length / 80), 0.8, dt);
         needle = A.damp(needle, press, 6, dt);
-        const sx = (erupt || (ptime && press > 0.3) ? (Math.random() - 0.5) * (2 + 10 * shake + press * 4) : 0), sy = sx * 0.6;
+        const shk = erupt || (ptime && press > 0.3) ? (2 + 10 * shake + press * 4) * 0.5 : 0, sx = nz(t, 1, 0.9) * shk * 1.6, sy = nz(t, 1.3, 3.1) * shk * 0.8;
         ctx.save(); ctx.translate(sx, sy);
         ctx.drawImage(scene(W, H, gy, U), 0, 0);
         /* cerul se întunecă de cenușă */

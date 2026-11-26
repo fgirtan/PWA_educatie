@@ -141,7 +141,7 @@ Adaugă-l în lista potrivită (`PLANETS`, `DWARFS`, `COMETS`, `ASTEROIDS`, `SPA
 
 **Important:** după orice modificare a fișierelor `.js` / `.css`:
 
-1. urcă numărul din `index.html` (acum `?v=42` → `?v=43`, la toate scripturile și la stil) — și aceleași valori în lista `ASSETS` din `sw.js`;
+1. urcă numărul din `index.html` (acum `?v=43` → `?v=44`, la toate scripturile și la stil) — și aceleași valori în lista `ASSETS` din `sw.js`;
 2. urcă versiunea cache-ului din `sw.js` (`const CACHE = 'univers-v3'` → `v4`).
 
 Altfel browserul (și service worker-ul) servesc varianta veche. În timpul dezvoltării poți deschide
