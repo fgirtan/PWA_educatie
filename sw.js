@@ -1,14 +1,19 @@
 /* Service worker — aplicația funcționează complet offline. */
-const CACHE = 'univers-v5';
+const CACHE = 'univers-v11';
 const ASSETS = [
   './',
   'index.html',
-  'css/style.css?v=3',
-  'js/data.js?v=3',
-  'js/data-extra.js?v=3',
-  'js/textures.js?v=3',
-  'js/sky.js?v=3',
-  'js/app.js?v=3',
+  'css/style.css?v=9',
+  'js/data.js?v=9',
+  'js/data-extra.js?v=9',
+  'js/textures.js?v=9',
+  'js/sky.js?v=9',
+  'js/app.js?v=9',
+  'js/modules.js?v=9',
+  'js/mod-blackhole.js?v=9',
+  'js/mod-explosions.js?v=9',
+  'js/mod-gravity.js?v=9',
+  'js/mod-earth.js?v=9',
   'manifest.webmanifest',
   'photos/credits.json',
   'icons/icon-192.png',

@@ -14,7 +14,7 @@ let BELT_STEP = 1, STAR_STEP = 1;   // pe telefon desenăm mai puține particule
 let viewShift = 0;                  // urcă imaginea când se deschide fișa pe telefon
 
 /* ---------- cameră și timp ---------- */
-const MIN_SCALE = 2e4;        // metri / pixel (zoom maxim)
+const MIN_SCALE = 8e3;        // metri / pixel (zoom maxim)
 const MAX_SCALE = 2.5e23;     // (zoom minim)
 
 const cam = { x: 0, y: 0, scale: 9e8 };
@@ -199,7 +199,7 @@ function drawBody(b, p, alpha, minPx, kindOverride) {
     ctx.beginPath(); ctx.arc(px, py, drawR, 0, Math.PI * 2); ctx.fill();
   } else {
     const tex = getTexture(kindOverride || b.texture || 'rock', b.id);
-    if (drawR > 11) {
+    if (drawR > 11 && b.id !== 'mars') {
       const rot = (simDays * 24 / (b.rot || 22)) * 0.35;
       ctx.save();
       ctx.translate(px, py); ctx.rotate(rot);
@@ -459,37 +459,22 @@ function drawHostCraft(hostId, hostHit, alpha) {
   for (const s of SPACECRAFT) {
     if (s.around !== hostId) continue;
 
-    /* roboți pe suprafață: un punct luminos chiar pe planetă */
+    /* roboți pe suprafață: pictogramă care seamănă cu robotul, pe traseul lui */
     if (s.kind === 'rover') {
-      const ang = s.phase * DEG + (2 * Math.PI * simDays) / (s.P * 40);
-      const rr2 = hostHit.r * 0.72;
-      const px2 = hostHit.x + Math.cos(ang) * rr2;
-      const py2 = hostHit.y + Math.sin(ang) * rr2 * 0.85;
-      ctx.globalAlpha = a;
-      const gg = ctx.createRadialGradient(px2, py2, 0, px2, py2, 7);
-      gg.addColorStop(0, hexA(s.color, 1));
-      gg.addColorStop(0.35, hexA(s.color, 0.55));
-      gg.addColorStop(1, hexA(s.color, 0));
-      ctx.fillStyle = gg;
-      ctx.beginPath(); ctx.arc(px2, py2, 7, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = hexA(s.color, 0.85); ctx.lineWidth = 1.3;
-      ctx.beginPath();
-      ctx.moveTo(px2, py2); ctx.lineTo(px2 + 13, py2 - 13);
-      ctx.stroke();
-      ctx.globalAlpha = 1;
-      hitList.push({ x: px2 + 13, y: py2 - 13, r: 14, obj: s });
-      label(s.short || s.name, px2 + 13 + ctx.measureText(s.short || s.name).width / 2 + 4,
-        py2 - 15, 12, hexA(s.color, 0.97));
+      drawRover(s, hostHit, a);
       continue;
     }
 
     const k = ks[s.id] || 2;
     const rr = hostHit.r * k;
     const ang = s.phase * DEG + (2 * Math.PI * simDays) / s.P;
-    ctx.globalAlpha = a * 0.5;
-    ctx.strokeStyle = 'rgba(190,215,255,0.5)';
-    ctx.lineWidth = 1;
+    const isSel = selected === s;
+    ctx.globalAlpha = a * (isSel ? 0.95 : 0.5);
+    ctx.strokeStyle = isSel ? '#ffd166' : 'rgba(190,215,255,0.5)';
+    ctx.lineWidth = isSel ? 2.4 : 1;
+    if (isSel) { ctx.setLineDash([8, 6]); ctx.lineDashOffset = -performance.now() / 60; }
     ctx.beginPath(); ctx.arc(hostHit.x, hostHit.y, rr, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
     ctx.globalAlpha = 1;
 
     if (s.kind === 'swarm') {
@@ -511,12 +496,220 @@ function drawHostCraft(hostId, hostHit, alpha) {
     const px = hostHit.x + Math.cos(ang) * rr;
     const py = hostHit.y + Math.sin(ang) * rr;
     drawCraftMarker(px, py, s, a);
-    hitList.push({ x: px, y: py, r: 14, obj: s });
+    hitList.push({ x: px, y: py, r: s.id === 'iss' ? 30 : 14, obj: s });
     label(s.short || s.name, px, py - 12, 12, '#ffffff');
   }
 }
 
+
+/* ---------- roboții de pe Marte: traseu + pictogramă ---------- */
+function roverPoly(s) {
+  if (s._poly) return s._poly;
+  const P = s.trail, pts = [];
+  const g = (i) => P[Math.max(0, Math.min(P.length - 1, i))];
+  for (let i = 0; i < P.length - 1; i++) {
+    const p0 = g(i - 1), p1 = g(i), p2 = g(i + 1), p3 = g(i + 2);
+    for (let k = 0; k < 12; k++) {
+      const t = k / 12, t2 = t * t, t3 = t2 * t;
+      const f = (j) => 0.5 * (2 * p1[j] + (-p0[j] + p2[j]) * t +
+        (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * t2 +
+        (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * t3);
+      pts.push([f(0), f(1)]);
+    }
+  }
+  pts.push(P[P.length - 1]);
+  const cum = [0];
+  for (let i = 1; i < pts.length; i++) {
+    cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  }
+  s._poly = { pts: pts, cum: cum, len: cum[cum.length - 1] };
+  return s._poly;
+}
+
+/* progresul pe traseu (0..1): robotul merge înainte și înapoi */
+function roverProgress(s) {
+  const ph = (simDays / (s.P * 0.6) + s.phase / 360) % 2;
+  const u = ph < 1 ? ph : 2 - ph;
+  return u * u * (3 - 2 * u);   // pornește și se oprește lin
+}
+
+function roverAt(s, u) {
+  const poly = roverPoly(s), d = u * poly.len;
+  let i = 1;
+  while (i < poly.cum.length - 1 && poly.cum[i] < d) i++;
+  const seg = (poly.cum[i] - poly.cum[i - 1]) || 1;
+  const k = clamp((d - poly.cum[i - 1]) / seg, 0, 1);
+  const A = poly.pts[i - 1], B = poly.pts[i];
+  return { x: lerp(A[0], B[0], k), y: lerp(A[1], B[1], k), ang: Math.atan2(B[1] - A[1], B[0] - A[0]) };
+}
+
+function drawRover(s, hostHit, alpha) {
+  const R = hostHit.r;
+  const poly = roverPoly(s);
+  const isSel = selected === s;
+  const cx = hostHit.x, cy = hostHit.y;
+  const u = roverProgress(s);
+  const me = roverAt(s, u);
+  const X = (p) => cx + p[0] * R, Y = (p) => cy + p[1] * R;
+
+  /* traseul */
+  ctx.save();
+  ctx.globalAlpha = alpha * (isSel ? 1 : 0.7);
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = isSel ? 6 : 4;
+  ctx.beginPath();
+  poly.pts.forEach((p, i) => i ? ctx.lineTo(X(p), Y(p)) : ctx.moveTo(X(p), Y(p)));
+  ctx.stroke();
+  ctx.strokeStyle = hexA(s.color, 0.98); ctx.lineWidth = isSel ? 3 : 2;
+  ctx.setLineDash(isSel ? [8, 6] : [4, 5]);
+  ctx.lineDashOffset = isSel ? -performance.now() / 55 : 0;
+  ctx.stroke();
+  ctx.setLineDash([]);
+  if (isSel) {
+    /* porțiunea deja parcursă, plină */
+    const done = Math.max(2, Math.round(u * (poly.pts.length - 1)));
+    ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 3;
+    ctx.beginPath();
+    for (let i = 0; i <= Math.min(done, poly.pts.length - 1); i++) {
+      const p = poly.pts[i]; i ? ctx.lineTo(X(p), Y(p)) : ctx.moveTo(X(p), Y(p));
+    }
+    ctx.stroke();
+    /* oprirea 'aterizare' și 'ținta' */
+    const A = poly.pts[0], B = poly.pts[poly.pts.length - 1];
+    ctx.fillStyle = '#7dffb0'; ctx.beginPath(); ctx.arc(X(A), Y(A), 5, 0, 7); ctx.fill();
+    ctx.fillStyle = '#ff7a8a'; ctx.beginPath(); ctx.arc(X(B), Y(B), 5, 0, 7); ctx.fill();
+    if (s.icon === 'heli') {
+      for (const p of s.trail) {
+        ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(X(p), Y(p), 3, 0, 7); ctx.fill();
+      }
+    }
+    ctx.globalAlpha = alpha;
+    label(s.startLabel || 'Aterizare', X(A), Y(A) + 18, 12, '#7dffb0', true);
+    label(s.endLabel || 'Acum încolo', X(B), Y(B) - 14, 12, '#ff9aa6', true);
+  }
+  ctx.restore();
+
+  /* pictograma */
+  const size = clamp(R * 0.34, 32, 66);
+  const px = X([me.x, me.y]), py = Y([me.x, me.y]);
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  const g = ctx.createRadialGradient(px, py, 0, px, py, size * 0.95);
+  g.addColorStop(0, 'rgba(0,0,0,0.45)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(px, py, size * 0.95, 0, 7); ctx.fill();
+  drawRoverIcon(px, py, size, s, me.ang);
+  ctx.restore();
+  hitList.push({ x: px, y: py, r: Math.max(size * 0.75, 16), obj: s });
+  if (s.icon === 'heli') label(s.short || s.name, px, py + size * 0.95, 12, hexA(s.color, 0.97));
+  else label(s.short || s.name, px, py - size * 0.8, 12, hexA(s.color, 0.97));
+}
+
+function roundRectPath(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
+}
+
+/* rover văzut din lateral (sau elicopter), desenat cu ~46 de pixeli lățime */
+function drawRoverIcon(px, py, size, s, ang) {
+  const u = size / 46;                      // unitate de desen
+  const flip = Math.cos(ang) < 0 ? -1 : 1;  // se uită în direcția de mers
+  ctx.save();
+  ctx.translate(px, py); ctx.scale(u * flip, u);
+  ctx.lineWidth = 1.2; ctx.strokeStyle = '#1b1f2b';
+
+  if (s.icon === 'heli') {
+    const t = performance.now() / 1000;
+    /* picioare */
+    ctx.strokeStyle = '#2a2f3d'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(-6, 5); ctx.lineTo(-10, 13); ctx.moveTo(6, 5); ctx.lineTo(10, 13);
+    ctx.moveTo(-12, 13); ctx.lineTo(-7, 13); ctx.moveTo(7, 13); ctx.lineTo(12, 13); ctx.stroke();
+    /* corp */
+    ctx.fillStyle = '#e8eef5'; ctx.strokeStyle = '#1b1f2b'; ctx.lineWidth = 1.2;
+    roundRectPath(-6, -4, 12, 10, 2); ctx.fill(); ctx.stroke();
+    /* panou solar */
+    ctx.fillStyle = '#1d3c78';
+    roundRectPath(-8, -13, 16, 7, 1); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#5f8be0'; ctx.lineWidth = 0.7;
+    ctx.beginPath(); ctx.moveTo(-3, -13); ctx.lineTo(-3, -6); ctx.moveTo(3, -13); ctx.lineTo(3, -6); ctx.stroke();
+    /* elicele (două, în contra-rotație) */
+    ctx.strokeStyle = '#1b1f2b'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, -13); ctx.lineTo(0, -17); ctx.stroke();
+    const w1 = 22 * Math.abs(Math.cos(t * 19)), w2 = 22 * Math.abs(Math.cos(t * 17 + 1));
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.fillRect(-w1 / 2, -17.6, w1, 1.8);
+    ctx.fillStyle = 'rgba(190,230,255,0.8)';
+    ctx.fillRect(-w2 / 2, -20.4, w2, 1.8);
+    ctx.restore();
+    return;
+  }
+
+  const tan = s.id === 'curiosity';
+  const body = tan ? '#d8c3a2' : '#f1f3f6';
+  const dark = '#2a2f3d';
+  /* mastul cu „capul” și camera */
+  ctx.strokeStyle = dark; ctx.lineWidth = 1.8;
+  ctx.beginPath(); ctx.moveTo(8, -4); ctx.lineTo(10, -16); ctx.stroke();
+  ctx.fillStyle = body; ctx.strokeStyle = '#1b1f2b'; ctx.lineWidth = 1.1;
+  roundRectPath(6.5, -21, 9, 6, 1.5); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(13, -18, 1.5, 0, 7); ctx.fill();
+  /* generator radioactiv în spate (Curiosity) sau mic (Perseverance) */
+  ctx.fillStyle = dark; ctx.beginPath(); ctx.moveTo(-9, -4); ctx.lineTo(-17, -9); ctx.lineTo(-17, -3); ctx.lineTo(-9, 0); ctx.closePath(); ctx.fill();
+  /* corpul */
+  ctx.fillStyle = body;
+  roundRectPath(-11, -6, 24, 11, 2.5); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.beginPath(); ctx.moveTo(-11, -1); ctx.lineTo(13, -1); ctx.stroke();
+  /* brațul */
+  ctx.strokeStyle = dark; ctx.lineWidth = 1.8;
+  ctx.beginPath(); ctx.moveTo(13, 1); ctx.lineTo(19, 4); ctx.lineTo(21, 9); ctx.stroke();
+  /* suspensia și 6 roți */
+  ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(-9, 5); ctx.lineTo(-13, 11); ctx.moveTo(-9, 5); ctx.lineTo(0, 11);
+  ctx.moveTo(8, 5); ctx.lineTo(0, 11); ctx.moveTo(8, 5); ctx.lineTo(13, 11); ctx.stroke();
+  const spin = simDays * 6;
+  for (const wx of [-13, 0, 13]) {
+    ctx.fillStyle = '#9aa3b2'; ctx.strokeStyle = '#1b1f2b'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(wx, 12, 4.2, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#2a2f3d'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(wx + Math.cos(spin) * 3.4, 12 + Math.sin(spin) * 3.4);
+    ctx.lineTo(wx - Math.cos(spin) * 3.4, 12 - Math.sin(spin) * 3.4); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/* ISS: lungul „fermă” cu 4 perechi de panouri solare, module și radiatoare */
+function drawIssIcon(px, py, alpha, rot) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(px, py); ctx.rotate(rot); ctx.scale(1.5, 1.5);
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 26);
+  g.addColorStop(0, 'rgba(0,0,0,0.5)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 26, 0, 7); ctx.fill();
+  /* panourile solare: 2 perechi la fiecare capăt */
+  for (const sx_ of [-1, 1]) for (const off of [11, 19]) {
+    for (const sy_ of [-1, 1]) {
+      ctx.fillStyle = '#1f4fa8'; ctx.strokeStyle = '#8fb4ff'; ctx.lineWidth = 0.6;
+      ctx.fillRect(sx_ * off - 3, sy_ > 0 ? 1.5 : -13.5, 6, 12);
+      ctx.strokeRect(sx_ * off - 3, sy_ > 0 ? 1.5 : -13.5, 6, 12);
+      ctx.beginPath(); ctx.moveTo(sx_ * off, sy_ > 0 ? 1.5 : -13.5); ctx.lineTo(sx_ * off, sy_ > 0 ? 13.5 : -1.5); ctx.stroke();
+    }
+  }
+  /* ferma */
+  ctx.fillStyle = '#d6dae3'; ctx.fillRect(-23, -1, 46, 2);
+  /* module (perpendicular pe fermă) */
+  ctx.fillStyle = '#f3f4f7'; ctx.strokeStyle = '#4a5160'; ctx.lineWidth = 0.7;
+  ctx.fillRect(-2.2, -9, 4.4, 18); ctx.strokeRect(-2.2, -9, 4.4, 18);
+  ctx.fillStyle = '#c9ced9'; ctx.fillRect(-5, -2.2, 10, 4.4); ctx.strokeRect(-5, -2.2, 10, 4.4);
+  /* radiatoare */
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(-1, -13, 2, 4); ctx.fillRect(-1, 9, 2, 4);
+  ctx.restore();
+  ctx.globalAlpha = 1;
+}
+
 function drawCraftMarker(px, py, s, alpha) {
+  if (s.id === 'iss') { drawIssIcon(px, py, alpha, 0); return; }
   ctx.globalAlpha = alpha;
   const g = ctx.createRadialGradient(px, py, 0, px, py, 9);
   g.addColorStop(0, hexA(s.color, 0.9));
@@ -924,6 +1117,11 @@ function byId(id) { return ALL_OBJECTS.find((o) => o.id === id); }
 function objWorldPos(id) {
   const o = byId(id);
   if (!o) return null;
+  if (o.kind === 'rover' && o.trail && pos[o.around]) {
+    /* camera stă pe robot, nu pe centrul planetei */
+    const hb = byId(o.around), hp = pos[o.around], m = roverAt(o, roverProgress(o));
+    return { x: hp.x + m.x * hb.radius, y: hp.y + m.y * hb.radius };
+  }
   if (pos[id]) return pos[id];
   if (o.dist !== undefined) {
     let d;
@@ -943,6 +1141,10 @@ function objViewScale(o) {
     return clamp(o.radius * 7 / minDim, MIN_SCALE, MAX_SCALE);
   }
   if (SPACECRAFT.indexOf(o) >= 0) {
+    if (o.kind === 'rover') {
+      const hostB = byId(o.around);
+      return clamp((hostB ? hostB.radius : 3.39e6) * 2.1 / minDim, MIN_SCALE, MAX_SCALE);
+    }
     if (o.around && o.around !== 'sun') {
       const host = byId(o.around);
       return clamp((host ? host.radius : 6.371e6) * 26 / minDim, MIN_SCALE, MAX_SCALE);
@@ -1005,6 +1207,7 @@ function showPhoto(o) {
 function select(o) {
   selected = o;
   if (!o) {
+    followId = null;
     $('#info').classList.remove('open');
     return;
   }
@@ -1027,7 +1230,7 @@ function select(o) {
   const note = $('#info-note');
   if (SPACECRAFT.indexOf(o) >= 0 && o.kind === 'rover') {
     note.style.display = 'block';
-    note.textContent = 'Notă: robotul e desenat mult mai mare decât în realitate, ca să poată fi văzut pe planetă.';
+    note.textContent = 'Notă: robotul și traseul lui sunt desenate schematic și mult mai mari decât în realitate. Atinge robotul ca să vezi drumul pe care merge.';
   } else if (SPACECRAFT.indexOf(o) >= 0 && o.around && o.around !== 'sun') {
     note.style.display = 'block';
     note.textContent = 'Notă: orbitele sateliților sunt desenate mai mari decât în realitate, ca să poată fi văzute.';
@@ -1204,15 +1407,23 @@ function resize() {
    ============================================================ */
 function setupEvents() {
   window.addEventListener('resize', resize);
+  window.addEventListener('orientationchange', () => setTimeout(resize, 250));
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', resize);
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(canvas);
 
   /* mouse */
   let dragging = false, moved = 0, lastX = 0, lastY = 0;
+  const activePtrs = new Set();     // degetele aflate pe ecran
+  let multiTouch = false;           // true cât timp s-a folosit pinch
+  canvas.addEventListener('pointercancel', (e) => { activePtrs.delete(e.pointerId); dragging = false; });
   canvas.addEventListener('pointerdown', (e) => {
+    activePtrs.add(e.pointerId);
+    if (activePtrs.size > 1) multiTouch = true;
     dragging = true; moved = 0; lastX = e.clientX; lastY = e.clientY;
     canvas.setPointerCapture(e.pointerId);
   });
   canvas.addEventListener('pointermove', (e) => {
-    if (!dragging) return;
+    if (!dragging || activePtrs.size > 1) return;
     const dx = e.clientX - lastX, dy = e.clientY - lastY;
     lastX = e.clientX; lastY = e.clientY;
     moved += Math.abs(dx) + Math.abs(dy);
@@ -1223,14 +1434,16 @@ function setupEvents() {
     }
   });
   canvas.addEventListener('pointerup', (e) => {
+    activePtrs.delete(e.pointerId);
     dragging = false;
+    if (multiTouch) { if (activePtrs.size === 0) multiTouch = false; return; }
     if (moved <= 4) {
       const r = canvas.getBoundingClientRect();
       const o = pickAt(e.clientX - r.left, e.clientY - r.top);
       if (quiz.on) { quizAnswer(o); return; }
       if (o) {
-        select(o);
         followId = (!skyMode && (o.radius || SPACECRAFT.indexOf(o) >= 0)) ? o.id : null;
+        select(o);
       } else select(null);
     }
   });
