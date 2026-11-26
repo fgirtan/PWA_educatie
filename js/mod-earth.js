@@ -366,7 +366,7 @@
       const r1 = api.row('');
       const sl = api.slider(r1, { label: 'Adâncimea', min: 0, max: 1, step: 0.001, value: 0, fmt: () => fmtN(depth) + ' km', onInput: (v) => { depth = Math.pow(v, 2.2) * 6371; drilling = false; } });
       api.button(r1, '⛏️ Sapă singur', () => { drilling = true; if (depth >= 6370) { depth = 0; } });
-      api.button(r1, '💥 Cutremur', () => { quake = { t: 0 }; api.say('<b>Unde seismice.</b> Undele P (verzi) trec prin tot Pământul. Undele S (roșii) NU trec prin nucleul extern — așa au aflat oamenii de știință că e lichid!', 10000); });
+      api.button(r1, '💥 Cutremur', () => { quake = { t: 0 }; if (navigator.vibrate) navigator.vibrate([180, 60, 220, 60, 300, 80, 160]); api.say('<b>Unde seismice.</b> Undele P (verzi) trec prin tot Pământul. Undele S (roșii) NU trec prin nucleul extern — așa au aflat oamenii de știință că e lichid!', 10000); });
       const info = api.row('');
       const readout = document.createElement('div'); readout.className = 'mod-readout'; info.appendChild(readout);
       api.say('Trage de glisor ca să sapi spre centrul Pământului. Atinge un strat ca să afli despre el. Cea mai adâncă gaură făcută de oameni (Kola, Rusia) are doar 12 km!', 9000);
@@ -377,6 +377,9 @@
         if (quake) { quake.t += dt; if (quake.t > 9) quake = null; }
         const cx = api.cx, cy = api.cy, R = api.unit * 0.86;
         ctx.fillStyle = '#02030a'; ctx.fillRect(0, 0, api.W, api.H); drawStars(api, ST);
+        /* cutremur: tot desenul tremură, tot mai slab pe măsură ce undele se sting */
+        ctx.save();
+        if (quake) { const amp = 14 * Math.max(0, 1 - quake.t / 7) * (quake.t < 0.4 ? quake.t / 0.4 : 1); ctx.translate((Math.random() - 0.5) * amp * 2, (Math.random() - 0.5) * amp * 2); }
         const px = (km) => km / 6371 * R;
         /* câmp magnetic */
         ctx.strokeStyle = 'rgba(140,200,255,0.28)'; ctx.lineWidth = 1.5;
@@ -426,6 +429,9 @@
         ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.font = '600 12px system-ui,sans-serif'; ctx.textAlign = 'left';
         LAY.forEach((l, i) => { const mid = (l.a + l.b) / 2; ctx.fillStyle = i === 3 ? '#4a3a00' : '#fff'; if (i > 0) ctx.fillText(l.n, cx - R * 0.05 + 6, cy - R + px(mid) + 4 - (i === 1 ? 0 : 0)); });
         ctx.fillStyle = '#fff'; ctx.fillText('Scoarța', cx + R * 0.1, cy - R - 8);
+        /* valuri la suprafață, în jurul epicentrului */
+        if (quake) for (let k = 0; k < 3; k++) { const ph = (quake.t * 0.8 - k * 0.35); if (ph > 0 && ph < 1.4) { ctx.strokeStyle = 'rgba(255,220,120,' + (0.7 * (1 - ph / 1.4)).toFixed(2) + ')'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx, cy - R, 10 + ph * R * 0.35, 0, Math.PI); ctx.stroke(); } }
+        ctx.restore();
       }
       return { frame: frame };
     }
