@@ -31,7 +31,8 @@
       W: 0, H: 0, DPR: 1, cx: 0, cy: 0, unit: 100,
       /* zona liberă a ecranului (între bara de sus și panoul de jos) */
       layout: function () {
-        const top = 62;
+        const infoH = info.classList.contains('show') ? info.offsetHeight + 8 : 0;
+        const top = 62 + infoH;
         const freeH = Math.max(120, api.H - top - panelH);
         api.cx = api.W / 2;
         api.cy = top + freeH / 2;
@@ -100,6 +101,10 @@
       if (inst && inst.resize) inst.resize();
     }
     const ro = window.ResizeObserver ? new ResizeObserver(resize) : null;
+    /* când apare/dispare/se schimbă bula de informații, mutăm desenul sub ea */
+    const roInfo = window.ResizeObserver ? new ResizeObserver(() => { api.layout(); if (inst && inst.resize) inst.resize(); }) : null;
+    if (roInfo) roInfo.observe(info);
+    cleanups.push(() => { if (roInfo) roInfo.disconnect(); });
     if (ro) { ro.observe(canvas); ro.observe(panel); }
     window.addEventListener('resize', resize);
     cleanups.push(() => { if (ro) ro.disconnect(); window.removeEventListener('resize', resize); });
