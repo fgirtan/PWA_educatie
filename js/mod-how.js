@@ -148,6 +148,7 @@
         ctx.restore();
         ctx.save(); ctx.translate(cx, py);
         const a = aoa * Math.PI / 180;
+        const defl = (x, y0) => { const d = x / (chord * 0.55), bump = Math.exp(-d * d), fall = 1 - Math.min(1, Math.abs(y0) / (U * 0.7)); return Math.sin(a) * chord * 0.5 * d * bump * fall; };
         for (let i = -9; i <= 9; i++) {
           if (i === 0) continue;
           const y0 = i * U * 0.075;
@@ -157,7 +158,7 @@
             let dy = y0 + (i > 0 ? 1 : -1) * 0; const sgn = y0 > 0 ? 1 : -1;
             let yy = y0 + (-sgn) * 0;
             const rot = -Math.sin(a) * x * 0.0 ;
-            yy = y0 - (y0 < 0 ? 1 : 1) * bump * Math.sin(a) * chord * 0.35 * (1 - Math.min(1, Math.abs(y0) / (U * 0.7)));
+            yy = y0 + defl(x, y0);
             if (stall && y0 < 0 && x > 0) yy += Math.sin(x * 0.05 + t * 12 + i) * 10 * Math.min(1, x / chord) * 1.2;
             if (stall && y0 > 0 && x > 0) yy -= bump * 6;
             x === -W ? ctx.moveTo(cx - cx + x, yy) : ctx.lineTo(x, yy);
@@ -170,23 +171,27 @@
           w.x += dt * (0.3 + v * 1.3) * (0.7 + w.k * 0.6); if (w.x > 1.1) { w.x = -0.1; w.y = Math.random(); }
           const lx = (w.x - 0.5) * W * 1.1, y0 = (w.y - 0.5) * U * 1.5; if (Math.abs(y0) < U * 0.07) continue;
           const d = lx / (chord * 0.55), bump = Math.exp(-d * d), sgn = y0 > 0 ? 1 : -1;
-          let yy = y0 - bump * Math.sin(a) * chord * 0.35 * (1 - Math.min(1, Math.abs(y0) / (U * 0.7)));
+          let yy = y0 + defl(lx, y0);
           if (stall && y0 < 0 && lx > 0) yy += Math.sin(lx * 0.05 + t * 12) * 10 * Math.min(1, lx / chord) * 1.2;
           ctx.fillRect(lx, yy, 3, 1.6);
         }
-        /* aripa */
+        /* aripa (rotită: unghi pozitiv = botul în sus) */
+        ctx.save(); ctx.rotate(a);
         ctx.fillStyle = '#e8edf5'; ctx.strokeStyle = '#3a4150'; ctx.lineWidth = 2;
         ctx.beginPath();
         for (let x = -chord / 2; x <= chord / 2; x += 4) { const y = airfoilY(x, true); x === -chord / 2 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
-        for (let x = chord / 2; x >= -chord / 2; x -= 4) ctx.lineTo(x, airfoilY(x, false) * 0.45);
+        for (let x = chord / 2; x >= -chord / 2; x -= 4) ctx.lineTo(x, airfoilY(x, false) * 0.3);
         ctx.closePath(); ctx.fill(); ctx.stroke();
+        /* o linie de referință spre direcția aerului */
+        ctx.strokeStyle = 'rgba(255,80,80,0.0)'; ctx.restore();
         ctx.restore();
         /* săgeți de forță */
         const arrow = (x, y, dy, col, txt) => { ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + dy); ctx.stroke(); const s = dy < 0 ? -1 : 1; ctx.beginPath(); ctx.moveTo(x, y + dy + s * 14); ctx.lineTo(x - 9, y + dy); ctx.lineTo(x + 9, y + dy); ctx.fill(); ctx.font = '700 13px system-ui,sans-serif'; ctx.textAlign = 'left'; ctx.fillText(txt, x + 14, y + dy / 2 + 4); };
         arrow(cx + U * 0.25, py, -lift * 280, '#7dffb0', 'Portanță');
         arrow(cx - U * 0.25, py, MASS * 280, '#ff7a8a', 'Greutate');
-        ctx.fillStyle = '#fff'; ctx.font = '700 15px system-ui,sans-serif'; ctx.textAlign = 'right';
-        ctx.fillText('Altitudine: ' + fmt(alt * 12000, 0) + ' m', W - 14, 82);
+        ctx.fillStyle = '#fff'; ctx.font = '700 15px system-ui,sans-serif'; ctx.textAlign = 'left';
+        ctx.fillText('Altitudine: ' + fmt(alt * 12000, 0) + ' m', 14, 86);
+        ctx.fillText('Unghi: ' + fmt(aoa, 0) + '°', 14, 106);
         info.innerHTML = lift > MASS * 1.04 ? '⬆️ <b>Urcă</b> (portanța > greutate)' : lift < MASS * 0.96 ? '⬇️ <b>Coboară</b> (portanța < greutate)' : '➡️ <b>Zbor orizontal</b>' ;
         if (stall) info.innerHTML += ' · <b style="color:#ff8a8a">angajare!</b>';
       }
