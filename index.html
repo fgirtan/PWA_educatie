@@ -5,278 +5,391 @@
 <title>Universul Nostru</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="description" content="Aplicație educațională interactivă: Sistemul Solar, sateliți, comete, galaxii și structura Universului.">
-<meta name="theme-color" content="#04060f">
+<meta name="theme-color" content="#070a17">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<link rel="stylesheet" href="css/style.css?v=26">
+<link rel="stylesheet" href="css/style.css?v=41">
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 10.5 12 3.5l8.5 7V20a1 1 0 0 1-1 1H15v-6H9v6H4.5a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.2v13.6a.8.8 0 0 0 1.2.7l10.6-6.8a.8.8 0 0 0 0-1.4L9.2 4.5A.8.8 0 0 0 8 5.2z" fill="currentColor"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="5" width="4.2" height="14" rx="1.3" fill="currentColor"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.3" fill="currentColor"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-full" viewBox="0 0 24 24"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9.4 9.3a2.7 2.7 0 1 1 3.8 2.5c-.7.3-1.2.9-1.2 1.7v.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17.2" r="1.2" fill="currentColor"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-tour" viewBox="0 0 24 24"><path d="M5.5 21V4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M5.5 4.5h11.8a.6.6 0 0 1 .5.9L15.6 9l2.2 3.6a.6.6 0 0 1-.5.9H5.5z" fill="currentColor"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></symbol>
+    <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M11 3.5l1.7 5.1 5.1 1.7-5.1 1.7L11 17.1l-1.7-5.1-5.1-1.7 5.1-1.7z" fill="currentColor"/><path d="M18.5 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z" fill="currentColor"/></symbol>
+    <symbol id="i-planet" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5.6" fill="none" stroke="currentColor" stroke-width="2"/><ellipse cx="12" cy="12" rx="10" ry="3.6" transform="rotate(-20 12 12)" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-catalog" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="13" y="4" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="4" y="13" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="13" y="13" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-orbit" viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="9" ry="6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-dasharray="3 2.4"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/><circle cx="20.4" cy="9.9" r="1.7" fill="currentColor"/></symbol>
+    <symbol id="i-label" viewBox="0 0 24 24"><path d="M3.8 12.6V5a1.2 1.2 0 0 1 1.2-1.2h7.6l8 8a1.2 1.2 0 0 1 0 1.7l-7 7a1.2 1.2 0 0 1-1.7 0z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="8.3" cy="8.3" r="1.6" fill="currentColor"/></symbol>
+    <symbol id="i-reset" viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.4-5.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M4 4v4.5h4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M15.5 15.5 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-zoomto" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M15.5 15.5 20 20M10.5 7.8v5.4M7.8 10.5h5.4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-follow" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></symbol>
+    <symbol id="i-skip" viewBox="0 0 24 24"><path d="M6 6l7 6-7 6zM15 6l7 6-7 6z" fill="currentColor"/></symbol>
+    <symbol id="i-logo" viewBox="0 0 48 48"><defs><radialGradient id="lg-p" cx="35%" cy="32%" r="75%"><stop offset="0" stop-color="#d7ccff"/><stop offset=".45" stop-color="#8b7bff"/><stop offset="1" stop-color="#2a1d8f"/></radialGradient><linearGradient id="lg-r" x1="0" x2="1"><stop offset="0" stop-color="#ffd166" stop-opacity=".2"/><stop offset=".5" stop-color="#ffd166"/><stop offset="1" stop-color="#ff8fa3" stop-opacity=".3"/></linearGradient></defs><circle cx="24" cy="24" r="13" fill="url(#lg-p)"/><ellipse cx="24" cy="24" rx="22" ry="7" transform="rotate(-22 24 24)" fill="none" stroke="url(#lg-r)" stroke-width="3"/><path d="M11.5 20.5a13 13 0 0 1 25 0" fill="url(#lg-p)"/><circle cx="40" cy="9" r="2.2" fill="#fff"/><circle cx="7" cy="38" r="1.4" fill="#fff" opacity=".7"/></symbol>
+  </defs>
+</svg>
 
 <!-- ============ ECRAN DE PORNIRE ============ -->
 <section id="home">
+  <header class="topnav">
+    <button class="brand" id="brand-home" aria-label="Universul Nostru — toate secțiunile">
+      <svg class="brand-mark" aria-hidden="true"><use href="#i-logo"/></svg>
+      <span class="brand-name">Universul <b>Nostru</b></span>
+    </button>
+    <nav class="sec-tabs" aria-label="Secțiuni">
+      <button class="sec-tab" data-tab="space" style="--c1:#8b7bff;--c2:#3b2bb0"><span class="dot"></span>Spațiul</button>
+      <button class="sec-tab" data-tab="body" style="--c1:#ff6b8a;--c2:#b0284e"><span class="dot"></span>Corpul omenesc</button>
+      <button class="sec-tab" data-tab="how" style="--c1:#ffb43d;--c2:#b8620f"><span class="dot"></span>Cum funcționează</button>
+      <button class="sec-tab" data-tab="earth" style="--c1:#35c3a0;--c2:#147a8f"><span class="dot"></span>Planeta Pământ</button>
+    </nav>
+    <button class="icon ghost" id="btn-hub-full" title="Ecran complet (F)" aria-label="Ecran complet"><svg class="i" aria-hidden="true"><use href="#i-full"/></svg></button>
+  </header>
+
   <div class="home-inner">
     <div id="hub">
-      <h1>Universul <span>Nostru</span></h1>
-      <p class="tagline">Explorăm împreună, de la sateliții de deasupra noastră până la marginea Universului. Alege o secțiune:</p>
+      <div class="hero">
+        <p class="eyebrow"><span></span>Atlas interactiv pentru copii curioși</p>
+        <h1>Universul <span>Nostru</span></h1>
+        <p class="tagline">Explorăm împreună, de la sateliții de deasupra noastră până la marginea Universului, de la bătăile inimii până la motoarele care ne poartă. Alege o secțiune:</p>
+      </div>
       <div class="sec-tiles">
-      <button class="sec-tile has-img" data-section="space" style="--g1:#7b6cff;--g2:#2a1a6e">
-        <span class="sec-ico" style="background-image:url(img/hub/space.jpg)" role="img" aria-label="Spațiul">🚀</span>
-        <h2>Spațiul</h2>
-        <p>Sistemul Solar, găuri negre, explozii cosmice, Big Bang și gravitație.</p>
-        <span class="sec-count" data-count="space"></span>
+      <button class="sec-tile" data-section="space" style="--c1:#8b7bff;--c2:#3b2bb0;--i:0">
+        <span class="sec-art img" style="background-image:url(img/hub/space.jpg)"></span>
+        <span class="sec-info">
+          <h2>Spațiul</h2>
+          <p>Sistemul Solar, găuri negre, explozii cosmice, Big Bang și gravitație.</p>
+          <span class="sec-foot"><span class="sec-count" data-count="space"></span><span class="sec-go"><svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span></span>
+        </span>
       </button>
-      <button class="sec-tile" data-section="body" style="--g1:#ff5a7a;--g2:#6e1a2e">
-        <span class="sec-ico">🫀</span>
-        <h2>Corpul omenesc</h2>
-        <p>Inima, plămânii, scheletul, digestia și creierul.</p>
-        <span class="sec-count" data-count="body"></span>
+      <button class="sec-tile" data-section="body" style="--c1:#ff6b8a;--c2:#b0284e;--i:1">
+        <span class="sec-art img" style="background-image:url(img/cards/m-heart.jpg)"></span>
+        <span class="sec-info">
+          <h2>Corpul omenesc</h2>
+          <p>Inima, plămânii, scheletul, digestia și creierul.</p>
+          <span class="sec-foot"><span class="sec-count" data-count="body"></span><span class="sec-go"><svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span></span>
+        </span>
       </button>
-      <button class="sec-tile" data-section="how" style="--g1:#ffb03a;--g2:#6e4a0a">
-        <span class="sec-ico">⚙️</span>
-        <h2>Cum funcționează</h2>
-        <p>Circuite, avioane, motoare, trenuri, telefoane, aparate foto și mașini.</p>
-        <span class="sec-count" data-count="how"></span>
+      <button class="sec-tile" data-section="how" style="--c1:#ffb43d;--c2:#b8620f;--i:2">
+        <span class="sec-art img" style="background-image:url(img/cards/m-mechanics.jpg)"></span>
+        <span class="sec-info">
+          <h2>Cum funcționează</h2>
+          <p>Circuite, avioane, motoare, trenuri, telefoane, aparate foto și mașini.</p>
+          <span class="sec-foot"><span class="sec-count" data-count="how"></span><span class="sec-go"><svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span></span>
+        </span>
       </button>
-      <button class="sec-tile" data-section="earth" style="--g1:#3aa0ff;--g2:#0a3a6e">
-        <span class="sec-ico">🌍</span>
-        <h2>Planeta Pământ</h2>
-        <p>Pământul în timp, omul, fauna și flora, civilizația, relief, vulcani, straturi și oceane.</p>
-        <span class="sec-count" data-count="earth"></span>
+      <button class="sec-tile" data-section="earth" style="--c1:#35c3a0;--c2:#147a8f;--i:3">
+        <span class="sec-art img" style="background-image:url(img/cards/m-earthtime.jpg)"></span>
+        <span class="sec-info">
+          <h2>Planeta Pământ</h2>
+          <p>Pământul în timp, omul, fauna și flora, civilizația, relief, vulcani, straturi și oceane.</p>
+          <span class="sec-foot"><span class="sec-count" data-count="earth"></span><span class="sec-go"><svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span></span>
+        </span>
       </button>
       </div>
+      <ul class="hub-tips">
+        <li><svg class="i" aria-hidden="true"><use href="#i-full"/></svg><span>Pentru proiector, apasă <kbd>F</kbd> pentru ecran complet</span></li>
+        <li><svg class="i" aria-hidden="true"><use href="#i-sparkle"/></svg><span>Atinge orice ca să afli mai multe</span></li>
+        <li><svg class="i" aria-hidden="true"><use href="#i-planet"/></svg><span>Funcționează și fără internet</span></li>
+      </ul>
     </div>
 
-    <div class="sec-view hidden" id="sec-space">
-      <div class="sec-head">
-        <button class="pill sec-back">← Toate secțiunile</button>
-        <h2 class="sec-title"><span>🚀</span> Spațiul</h2>
-      </div>
-      <p class="sec-desc">Sistemul Solar, găuri negre, explozii cosmice, Big Bang și gravitație.</p>
+    <div class="sec-view hidden" id="sec-space" style="--c1:#8b7bff;--c2:#3b2bb0">
+      <header class="sec-hero">
+        <button class="back-link sec-back"><svg class="i" aria-hidden="true"><use href="#i-back"/></svg><span>Toate secțiunile</span></button>
+        <h2 class="sec-title">Spațiul</h2>
+        <p class="sec-desc">Sistemul Solar, găuri negre, explozii cosmice, Big Bang și gravitație.</p>
+        <span class="sec-badge" data-count="space"></span>
+      </header>
       <div class="cards">
-      <button class="card" id="start-space">
-        <div class="card-art art-space img" style="background-image:url(img/cards/solar.jpg)"></div>
-        <h2>Spațiul</h2>
-        <p>Planete, sateliți, comete, asteroizi, stele, nebuloase și galaxii. Cu zoom de la ISS până la pânza cosmică.</p>
-        <span class="go">Intră →</span>
+      <button class="card card-feature" id="start-space" style="--i:0">
+        <div class="card-art img" style="background-image:url(img/cards/solar.jpg)"><span class="card-tag">Harta interactivă</span></div>
+        <div class="card-body">
+          <h3>Spațiul</h3>
+          <p>Planete, sateliți, comete, asteroizi, stele, nebuloase și galaxii. Cu zoom de la ISS până la pânza cosmică.</p>
+          <span class="card-cta">Intră în spațiu <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="bigbang">
-        <div class="card-art art-bb img" style="background-image:url(img/cards/bigbang.jpg)"></div>
-        <h2>Big Bang</h2>
-        <p>Derulează 13,8 miliarde de ani: de la un punct mai mic decât un atom la stele, galaxii și la noi.</p>
-        <span class="go">Joacă-te →</span>
+      <button class="card" data-module="bigbang" style="--i:1">
+        <div class="card-art img" style="background-image:url(img/cards/bigbang.jpg)"></div>
+        <div class="card-body">
+          <h3>Big Bang</h3>
+          <p>Derulează 13,8 miliarde de ani: de la un punct mai mic decât un atom la stele, galaxii și la noi.</p>
+          <span class="card-cta">Joacă-te <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="blackhole">
-        <div class="card-art art-bh img" style="background-image:url(img/cards/blackhole.jpg)"></div>
-        <h2>Gaura neagră</h2>
-        <p>Aruncă planete și lumină într-o gaură neagră. Schimbă-i masa de la cât Pământul până la un monstru de miliarde de Sori.</p>
-        <span class="go">Joacă-te →</span>
+      <button class="card" data-module="blackhole" style="--i:2">
+        <div class="card-art img" style="background-image:url(img/cards/blackhole.jpg)"></div>
+        <div class="card-body">
+          <h3>Gaura neagră</h3>
+          <p>Aruncă planete și lumină într-o gaură neagră. Schimbă-i masa de la cât Pământul până la un monstru de miliarde de Sori.</p>
+          <span class="card-cta">Joacă-te <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="explosions">
-        <div class="card-art art-boom img" style="background-image:url(img/cards/supernova.jpg)"></div>
-        <h2>Explozii cosmice</h2>
-        <p>Urmărește viața unei stele până la supernovă, apoi declanșează tu supernove, kilonove și rafale gamma.</p>
-        <span class="go">Joacă-te →</span>
+      <button class="card" data-module="explosions" style="--i:3">
+        <div class="card-art img" style="background-image:url(img/cards/supernova.jpg)"></div>
+        <div class="card-body">
+          <h3>Explozii cosmice</h3>
+          <p>Urmărește viața unei stele până la supernovă, apoi declanșează tu supernove, kilonove și rafale gamma.</p>
+          <span class="card-cta">Joacă-te <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="gravity">
-        <div class="card-art art-grav"></div>
-        <h2>Laborator de gravitație</h2>
-        <p>Lansează planete și descoperă ce e o orbită, de ce cad unele în stea și altele scapă în spațiu.</p>
-        <span class="go">Joacă-te →</span>
+      <button class="card" data-module="gravity" style="--i:4">
+        <div class="card-art img" style="background-image:url(img/cards/m-gravity.jpg)"></div>
+        <div class="card-body">
+          <h3>Laborator de gravitație</h3>
+          <p>Lansează planete și descoperă ce e o orbită, de ce cad unele în stea și altele scapă în spațiu.</p>
+          <span class="card-cta">Joacă-te <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
       </div>
     </div>
-
-    <div class="sec-view hidden" id="sec-body">
-      <div class="sec-head">
-        <button class="pill sec-back">← Toate secțiunile</button>
-        <h2 class="sec-title"><span>🫀</span> Corpul omenesc</h2>
-      </div>
-      <p class="sec-desc">Inima, plămânii, scheletul, digestia și creierul.</p>
+    <div class="sec-view hidden" id="sec-body" style="--c1:#ff6b8a;--c2:#b0284e">
+      <header class="sec-hero">
+        <button class="back-link sec-back"><svg class="i" aria-hidden="true"><use href="#i-back"/></svg><span>Toate secțiunile</span></button>
+        <h2 class="sec-title">Corpul omenesc</h2>
+        <p class="sec-desc">Inima, plămânii, scheletul, digestia și creierul.</p>
+        <span class="sec-badge" data-count="body"></span>
+      </header>
       <div class="cards">
-      <button class="card" data-module="heart">
-        <div class="card-art art-heart"></div>
-        <h2>Inima și circulația</h2>
-        <p>Cele 4 camere ale inimii, sângele albastru și roșu, EKG și pulsul la somn, mers sau alergare.</p>
-        <span class="go">Explorează →</span>
+      <button class="card" data-module="heart" style="--i:0">
+        <div class="card-art img" style="background-image:url(img/cards/m-heart.jpg)"></div>
+        <div class="card-body">
+          <h3>Inima și circulația</h3>
+          <p>Cele 4 camere ale inimii, sângele albastru și roșu, EKG și pulsul la somn, mers sau alergare.</p>
+          <span class="card-cta">Explorează <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="lungs">
-        <div class="card-art art-lungs"></div>
-        <h2>Plămânii și respirația</h2>
-        <p>Vezi cum diafragma umflă plămânii, cum trece oxigenul în sânge și cât poți ține respirația.</p>
-        <span class="go">Explorează →</span>
+      <button class="card" data-module="lungs" style="--i:1">
+        <div class="card-art img" style="background-image:url(img/cards/m-lungs.jpg)"></div>
+        <div class="card-body">
+          <h3>Plămânii și respirația</h3>
+          <p>Vezi cum diafragma umflă plămânii, cum trece oxigenul în sânge și cât poți ține respirația.</p>
+          <span class="card-cta">Explorează <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="skeleton">
-        <div class="card-art art-skel"></div>
-        <h2>Scheletul</h2>
-        <p>Atinge oasele ca să afli cum se numesc, apoi joacă „Găsește osul” — de la craniu la femur.</p>
-        <span class="go">Explorează →</span>
+      <button class="card" data-module="skeleton" style="--i:2">
+        <div class="card-art img" style="background-image:url(img/cards/m-skeleton.jpg)"></div>
+        <div class="card-body">
+          <h3>Scheletul</h3>
+          <p>Atinge oasele ca să afli cum se numesc, apoi joacă „Găsește osul” — de la craniu la femur.</p>
+          <span class="card-cta">Explorează <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="digestion">
-        <div class="card-art art-dig"></div>
-        <h2>Digestia</h2>
-        <p>Urmărește un măr de la gură până la ieșire: stomac, intestinul subțire de 6 metri și nu numai.</p>
-        <span class="go">Explorează →</span>
+      <button class="card" data-module="digestion" style="--i:3">
+        <div class="card-art img" style="background-image:url(img/cards/m-digestion.jpg)"></div>
+        <div class="card-body">
+          <h3>Digestia</h3>
+          <p>Urmărește un măr de la gură până la ieșire: stomac, intestinul subțire de 6 metri și nu numai.</p>
+          <span class="card-cta">Explorează <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="brain">
-        <div class="card-art art-brain"></div>
-        <h2>Creierul</h2>
-        <p>Zonele creierului, un test de reflexe și un joc de memorie. Cât de repede ești?</p>
-        <span class="go">Explorează →</span>
+      <button class="card" data-module="brain" style="--i:4">
+        <div class="card-art img" style="background-image:url(img/cards/m-brain.jpg)"></div>
+        <div class="card-body">
+          <h3>Creierul</h3>
+          <p>Zonele creierului, un test de reflexe și un joc de memorie. Cât de repede ești?</p>
+          <span class="card-cta">Explorează <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
       </div>
     </div>
-
-    <div class="sec-view hidden" id="sec-how">
-      <div class="sec-head">
-        <button class="pill sec-back">← Toate secțiunile</button>
-        <h2 class="sec-title"><span>⚙️</span> Cum funcționează</h2>
-      </div>
-      <p class="sec-desc">Circuite, avioane, motoare, trenuri, telefoane, aparate foto și mașini.</p>
+    <div class="sec-view hidden" id="sec-how" style="--c1:#ffb43d;--c2:#b8620f">
+      <header class="sec-hero">
+        <button class="back-link sec-back"><svg class="i" aria-hidden="true"><use href="#i-back"/></svg><span>Toate secțiunile</span></button>
+        <h2 class="sec-title">Cum funcționează</h2>
+        <p class="sec-desc">Circuite, avioane, motoare, trenuri, telefoane, aparate foto și mașini.</p>
+        <span class="sec-badge" data-count="how"></span>
+      </header>
       <div class="cards">
-      <button class="card" data-module="circuit">
-        <div class="card-art art-circ"></div>
-        <h2>Circuitul electric</h2>
-        <p>Pornește un bec, pune becuri în serie sau în paralel și vezi ce se întâmplă dacă tensiunea e prea mare.</p>
-        <span class="go">Joacă-te →</span>
+      <button class="card" data-module="circuit" style="--i:0">
+        <div class="card-art img" style="background-image:url(img/cards/m-circuit.jpg)"></div>
+        <div class="card-body">
+          <h3>Circuitul electric</h3>
+          <p>Pornește un bec, pune becuri în serie sau în paralel și vezi ce se întâmplă dacă tensiunea e prea mare.</p>
+          <span class="card-cta">Joacă-te <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="binary">
-        <div class="card-art art-bin"></div>
-        <h2>Cum „gândește” calculatorul</h2>
-        <p>Aprinde biți și descoperă cum 0 și 1 devin numere, litere și culori.</p>
-        <span class="go">Joacă-te →</span>
+      <button class="card" data-module="binary" style="--i:1">
+        <div class="card-art img" style="background-image:url(img/cards/m-binary.jpg)"></div>
+        <div class="card-body">
+          <h3>Cum „gândește” calculatorul</h3>
+          <p>Aprinde biți și descoperă cum 0 și 1 devin numere, litere și culori.</p>
+          <span class="card-cta">Joacă-te <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="phone">
-        <div class="card-art art-phone"></div>
-        <h2>Telefonul mobil</h2>
-        <p>Trage telefonul între turnuri și vezi cum ajunge vocea ta la prieten. Apoi vezi cum simte ecranul degetul.</p>
-        <span class="go">Joacă-te →</span>
+      <button class="card" data-module="phone" style="--i:2">
+        <div class="card-art img" style="background-image:url(img/cards/m-phone.jpg)"></div>
+        <div class="card-body">
+          <h3>Telefonul mobil</h3>
+          <p>Trage telefonul între turnuri și vezi cum ajunge vocea ta la prieten. Apoi vezi cum simte ecranul degetul.</p>
+          <span class="card-cta">Joacă-te <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="camera">
-        <div class="card-art art-cam"></div>
-        <h2>Aparatul foto</h2>
-        <p>Cum face lentila o imagine, de ce poza iese clară sau neclară și ce fac diafragma, timpul și ISO.</p>
-        <span class="go">Joacă-te →</span>
+      <button class="card" data-module="camera" style="--i:3">
+        <div class="card-art img" style="background-image:url(img/cards/m-camera.jpg)"></div>
+        <div class="card-body">
+          <h3>Aparatul foto</h3>
+          <p>Cum face lentila o imagine, de ce poza iese clară sau neclară și ce fac diafragma, timpul și ISO.</p>
+          <span class="card-cta">Joacă-te <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="mechanics">
-        <div class="card-art art-gear"></div>
-        <h2>Mecanisme</h2>
-        <p>Roți dințate care se învârt una pe alta și o pârghie pe care o poți echilibra.</p>
-        <span class="go">Joacă-te →</span>
+      <button class="card" data-module="mechanics" style="--i:4">
+        <div class="card-art img" style="background-image:url(img/cards/m-mechanics.jpg)"></div>
+        <div class="card-body">
+          <h3>Mecanisme</h3>
+          <p>Roți dințate care se învârt una pe alta și o pârghie pe care o poți echilibra.</p>
+          <span class="card-cta">Joacă-te <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="engine">
-        <div class="card-art art-eng"></div>
-        <h2>Motorul termic</h2>
-        <p>Cei 4 timpi ai motorului: admisie, comprimare, ardere, evacuare. Pistonul, supapele și bujia, încetinit.</p>
-        <span class="go">Joacă-te →</span>
+      <button class="card" data-module="engine" style="--i:5">
+        <div class="card-art img" style="background-image:url(img/cards/m-engine.jpg)"></div>
+        <div class="card-body">
+          <h3>Motorul termic</h3>
+          <p>Cei 4 timpi ai motorului: admisie, comprimare, ardere, evacuare. Pistonul, supapele și bujia, încetinit.</p>
+          <span class="card-cta">Joacă-te <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="solar">
-        <div class="card-art art-solar"></div>
-        <h2>Panourile solare</h2>
-        <p>Urmărește soarele pe cer, înclină panoul și vezi cum se face curent, cum se încarcă bateria și ce se întâmplă noaptea.</p>
-        <span class="go">Joacă-te →</span>
+      <button class="card" data-module="solar" style="--i:6">
+        <div class="card-art img" style="background-image:url(img/cards/m-solar.jpg)"></div>
+        <div class="card-body">
+          <h3>Panourile solare</h3>
+          <p>Urmărește soarele pe cer, înclină panoul și vezi cum se face curent, cum se încarcă bateria și ce se întâmplă noaptea.</p>
+          <span class="card-cta">Joacă-te <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="emotor">
-        <div class="card-art art-emot"></div>
-        <h2>Mașina electrică</h2>
-        <p>Cum merge o mașină fără benzină: baterie, controler și motor. Apoi vezi cum magneții împing roata.</p>
-        <span class="go">Joacă-te →</span>
+      <button class="card" data-module="emotor" style="--i:7">
+        <div class="card-art img" style="background-image:url(img/cards/m-emotor.jpg)"></div>
+        <div class="card-body">
+          <h3>Mașina electrică</h3>
+          <p>Cum merge o mașină fără benzină: baterie, controler și motor. Apoi vezi cum magneții împing roata.</p>
+          <span class="card-cta">Joacă-te <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="airplane">
-        <div class="card-art art-plane"></div>
-        <h2>Cum zboară avionul</h2>
-        <p>Înclină aripa, schimbă viteza și vezi portanța. Ce e angajarea și de ce „pică” avionul?</p>
-        <span class="go">Joacă-te →</span>
+      <button class="card" data-module="airplane" style="--i:8">
+        <div class="card-art img" style="background-image:url(img/cards/m-airplane.jpg)"></div>
+        <div class="card-body">
+          <h3>Cum zboară avionul</h3>
+          <p>Înclină aripa, schimbă viteza și vezi portanța. Ce e angajarea și de ce „pică” avionul?</p>
+          <span class="card-cta">Joacă-te <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="train">
-        <div class="card-art art-train"></div>
-        <h2>Trenul</h2>
-        <p>Cum ia locomotiva curent din fir și cum se ia trenul singur după curbe, datorită roților conice.</p>
-        <span class="go">Joacă-te →</span>
+      <button class="card" data-module="train" style="--i:9">
+        <div class="card-art img" style="background-image:url(img/cards/m-train.jpg)"></div>
+        <div class="card-body">
+          <h3>Trenul</h3>
+          <p>Cum ia locomotiva curent din fir și cum se ia trenul singur după curbe, datorită roților conice.</p>
+          <span class="card-cta">Joacă-te <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="car">
-        <div class="card-art art-car"></div>
-        <h2>Mașina</h2>
-        <p>Accelerează și schimbă vitezele, urmărește turația motorului și află cum frânează o mașină.</p>
-        <span class="go">Joacă-te →</span>
+      <button class="card" data-module="car" style="--i:10">
+        <div class="card-art img" style="background-image:url(img/cards/m-car.jpg)"></div>
+        <div class="card-body">
+          <h3>Mașina</h3>
+          <p>Accelerează și schimbă vitezele, urmărește turația motorului și află cum frânează o mașină.</p>
+          <span class="card-cta">Joacă-te <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
       </div>
     </div>
-
-    <div class="sec-view hidden" id="sec-earth">
-      <div class="sec-head">
-        <button class="pill sec-back">← Toate secțiunile</button>
-        <h2 class="sec-title"><span>🌍</span> Planeta Pământ</h2>
-      </div>
-      <p class="sec-desc">Pământul în timp, omul, fauna și flora, civilizația, relief, vulcani, straturi și oceane.</p>
+    <div class="sec-view hidden" id="sec-earth" style="--c1:#35c3a0;--c2:#147a8f">
+      <header class="sec-hero">
+        <button class="back-link sec-back"><svg class="i" aria-hidden="true"><use href="#i-back"/></svg><span>Toate secțiunile</span></button>
+        <h2 class="sec-title">Planeta Pământ</h2>
+        <p class="sec-desc">Pământul în timp, omul, fauna și flora, civilizația, relief, vulcani, straturi și oceane.</p>
+        <span class="sec-badge" data-count="earth"></span>
+      </header>
       <div class="cards">
-      <button class="card" data-module="human">
-        <div class="card-art art-human"></div>
-        <h2>Evoluția omului</h2>
-        <p>De la Lucy la noi: speciile umane, perioadele lor, câți oameni trăiau în același timp și cât de înalți erau.</p>
-        <span class="go">Explorează →</span>
+      <button class="card" data-module="human" style="--i:0">
+        <div class="card-art img" style="background-image:url(img/cards/m-human.jpg)"></div>
+        <div class="card-body">
+          <h3>Evoluția omului</h3>
+          <p>De la Lucy la noi: speciile umane, perioadele lor, câți oameni trăiau în același timp și cât de înalți erau.</p>
+          <span class="card-cta">Explorează <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="lifeevo">
-        <div class="card-art art-life"></div>
-        <h2>Fauna și flora în timp</h2>
-        <p>De la trilobiți la mamuți: cum s-au schimbat animalele și plantele în fiecare perioadă geologică, cu extincțiile în masă.</p>
-        <span class="go">Explorează →</span>
+      <button class="card" data-module="lifeevo" style="--i:1">
+        <div class="card-art img" style="background-image:url(img/cards/m-lifeevo.jpg)"></div>
+        <div class="card-body">
+          <h3>Fauna și flora în timp</h3>
+          <p>De la trilobiți la mamuți: cum s-au schimbat animalele și plantele în fiecare perioadă geologică, cu extincțiile în masă.</p>
+          <span class="card-cta">Explorează <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="civ">
-        <div class="card-art art-civ"></div>
-        <h2>Evoluția civilizației</h2>
-        <p>De la primele sate la internet: agricultura, scrierea, Roma, tiparul, mașina cu abur și câți oameni trăiau pe Pământ.</p>
-        <span class="go">Explorează →</span>
+      <button class="card" data-module="civ" style="--i:2">
+        <div class="card-art img" style="background-image:url(img/cards/m-civ.jpg)"></div>
+        <div class="card-body">
+          <h3>Evoluția civilizației</h3>
+          <p>De la primele sate la internet: agricultura, scrierea, Roma, tiparul, mașina cu abur și câți oameni trăiau pe Pământ.</p>
+          <span class="card-cta">Explorează <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="earthtime">
-        <div class="card-art art-earth"></div>
-        <h2>Pământul în timp</h2>
-        <p>Derulează 4,6 miliarde de ani: de la o minge de lavă la oceane, dinozauri și continentele de azi.</p>
-        <span class="go">Explorează →</span>
+      <button class="card" data-module="earthtime" style="--i:3">
+        <div class="card-art img" style="background-image:url(img/cards/m-earthtime.jpg)"></div>
+        <div class="card-body">
+          <h3>Pământul în timp</h3>
+          <p>Derulează 4,6 miliarde de ani: de la o minge de lavă la oceane, dinozauri și continentele de azi.</p>
+          <span class="card-cta">Explorează <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="relief">
-        <div class="card-art art-relief"></div>
-        <h2>Formarea reliefului</h2>
-        <p>Cum se nasc munții (Everest), oceanele și vulcanii din mișcarea plăcilor. Compară înălțimile munților.</p>
-        <span class="go">Explorează →</span>
+      <button class="card" data-module="relief" style="--i:4">
+        <div class="card-art img" style="background-image:url(img/cards/m-relief.jpg)"></div>
+        <div class="card-body">
+          <h3>Formarea reliefului</h3>
+          <p>Cum se nasc munții (Everest), oceanele și vulcanii din mișcarea plăcilor. Compară înălțimile munților.</p>
+          <span class="card-cta">Explorează <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="volcano">
-        <div class="card-art art-volcano"></div>
-        <h2>Vulcani</h2>
-        <p>Încarcă camera magmatică și provoacă o erupție: liniștită ca în Hawaii sau explozivă ca la Vezuviu.</p>
-        <span class="go">Explorează →</span>
+      <button class="card" data-module="volcano" style="--i:5">
+        <div class="card-art img" style="background-image:url(img/cards/m-volcano.jpg)"></div>
+        <div class="card-body">
+          <h3>Vulcani</h3>
+          <p>Încarcă camera magmatică și provoacă o erupție: liniștită ca în Hawaii sau explozivă ca la Vezuviu.</p>
+          <span class="card-cta">Explorează <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="layers">
-        <div class="card-art art-layers"></div>
-        <h2>Straturile Pământului</h2>
-        <p>Sapă spre centrul planetei: scoarță, manta, nucleu. Temperatură, presiune și unde de cutremur.</p>
-        <span class="go">Explorează →</span>
+      <button class="card" data-module="layers" style="--i:6">
+        <div class="card-art img" style="background-image:url(img/cards/m-layers.jpg)"></div>
+        <div class="card-body">
+          <h3>Straturile Pământului</h3>
+          <p>Sapă spre centrul planetei: scoarță, manta, nucleu. Temperatură, presiune și unde de cutremur.</p>
+          <span class="card-cta">Explorează <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
-      <button class="card" data-module="ocean">
-        <div class="card-art art-ocean"></div>
-        <h2>Oceane și adâncimi</h2>
-        <p>Scufundă-te până la Groapa Marianelor și vezi ce animale trăiesc la fiecare adâncime.</p>
-        <span class="go">Explorează →</span>
+      <button class="card" data-module="ocean" style="--i:7">
+        <div class="card-art img" style="background-image:url(img/cards/m-ocean.jpg)"></div>
+        <div class="card-body">
+          <h3>Oceane și adâncimi</h3>
+          <p>Scufundă-te până la Groapa Marianelor și vezi ce animale trăiesc la fiecare adâncime.</p>
+          <span class="card-cta">Explorează <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
       </button>
       </div>
     </div>
-
-    <p class="foot">Sfat pentru proiector: apasă <kbd>F</kbd> pentru ecran complet. Funcționează și fără internet.</p>
   </div>
 </section>
 
-<!-- ============ APLICAȚIA ============ -->
 <!-- ============ MODULE INTERACTIVE ============ -->
 <section id="module" class="hidden">
   <canvas id="mod-canvas"></canvas>
   <header class="mod-bar">
-    <button id="mod-back" class="icon" title="Înapoi">←</button>
-    <div class="mod-titles"><strong id="mod-title"></strong><small id="mod-sub"></small></div>
+    <button id="mod-back" class="back-btn" title="Înapoi (Esc)"><svg class="i" aria-hidden="true"><use href="#i-back"/></svg><span>Înapoi</span></button>
+    <div class="mod-titles"><span id="mod-crumb" class="crumb"></span><strong id="mod-title"></strong><small id="mod-sub"></small></div>
   </header>
-  <div id="mod-info"></div>
+  <div id="mod-info" role="status" aria-live="polite"></div>
   <div id="mod-panel"></div>
 </section>
 
@@ -285,105 +398,113 @@
 
   <!-- bara de sus -->
   <header class="bar top">
-    <button id="btn-menu-home" class="icon" title="Meniu principal">⌂</button>
+    <button id="btn-menu-home" class="icon" title="Meniu principal" aria-label="Meniu principal"><svg class="i" aria-hidden="true"><use href="#i-home"/></svg></button>
     <div class="titles">
       <strong id="level">Sistemul Solar</strong>
       <small id="fov">—</small>
     </div>
     <div class="spacer"></div>
-    <div class="date-box"><span class="lbl">Data</span><span id="date">—</span></div>
-    <button id="btn-sky" class="pill" title="Constelațiile văzute de pe Pământ (C)"><span class="ico">✨</span><span class="t">Cerul nopții</span></button>
-    <button id="btn-quiz" class="pill" title="Joc: găsește obiectul (G)"><span class="ico">🎯</span><span class="t">Joc</span></button>
-    <button id="btn-tour" class="pill"><span class="ico">★</span><span class="t">Tur ghidat</span></button>
-    <button id="btn-menu" class="pill"><span class="ico">☰</span><span class="t">Catalog</span></button>
-    <button id="btn-help" class="icon" title="Ajutor">?</button>
-    <button id="btn-full" class="icon" title="Ecran complet (F)">⛶</button>
+    <div class="date-box"><span class="lbl">Data în simulare</span><span id="date">—</span></div>
+    <div class="tool-group">
+      <button id="btn-sky" class="pill" title="Constelațiile văzute de pe Pământ (C)"><span class="ico"><svg class="i" aria-hidden="true"><use href="#i-sparkle"/></svg></span><span class="t">Cerul nopții</span></button>
+      <button id="btn-quiz" class="pill" title="Joc: găsește obiectul (G)"><span class="ico"><svg class="i" aria-hidden="true"><use href="#i-target"/></svg></span><span class="t">Joc</span></button>
+      <button id="btn-tour" class="pill" title="Tur ghidat"><span class="ico"><svg class="i" aria-hidden="true"><use href="#i-tour"/></svg></span><span class="t">Tur ghidat</span></button>
+      <button id="btn-menu" class="pill" title="Catalog"><span class="ico"><svg class="i" aria-hidden="true"><use href="#i-catalog"/></svg></span><span class="t">Catalog</span></button>
+    </div>
+    <button id="btn-help" class="icon" title="Ajutor" aria-label="Ajutor"><svg class="i" aria-hidden="true"><use href="#i-help"/></svg></button>
+    <button id="btn-full" class="icon" title="Ecran complet (F)" aria-label="Ecran complet"><svg class="i" aria-hidden="true"><use href="#i-full"/></svg></button>
   </header>
 
   <!-- bara de jos -->
   <footer class="bar bottom">
-    <button id="btn-play" class="icon big" title="Pauză (Space)">⏸</button>
+    <button id="btn-play" class="icon big play" title="Pauză (Space)" aria-label="Pauză / pornește"><svg class="i" aria-hidden="true"><use href="#i-pause"/></svg></button>
 
     <div class="ctrl" id="speed-ctrl">
-      <label for="speed">Viteza timpului · <b id="speed-val">—</b></label>
+      <label for="speed">Viteza timpului <b id="speed-val">—</b></label>
       <input id="speed" type="range" min="0" max="1000" value="300">
     </div>
 
-    <div id="sky-hint">Trage cu mouse-ul ca să te plimbi pe cer · rotița schimbă cât de mult cer vezi · click pe o stea sau pe numele unei constelații</div>
+    <div id="sky-hint">Trage ca să te plimbi pe cer · rotița schimbă cât de mult cer vezi · atinge o stea sau numele unei constelații</div>
 
     <div class="ctrl" id="zoom-ctrl">
-      <label for="zoom">Zoom <small>(rotița mouse-ului / pinch)</small></label>
+      <label for="zoom">Zoom <small>rotița / două degete</small></label>
       <div class="zoom-row">
-        <button id="btn-zoom-out" class="icon" title="Zoom out (−)">−</button>
+        <button id="btn-zoom-out" class="icon" title="Zoom out (−)" aria-label="Zoom out"><svg class="i" aria-hidden="true"><use href="#i-minus"/></svg></button>
         <input id="zoom" type="range" min="0" max="1000" value="500">
-        <button id="btn-zoom-in" class="icon" title="Zoom in (+)">+</button>
+        <button id="btn-zoom-in" class="icon" title="Zoom in (+)" aria-label="Zoom in"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button>
       </div>
     </div>
 
     <div class="toggles">
-      <button id="btn-orbits" class="pill tgl" title="Arată orbitele (O)">Orbite</button>
-      <button id="btn-labels" class="pill tgl" title="Arată numele (L)">Nume</button>
-      <button id="btn-home-view" class="pill" title="Revino la Sistemul Solar">⟲ Resetează</button>
+      <button id="btn-orbits" class="pill tgl" title="Arată orbitele (O)"><svg class="i" aria-hidden="true"><use href="#i-orbit"/></svg><span>Orbite</span></button>
+      <button id="btn-labels" class="pill tgl" title="Arată numele (L)"><svg class="i" aria-hidden="true"><use href="#i-label"/></svg><span>Nume</span></button>
+      <button id="btn-home-view" class="pill" title="Revino la Sistemul Solar"><svg class="i" aria-hidden="true"><use href="#i-reset"/></svg><span>Resetează</span></button>
     </div>
   </footer>
 
   <!-- panoul de informații -->
-  <aside id="info">
+  <aside id="info" aria-label="Fișa obiectului">
     <div class="sheet-handle"></div>
-    <button id="info-close" class="close">×</button>
+    <button id="info-close" class="close" aria-label="Închide"><svg class="i" aria-hidden="true"><use href="#i-close"/></svg></button>
     <figure id="info-photo">
       <img id="info-photo-img" alt="">
       <figcaption id="info-photo-cap"></figcaption>
     </figure>
-    <h2 id="info-name">—</h2>
-    <div id="info-type" class="type">—</div>
+    <div class="info-head">
+      <div id="info-type" class="type">—</div>
+      <h2 id="info-name">—</h2>
+    </div>
     <p id="info-desc"></p>
     <div id="info-live" class="facts live-box"></div>
     <div id="info-facts" class="facts"></div>
-    <div id="info-fun-wrap" class="fun"><span class="fun-i">!</span><span id="info-fun"></span></div>
+    <div id="info-fun-wrap" class="fun"><span class="fun-i"><svg class="i" aria-hidden="true"><use href="#i-sparkle"/></svg></span><div><b class="fun-t">Știai că…</b><span id="info-fun"></span></div></div>
     <div id="info-note" class="note"></div>
     <div class="info-actions">
-      <button id="btn-zoomto" class="pill primary">🔍 Zoom la obiect</button>
+      <button id="btn-zoomto" class="pill primary"><svg class="i" aria-hidden="true"><use href="#i-zoomto"/></svg><span>Zboară acolo</span></button>
       <button id="btn-follow" class="pill">Urmărește</button>
     </div>
   </aside>
 
   <!-- jocul „Găsește!" -->
-  <div id="quiz">
-    <button id="quiz-close" class="close small">×</button>
+  <div id="quiz" role="status" aria-live="polite">
+    <span class="quiz-ico"><svg class="i" aria-hidden="true"><use href="#i-target"/></svg></span>
     <div class="quiz-main">
-      <div class="quiz-top"><span class="quiz-tag">JOC</span><span id="quiz-score">0 / 10</span></div>
+      <div class="quiz-top"><span class="quiz-tag">Joc · Găsește!</span><span id="quiz-score" class="quiz-score">0 / 10</span></div>
       <p id="quiz-q">—</p>
       <small id="quiz-feedback"></small>
     </div>
-    <button id="quiz-skip" class="pill">Sari peste ›</button>
+    <button id="quiz-skip" class="pill">Sari peste <svg class="i" aria-hidden="true"><use href="#i-skip"/></svg></button>
+    <button id="quiz-close" class="close small" aria-label="Oprește jocul"><svg class="i" aria-hidden="true"><use href="#i-close"/></svg></button>
   </div>
 
   <!-- catalogul -->
-  <aside id="catalog">
+  <aside id="catalog" aria-label="Catalog">
     <div class="sheet-handle"></div>
-    <button id="catalog-close" class="close">×</button>
+    <button id="catalog-close" class="close" aria-label="Închide"><svg class="i" aria-hidden="true"><use href="#i-close"/></svg></button>
     <h2>Catalog</h2>
     <p class="hint">Apasă pe un nume și camera zboară acolo.</p>
+    <label class="search"><svg class="i" aria-hidden="true"><use href="#i-search"/></svg><input id="catalog-search" type="search" placeholder="Caută: Marte, Andromeda, Orion…" autocomplete="off"></label>
+    <p id="catalog-empty" class="hint" hidden>Nu am găsit nimic. Încearcă alt nume.</p>
     <div id="catalog-body"></div>
   </aside>
 
   <!-- turul ghidat -->
-  <div id="tour">
-    <button id="tour-close" class="close small">×</button>
+  <div id="tour" role="status" aria-live="polite">
+    <div class="tour-progress"><span id="tour-progress"></span></div>
+    <button id="tour-close" class="close small" aria-label="Închide turul"><svg class="i" aria-hidden="true"><use href="#i-close"/></svg></button>
     <div class="tour-body">
       <span id="tour-count" class="count">1 / 1</span>
       <p id="tour-text">—</p>
     </div>
     <div class="tour-nav">
-      <button id="tour-prev" class="pill">‹ Înapoi</button>
-      <button id="tour-next" class="pill primary">Următorul › <small>(N)</small></button>
+      <button id="tour-prev" class="pill"><svg class="i" aria-hidden="true"><use href="#i-back"/></svg><span>Înapoi</span></button>
+      <button id="tour-next" class="pill primary"><span>Următorul</span> <kbd>N</kbd></button>
     </div>
   </div>
 
   <!-- ajutor -->
-  <div id="help">
-    <button id="help-close" class="close">×</button>
+  <div id="help" role="dialog" aria-label="Cum se folosește">
+    <button id="help-close" class="close" aria-label="Închide"><svg class="i" aria-hidden="true"><use href="#i-close"/></svg></button>
     <h2>Cum se folosește</h2>
     <ul>
       <li><b>Click pe orice obiect</b> → se deschide fișa lui cu informații.</li>
@@ -416,40 +537,41 @@
   </div>
 </main>
 
-<script src="js/data.js?v=26"></script>
-<script src="js/data-extra.js?v=26"></script>
-<script src="js/textures.js?v=26"></script>
-<script src="js/sky.js?v=26"></script>
-<script src="js/app.js?v=26"></script>
-<script src="js/core/fx.js?v=32"></script>
-<script src="js/core/modules.js?v=32"></script>
-<script src="js/modules/body/brain.js?v=32"></script>
-<script src="js/modules/body/digestion.js?v=32"></script>
-<script src="js/modules/body/heart.js?v=32"></script>
-<script src="js/modules/body/lungs.js?v=32"></script>
-<script src="js/modules/body/skeleton.js?v=32"></script>
-<script src="js/modules/earth/civ.js?v=32"></script>
-<script src="js/modules/earth/earthtime.js?v=32"></script>
-<script src="js/modules/earth/human.js?v=32"></script>
-<script src="js/modules/earth/layers.js?v=32"></script>
-<script src="js/modules/earth/lifeevo.js?v=32"></script>
-<script src="js/modules/earth/ocean.js?v=32"></script>
-<script src="js/modules/earth/relief.js?v=32"></script>
-<script src="js/modules/earth/volcano.js?v=32"></script>
-<script src="js/modules/mechanics/engine.js?v=32"></script>
-<script src="js/modules/mechanics/mechanics.js?v=32"></script>
-<script src="js/modules/space/bigbang.js?v=32"></script>
-<script src="js/modules/space/blackhole.js?v=32"></script>
-<script src="js/modules/space/explosions.js?v=32"></script>
-<script src="js/modules/space/gravity.js?v=32"></script>
-<script src="js/modules/tech/binary.js?v=32"></script>
-<script src="js/modules/tech/camera.js?v=32"></script>
-<script src="js/modules/tech/circuit.js?v=32"></script>
-<script src="js/modules/tech/phone.js?v=32"></script>
-<script src="js/modules/tech/solar.js?v=32"></script>
-<script src="js/modules/vehicles/airplane.js?v=32"></script>
-<script src="js/modules/vehicles/car.js?v=32"></script>
-<script src="js/modules/vehicles/emotor.js?v=32"></script>
-<script src="js/modules/vehicles/train.js?v=32"></script>
+<script src="js/data.js?v=41"></script>
+<script src="js/data-extra.js?v=41"></script>
+<script src="js/textures.js?v=41"></script>
+<script src="js/sky.js?v=41"></script>
+<script src="js/app.js?v=41"></script>
+<script src="js/core/art.js?v=41"></script>
+<script src="js/core/creatures.js?v=41"></script>
+<script src="js/core/modules.js?v=41"></script>
+<script src="js/modules/body/brain.js?v=41"></script>
+<script src="js/modules/body/digestion.js?v=41"></script>
+<script src="js/modules/body/heart.js?v=41"></script>
+<script src="js/modules/body/lungs.js?v=41"></script>
+<script src="js/modules/body/skeleton.js?v=41"></script>
+<script src="js/modules/earth/civ.js?v=41"></script>
+<script src="js/modules/earth/earthtime.js?v=41"></script>
+<script src="js/modules/earth/human.js?v=41"></script>
+<script src="js/modules/earth/layers.js?v=41"></script>
+<script src="js/modules/earth/lifeevo.js?v=41"></script>
+<script src="js/modules/earth/ocean.js?v=41"></script>
+<script src="js/modules/earth/relief.js?v=41"></script>
+<script src="js/modules/earth/volcano.js?v=41"></script>
+<script src="js/modules/mechanics/engine.js?v=41"></script>
+<script src="js/modules/mechanics/mechanics.js?v=41"></script>
+<script src="js/modules/space/bigbang.js?v=41"></script>
+<script src="js/modules/space/blackhole.js?v=41"></script>
+<script src="js/modules/space/explosions.js?v=41"></script>
+<script src="js/modules/space/gravity.js?v=41"></script>
+<script src="js/modules/tech/binary.js?v=41"></script>
+<script src="js/modules/tech/camera.js?v=41"></script>
+<script src="js/modules/tech/circuit.js?v=41"></script>
+<script src="js/modules/tech/phone.js?v=41"></script>
+<script src="js/modules/tech/solar.js?v=41"></script>
+<script src="js/modules/vehicles/airplane.js?v=41"></script>
+<script src="js/modules/vehicles/car.js?v=41"></script>
+<script src="js/modules/vehicles/emotor.js?v=41"></script>
+<script src="js/modules/vehicles/train.js?v=41"></script>
 </body>
 </html>

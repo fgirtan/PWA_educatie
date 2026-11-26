@@ -19,6 +19,16 @@
     $('#module').classList.remove('hidden');
     $('#mod-title').textContent = def.title;
     $('#mod-sub').textContent = def.sub || '';
+    /* secțiunea din care face parte modulul: culoarea și „firimitura” din bara de sus */
+    const card = document.querySelector('[data-module="' + id + '"]');
+    const view = card && card.closest('.sec-view');
+    const modEl = $('#module');
+    if (view) {
+      modEl.style.setProperty('--c1', view.style.getPropertyValue('--c1'));
+      modEl.style.setProperty('--c2', view.style.getPropertyValue('--c2'));
+      const st = view.querySelector('.sec-title');
+      $('#mod-crumb').textContent = st ? st.textContent : '';
+    } else $('#mod-crumb').textContent = '';
     const panel = $('#mod-panel'); panel.innerHTML = '';
     const info = $('#mod-info'); info.innerHTML = ''; info.classList.remove('show');
     const canvas = $('#mod-canvas');
@@ -31,7 +41,7 @@
       W: 0, H: 0, DPR: 1, cx: 0, cy: 0, unit: 100, freeW: 0,
       /* zona liberă a ecranului (între bara de sus și panoul de jos) */
       layout: function () {
-        const shown = info.classList.contains('show');
+        const shown = info.classList.contains('show') && info.offsetParent !== null;   // ascuns în modul ?thumb=1
         const side = shown && window.matchMedia('(min-width: 900px)').matches;   // pe ecran lat: panou în dreapta
         const infoH = shown && !side ? info.offsetHeight + 8 : 0;
         const top = 62 + infoH;
@@ -148,27 +158,75 @@
   /* meniul de secțiuni: iconițe mari care duc la câmpul cu toate modulele */
   function showSection(id) {
     const hub = $('#hub');
+    document.querySelectorAll('.sec-tab').forEach((t) => {
+      const on = t.getAttribute('data-tab') === id;
+      t.classList.toggle('active', on);
+      if (on) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current');
+      if (on && t.scrollIntoView) t.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+    });
+    document.body.setAttribute('data-section', id || 'hub');
     document.querySelectorAll('.sec-view').forEach((v) => v.classList.add('hidden'));
     if (id) { hub.classList.add('hidden'); $('#sec-' + id).classList.remove('hidden'); try { sessionStorage.setItem('sec', id); } catch (e) { } }
     else { hub.classList.remove('hidden'); try { sessionStorage.removeItem('sec'); } catch (e) { } }
     const home = $('#home'); if (home) home.scrollTop = 0;
   }
   window.showSection = showSection;
+
+  /* ---------- navigare cu adrese (#space, #m/heart, #harta) ----------
+     Butonul Back din browser / telefon funcționează, iar fiecare modul
+     are propriul link. ?thumb=1 ascunde interfața (pentru imaginile cardurilor). */
+  const SECS = ['space', 'body', 'how', 'earth'];
+  /* history.state.i = câți pași am făcut în aplicație; „Înapoi” folosește istoricul doar dacă există pași */
+  const stepIdx = () => (history.state && history.state.i) || 0;
+  const sectionOf = (modId) => { const c = document.querySelector('[data-module="' + modId + '"]'); const v = c && c.closest('.sec-view'); return v ? v.id.replace('sec-', '') : null; };
+  function go(hash) { if (location.hash !== hash && !(hash === '#' && !location.hash)) history.pushState({ i: stepIdx() + 1 }, '', hash === '#' ? location.pathname + location.search : hash); route(); }
+  function up(hash) { if (stepIdx() > 0) history.back(); else { history.replaceState({ i: 0 }, '', hash || location.pathname + location.search); route(); } }
+  window.navTo = go;
+  function route() {
+    const h = decodeURIComponent(location.hash.replace(/^#/, ''));
+    const app = $('#app');
+    if (h.indexOf('m/') === 0) {
+      const id = h.slice(2);
+      if (!MODS[id]) { history.replaceState(null, '', location.pathname + location.search); route(); return; }
+      if (app && !app.classList.contains('hidden')) app.classList.add('hidden');
+      const sec = sectionOf(id); if (sec) showSection(sec);
+      if (!cur || cur.id !== id) { openModule(id); cur.id = id; }
+      return;
+    }
+    if (cur) closeModule();
+    if (h === 'harta') { if (typeof window.startApp === 'function' && app && app.classList.contains('hidden')) window.startApp(); return; }
+    if (app && !app.classList.contains('hidden')) { app.classList.add('hidden'); $('#home').classList.remove('hidden'); }
+    showSection(SECS.indexOf(h) >= 0 ? h : null);
+  }
+
   window.addEventListener('DOMContentLoaded', () => {
+    if (/[?&]thumb=1/.test(location.search)) document.body.classList.add('thumb');
     document.querySelectorAll('.sec-tile').forEach((t) => {
       const id = t.getAttribute('data-section');
       const n = document.querySelectorAll('#sec-' + id + ' .card').length;
-      const c = t.querySelector('.sec-count'); if (c) c.textContent = n + (n === 1 ? ' activitate' : ' activități');
-      t.addEventListener('click', () => showSection(id));
+      document.querySelectorAll('[data-count="' + id + '"]').forEach((c) => { c.textContent = n + (n === 1 ? ' activitate' : ' activități'); });
+      t.addEventListener('click', () => go('#' + id));
     });
-    document.querySelectorAll('.sec-back').forEach((b) => b.addEventListener('click', () => showSection(null)));
-    try { const last = sessionStorage.getItem('sec'); if (last && $('#sec-' + last)) showSection(last); } catch (e) { }
-    document.querySelectorAll('[data-module]').forEach((el) => {
-      el.addEventListener('click', () => openModule(el.getAttribute('data-module')));
-    });
-    $('#mod-back').addEventListener('click', () => closeModule());
+    document.querySelectorAll('.sec-back').forEach((b) => b.addEventListener('click', () => up('')));
+    document.querySelectorAll('.sec-tab').forEach((t) => t.addEventListener('click', () => go('#' + t.getAttribute('data-tab'))));
+    const brand = $('#brand-home'); if (brand) brand.addEventListener('click', () => go('#'));
+    const full = () => { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => { }); else document.exitFullscreen().catch(() => { }); };
+    const hf = $('#btn-hub-full'); if (hf) hf.addEventListener('click', full);
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && cur) closeModule();
+      const home = $('#home');
+      if ((e.key === 'f' || e.key === 'F') && home && !home.classList.contains('hidden') && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) full();
     });
+    document.querySelectorAll('[data-module]').forEach((el) => {
+      el.addEventListener('click', () => go('#m/' + el.getAttribute('data-module')));
+    });
+    const sp = $('#start-space'); if (sp) sp.addEventListener('click', () => { history.pushState({ i: stepIdx() + 1 }, '', '#harta'); });
+    const mh = $('#btn-menu-home'); if (mh) mh.addEventListener('click', () => up('#space'));
+    const back = () => { const id = cur && cur.id; up('#' + (sectionOf(id) || '')); };
+    $('#mod-back').addEventListener('click', back);
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && cur) back(); });
+    window.addEventListener('hashchange', route);
+    window.addEventListener('popstate', route);
+    if (location.hash) route();
+    else showSection(null);
   });
 })();

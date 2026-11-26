@@ -112,12 +112,16 @@ const KUIPER = makeBelt(1600, 30, 51, 4242, 0.12);
 const TROJANS_A = makeBelt(160, 4.95, 5.45, 919, 0.06);
 const TROJANS_B = makeBelt(160, 4.95, 5.45, 313, 0.06);
 
+/* roci (sprite-uri umbrite, partea luminată spre Soare); mai mari când apropii imaginea */
 function drawBelt(arr, color, alpha, sizeBoost, angOffset, refBody) {
   const n = arr.length / 4;
   const step = refBody ? 1 : BELT_STEP;
+  const zb = clamp(Math.pow(3e9 / cam.scale, 0.28), 1, 3.2);
+  const sprs = [getRockSprite(color, 0), getRockSprite(color, 1), getRockSprite(color, 2)];
   ctx.fillStyle = color;
   ctx.globalAlpha = alpha;
   const base = refBody ? Math.atan2(pos[refBody].y, pos[refBody].x) : 0;
+  let rotated = false;
   for (let i = 0; i < n; i += step) {
     const a = arr[i * 4], ph = arr[i * 4 + 1], wob = arr[i * 4 + 2], szf = arr[i * 4 + 3];
     const P = 365.256 * Math.pow(a / AU, 1.5);
@@ -130,9 +134,20 @@ function drawBelt(arr, color, alpha, sizeBoost, angOffset, refBody) {
     const rr = a * wob;
     const px = sx(Math.cos(ang) * rr), py = sy(Math.sin(ang) * rr);
     if (px < -20 || px > W + 20 || py < -20 || py > H + 20) continue;
-    const s = szf * (sizeBoost || 1);
-    ctx.fillRect(px, py, s, s);
+    const s = szf * (sizeBoost || 1) * zb;
+    if (s < 1.7) {
+      if (rotated) { ctx.setTransform(DPR, 0, 0, DPR, 0, 0); rotated = false; }
+      ctx.fillRect(px - s / 2, py - s / 2, s, s);
+    } else {
+      const c = Math.cos(ang + ph) * DPR, sn = Math.sin(ang + ph) * DPR;
+      /* rotim sprite-ul ca partea luminată să privească spre Soare */
+      const ca = Math.cos(ang) * DPR, sa = Math.sin(ang) * DPR;
+      ctx.setTransform(ca, sa, -sa, ca, px * DPR, py * DPR);
+      rotated = true;
+      ctx.drawImage(sprs[(i + (c > sn ? 1 : 0)) % 3], -s, -s, s * 2, s * 2);
+    }
   }
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.globalAlpha = 1;
 }
 
@@ -149,115 +164,170 @@ const BG_STARS = (function () {
   return arr;
 })();
 
+/* fundal curat: albastru-noapte foarte închis + stele statice de culori diferite */
 function drawBackground() {
-  ctx.fillStyle = '#04060f';
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#060a19');
+  g.addColorStop(1, '#03050c');
+  ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
-  /* ușoară nuanță de nebuloasă de fond */
-  const g = ctx.createRadialGradient(W * 0.75, H * 0.2, 0, W * 0.75, H * 0.2, Math.max(W, H) * 0.9);
-  g.addColorStop(0, 'rgba(40,30,80,0.30)');
-  g.addColorStop(0.5, 'rgba(14,18,48,0.18)');
-  g.addColorStop(1, 'rgba(4,6,15,0)');
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-
-  const n = BG_STARS.length / 4;
-  const sstep = STAR_STEP;
-  const ox = -(cam.x / cam.scale) * 0.015, oy = -(cam.y / cam.scale) * 0.015;
-  const tw = performance.now() / 1000;
-  for (let i = 0; i < n; i += sstep) {
-    let px = (BG_STARS[i * 4] * W + ox) % W; if (px < 0) px += W;
-    let py = (BG_STARS[i * 4 + 1] * H + oy) % H; if (py < 0) py += H;
-    const r = BG_STARS[i * 4 + 2];
-    const b = BG_STARS[i * 4 + 3] * (0.75 + 0.25 * Math.sin(tw * 1.5 + i));
-    ctx.fillStyle = 'rgba(255,255,255,' + (b * 0.75) + ')';
-    ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill();
+  const tile = getStarTile(DPR), T = tile.T;
+  for (let y = 0; y < H; y += T) {
+    for (let x = 0; x < W; x += T) ctx.drawImage(tile.cv, x, y, T, T);
   }
 }
 
 /* ---------- desenarea unui corp sferic ---------- */
+/* atmosferele vizibile (culoare, intensitate) */
+const ATMO = {
+  earth: ['#8cc4ff', 0.9], venus: ['#ffe9b8', 0.7], mars: ['#ffb894', 0.3],
+  jupiter: ['#fff0d8', 0.3], saturn: ['#fff3d6', 0.28], uranus: ['#d6fbff', 0.5],
+  neptune: ['#9ab8ff', 0.55], titan: ['#ffc070', 0.85]
+};
+/* perioade de rotație (ore); negativ = se rotește invers */
+const ROT_H = { sun: 609, mercury: 1407, venus: -5832, earth: 24, moon: 655, jupiter: 9.9, saturn: 10.7, uranus: -17.2, neptune: 16.1, pluto: -153 };
+function globeSize(r) {
+  const need = r * 2 * DPR;
+  const sizes = [32, 64, 128, 192, 288, 416, 512];
+  for (const s of sizes) if (need <= s * 1.1) return s;
+  return 512;
+}
+function bodyTurns(b) {
+  if (b.id === 'mars') return 0;       // traseele roboților sunt desenate pe fața din față
+  return simDays * 24 / (ROT_H[b.id] || 22) * 0.06;
+}
+
 function drawBody(b, p, alpha, minPx, kindOverride) {
   const Rpx = b.radius / cam.scale;
   const drawR = Math.max(Rpx, minPx);
   const px = sx(p.x), py = sy(p.y);
-  if (px < -drawR * 4 - 60 || px > W + drawR * 4 + 60 || py < -drawR * 4 - 60 || py > H + drawR * 4 + 60) return null;
+  const ext = b.rings ? drawR * 2.4 * (b.ringScale || 1) : drawR;
+  if (px < -ext - 60 || px > W + ext + 60 || py < -ext - 60 || py > H + ext + 60) return null;
 
   ctx.globalAlpha = alpha;
-
-  /* aureolă */
-  if (drawR > 1.5) {
-    const g = ctx.createRadialGradient(px, py, drawR * 0.9, px, py, drawR * 2.6);
-    g.addColorStop(0, hexA(b.color, 0.35));
-    g.addColorStop(1, hexA(b.color, 0));
-    ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(px, py, drawR * 2.6, 0, Math.PI * 2); ctx.fill();
-  }
+  const isSun = b.id === 'sun';
+  const d = Math.hypot(p.x, p.y);
+  const ux = d ? -p.x / d : -1, uy = d ? -p.y / d : 0;   // direcția spre Soare
 
   /* inele — jumătatea din spate */
-  if (b.rings && drawR > 4) drawRings(px, py, drawR, b, true);
+  if (b.rings && drawR > 4) drawRings(px, py, drawR, b, true, ux, uy);
 
   if (drawR < 4.5) {
+    /* punct mic: jumătate luminată, jumătate în umbră */
     ctx.fillStyle = b.color;
     ctx.beginPath(); ctx.arc(px, py, drawR, 0, Math.PI * 2); ctx.fill();
+    if (!isSun && drawR > 1.6) {
+      const a = Math.atan2(-uy, -ux);
+      ctx.fillStyle = 'rgba(2,4,12,0.6)';
+      ctx.beginPath(); ctx.arc(px, py, drawR + 0.2, a - Math.PI / 2, a + Math.PI / 2); ctx.closePath(); ctx.fill();
+    }
+  } else if (isSun && drawR < 30) {
+    /* Soarele mic: disc cald, fără detalii care s-ar transforma în „pete" */
+    const g = ctx.createRadialGradient(px, py, 0, px, py, drawR);
+    g.addColorStop(0, '#fff4c8'); g.addColorStop(0.6, '#ffcf55'); g.addColorStop(1, '#f39a24');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(px, py, drawR, 0, Math.PI * 2); ctx.fill();
   } else {
-    const tex = getTexture(kindOverride || b.texture || 'rock', b.id);
-    if (drawR > 11 && b.id !== 'mars') {
-      const rot = (simDays * 24 / (b.rot || 22)) * 0.35;
-      ctx.save();
-      ctx.translate(px, py); ctx.rotate(rot);
+    const tex = getGlobe(b, globeSize(drawR), bodyTurns(b), kindOverride);
+    if (b.id === 'saturn') {
+      ctx.save(); ctx.translate(px, py); ctx.rotate(-18 * DEG);
       ctx.drawImage(tex, -drawR, -drawR, drawR * 2, drawR * 2);
       ctx.restore();
     } else {
       ctx.drawImage(tex, px - drawR, py - drawR, drawR * 2, drawR * 2);
     }
+    if (isSun) sunLimb(px, py, drawR);
+    else if (drawR > 3.5) lightBody(px, py, drawR, ux, uy, ATMO[b.id]);
   }
 
-  /* partea de noapte — lumina vine de la Soare */
-  if (drawR > 3.5 && b.id !== 'sun') drawTerminator(px, py, drawR, p);
-
-  if (b.rings && drawR > 4) drawRings(px, py, drawR, b, false);
+  if (b.rings && drawR > 4) drawRings(px, py, drawR, b, false, ux, uy);
 
   ctx.globalAlpha = 1;
   return { x: px, y: py, r: drawR };
 }
 
-/* umbra: jumătatea dinspre partea opusă Soarelui */
-function drawTerminator(px, py, r, p) {
-  const d = Math.hypot(p.x, p.y);
-  if (!d) return;
-  const ux = -p.x / d, uy = -p.y / d;      // direcția spre Soare
-  ctx.save();
-  ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.clip();
+/* lumina Soarelui pe o planetă: zi/noapte cu terminator moale, margini mai întunecate,
+   și — doar unde există — o atmosferă subțire pe marginea luminată */
+function lightBody(px, py, r, ux, uy, atmo) {
+  const TAU = Math.PI * 2;
+  if (atmo && r > 6) {
+    const rgb = hexToRgb(atmo[0]).join(',');
+    const g = ctx.createRadialGradient(px + ux * r * 0.1, py + uy * r * 0.1, r * 0.8, px, py, r);
+    g.addColorStop(0, 'rgba(' + rgb + ',0)');
+    g.addColorStop(1, 'rgba(' + rgb + ',' + (atmo[1] * 0.5) + ')');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(px, py, r, 0, TAU); ctx.fill();
+  }
+  const l = ctx.createRadialGradient(px, py, r * 0.55, px, py, r);
+  l.addColorStop(0, 'rgba(0,0,0,0)');
+  l.addColorStop(1, 'rgba(0,0,0,0.32)');
+  ctx.fillStyle = l;
+  ctx.beginPath(); ctx.arc(px, py, r, 0, TAU); ctx.fill();
   const g = ctx.createLinearGradient(px + ux * r, py + uy * r, px - ux * r, py - uy * r);
-  g.addColorStop(0, 'rgba(0,0,0,0)');
-  g.addColorStop(0.42, 'rgba(0,0,0,0.04)');
-  g.addColorStop(0.6, 'rgba(1,3,10,0.45)');
-  g.addColorStop(0.78, 'rgba(1,3,10,0.82)');
-  g.addColorStop(1, 'rgba(1,3,10,0.9)');
+  g.addColorStop(0, 'rgba(255,250,236,0.10)');
+  g.addColorStop(0.28, 'rgba(0,0,0,0)');
+  g.addColorStop(0.45, 'rgba(2,4,12,0.12)');
+  g.addColorStop(0.57, 'rgba(2,4,12,0.62)');
+  g.addColorStop(0.7, 'rgba(2,4,12,0.88)');
+  g.addColorStop(1, 'rgba(2,4,12,0.94)');
   ctx.fillStyle = g;
-  ctx.fillRect(px - r - 1, py - r - 1, r * 2 + 2, r * 2 + 2);
-  ctx.restore();
+  ctx.beginPath(); ctx.arc(px, py, r + 0.3, 0, TAU); ctx.fill();
+  if (atmo && r > 10) {
+    /* linia subțire a atmosferei, doar pe partea de zi */
+    const rgb = hexToRgb(atmo[0]).join(',');
+    const s = ctx.createLinearGradient(px + ux * r, py + uy * r, px - ux * r, py - uy * r);
+    s.addColorStop(0, 'rgba(' + rgb + ',' + (atmo[1] * 0.75) + ')');
+    s.addColorStop(0.55, 'rgba(' + rgb + ',0)');
+    ctx.strokeStyle = s;
+    ctx.lineWidth = Math.max(1, r * 0.025);
+    ctx.beginPath(); ctx.arc(px, py, r + ctx.lineWidth * 0.5, 0, TAU); ctx.stroke();
+  }
 }
 
-function drawRings(px, py, r, b, back) {
+/* Soarele: discul mai întunecat și mai roșiatic spre margine (ca în fotografii) */
+function sunLimb(px, py, r) {
+  const g = ctx.createRadialGradient(px, py, r * 0.4, px, py, r);
+  g.addColorStop(0, 'rgba(255,220,150,0)');
+  g.addColorStop(0.75, 'rgba(230,110,20,0.18)');
+  g.addColorStop(1, 'rgba(170,55,0,0.55)');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill();
+}
+
+
+/* inelele: textură cu benzi reale (C, B, Cassini, A, Encke) + umbra planetei pe inele */
+function drawRings(px, py, r, b, back, ux, uy) {
   const k = b.ringScale || 1;
-  const inner = r * 1.28 * k, outer = r * 2.25 * k;
-  const squash = 0.3;
+  const outer = r * 2.25 * k, inner = outer * 0.57;
+  const squash = 0.3, tilt = -18 * DEG;
   ctx.save();
   ctx.translate(px, py);
-  ctx.rotate(-18 * DEG);
+  ctx.rotate(tilt);
+  ctx.scale(1, squash);
   ctx.beginPath();
-  ctx.ellipse(0, 0, outer, outer * squash, 0, back ? Math.PI : 0, back ? Math.PI * 2 : Math.PI);
-  ctx.lineTo(inner, 0);
-  ctx.ellipse(0, 0, inner, inner * squash, 0, back ? Math.PI * 2 : Math.PI, back ? Math.PI : 0, true);
-  ctx.closePath();
-  const g = ctx.createLinearGradient(-outer, 0, outer, 0);
-  const c = b.id === 'uranus' ? '180,230,235' : '232,214,170';
-  g.addColorStop(0, 'rgba(' + c + ',0.15)');
-  g.addColorStop(0.35, 'rgba(' + c + ',0.75)');
-  g.addColorStop(0.5, 'rgba(' + c + ',0.35)');
-  g.addColorStop(0.65, 'rgba(' + c + ',0.8)');
-  g.addColorStop(1, 'rgba(' + c + ',0.15)');
-  ctx.fillStyle = g;
-  ctx.fill();
+  if (back) ctx.rect(-outer - 2, -outer - 2, outer * 2 + 4, outer + 2);
+  else ctx.rect(-outer - 2, 0, outer * 2 + 4, outer + 2);
+  ctx.clip();
+  ctx.drawImage(getRingTexture(b.id), -outer, -outer, outer * 2, outer * 2);
+  /* umbra planetei: o fâșie spre partea opusă Soarelui, în planul inelelor */
+  if (r > 7 && b.id === 'saturn') {
+    const ax = -ux, ay = -uy, c = Math.cos(-tilt), s = Math.sin(-tilt);
+    let lx = ax * c - ay * s, ly = (ax * s + ay * c) / squash;
+    const L = Math.hypot(lx, ly) || 1; lx /= L; ly /= L;
+    const nx = -ly, ny = lx;
+    ctx.beginPath();
+    ctx.arc(0, 0, outer, 0, Math.PI * 2);
+    ctx.arc(0, 0, inner, 0, Math.PI * 2, true);
+    ctx.clip();
+    ctx.fillStyle = 'rgba(0,0,0,0.72)';
+    ctx.beginPath();
+    ctx.moveTo(nx * r, ny * r);
+    ctx.lineTo(nx * r * 0.9 + lx * outer * 1.1, ny * r * 0.9 + ly * outer * 1.1);
+    ctx.lineTo(-nx * r * 0.9 + lx * outer * 1.1, -ny * r * 0.9 + ly * outer * 1.1);
+    ctx.lineTo(-nx * r, -ny * r);
+    ctx.closePath();
+    ctx.fill();
+  }
   ctx.restore();
 }
 
@@ -267,7 +337,8 @@ function hexA(hex, a) {
 }
 
 /* ---------- orbite ---------- */
-function drawOrbit(b, cx, cy, alpha, color) {
+/* linie fină; puțin mai clară lângă corp și estompată în rest */
+function drawOrbit(b, cx, cy, alpha, rgba) {
   const a = b.a / cam.scale;
   if (a < 6) return;
   const e = b.e || 0;
@@ -275,9 +346,21 @@ function drawOrbit(b, cx, cy, alpha, color) {
   const w = orbitAngleArg(b);
   const ox = cx - a * e * Math.cos(w), oy = cy - a * e * Math.sin(w);
   if (a > 60000) return;
+  const sel = selected === b;
+  const c = 'rgba(' + rgba[0] + ',' + rgba[1] + ',' + rgba[2] + ',';
+  const A = Math.min(1, rgba[3] * (sel ? 1.8 : 1));
+  const bp = pos[b.id];
   ctx.globalAlpha = alpha;
-  ctx.strokeStyle = color || 'rgba(140,170,230,0.3)';
-  ctx.lineWidth = 1;
+  if (ctx.createConicGradient && bp) {
+    const th = Math.atan2(sy(bp.y) - oy, sx(bp.x) - ox);
+    const g = ctx.createConicGradient(th, ox, oy);
+    g.addColorStop(0, c + A + ')');
+    g.addColorStop(0.12, c + (A * 0.5) + ')');
+    g.addColorStop(0.75, c + (A * 0.5) + ')');
+    g.addColorStop(1, c + A + ')');
+    ctx.strokeStyle = g;
+  } else ctx.strokeStyle = c + (A * 0.7) + ')';
+  ctx.lineWidth = sel ? 1.6 : 1;
   ctx.beginPath();
   ctx.ellipse(ox, oy, a, bb, w, 0, Math.PI * 2);
   ctx.stroke();
@@ -285,11 +368,14 @@ function drawOrbit(b, cx, cy, alpha, color) {
 }
 
 /* ---------- etichete ---------- */
+/* text curat, cu un contur subțire închis; mai mare pe ecrane mari (proiector) */
 const labelBoxes = [];
+const LABEL_FONT = 'ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI", system-ui, sans-serif';
 function label(text, x, y, size, color, important) {
   if (!showLabels) return;
-  const fs = size || 13;
-  ctx.font = '600 ' + fs + 'px "Trebuchet MS", system-ui, sans-serif';
+  const k = clamp(Math.min(W, H) / 760, 0.95, 1.45);
+  const fs = Math.max(13, Math.round((size || 13) * k));
+  ctx.font = (important ? '700 ' : '600 ') + fs + 'px ' + LABEL_FONT;
   const w = ctx.measureText(text).width;
   /* ținem eticheta în ecran, ca să nu fie tăiată pe telefon */
   x = clamp(x, w / 2 + 6, W - w / 2 - 6);
@@ -302,10 +388,12 @@ function label(text, x, y, size, color, important) {
   }
   labelBoxes.push({ x: bx, y: by, w: w, h: fs });
   ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.95)';
-  ctx.shadowBlur = 6;
-  ctx.fillStyle = color || 'rgba(235,242,255,0.92)';
   ctx.textAlign = 'center';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = 'rgba(3,6,16,0.82)';
+  ctx.lineWidth = Math.max(2.5, fs * 0.22);
+  ctx.strokeText(text, x, y);
+  ctx.fillStyle = color || 'rgba(235,242,255,0.95)';
   ctx.fillText(text, x, y);
   ctx.restore();
 }
@@ -318,29 +406,29 @@ function drawSolarSystem(alpha) {
 
   /* centuri */
   const beltA = alpha * fadeOut(s, 2e12, 8e12) * ramp(s, 4e7, 3e8);
-  if (beltA > 0.01) drawBelt(MAIN_BELT, '#cdbfae', beltA * 0.75, 1, 0, null);
+  if (beltA > 0.01) drawBelt(MAIN_BELT, '#a89c8c', beltA * 0.85, 1, 0, null);
   const kuiA = alpha * ramp(s, 2e9, 2e10);
-  if (kuiA > 0.01) drawBelt(KUIPER, '#9fb6cf', kuiA * 0.6, 1, 0, null);
+  if (kuiA > 0.01) drawBelt(KUIPER, '#9fb0c4', kuiA * 0.65, 1, 0, null);
   const troA = alpha * fadeOut(s, 2e12, 8e12) * ramp(s, 2e8, 1e9);
   if (troA > 0.01) {
-    drawBelt(TROJANS_A, '#d8c08a', troA * 0.8, 1.2, 60 * DEG, 'jupiter');
-    drawBelt(TROJANS_B, '#d8c08a', troA * 0.8, 1.2, -60 * DEG, 'jupiter');
+    drawBelt(TROJANS_A, '#b49a76', troA * 0.85, 1.2, 60 * DEG, 'jupiter');
+    drawBelt(TROJANS_B, '#b49a76', troA * 0.85, 1.2, -60 * DEG, 'jupiter');
   }
 
   const cx = sx(0), cy = sy(0);
 
   /* orbite */
   if (showOrbits) {
-    for (const b of PLANETS) drawOrbit(b, cx, cy, alpha * 0.9, 'rgba(150,180,240,0.33)');
-    for (const b of DWARFS) drawOrbit(b, cx, cy, alpha * 0.7, 'rgba(190,170,230,0.26)');
-    for (const b of COMETS) drawOrbit(b, cx, cy, alpha * 0.8, 'rgba(150,230,255,0.33)');
-    for (const b of ASTEROIDS) drawOrbit(b, cx, cy, alpha * 0.5, 'rgba(200,190,170,0.2)');
+    for (const b of PLANETS) drawOrbit(b, cx, cy, alpha * 0.9, [150, 180, 240, 0.34]);
+    for (const b of DWARFS) drawOrbit(b, cx, cy, alpha * 0.7, [190, 170, 230, 0.26]);
+    for (const b of COMETS) drawOrbit(b, cx, cy, alpha * 0.8, [150, 220, 250, 0.3]);
+    for (const b of ASTEROIDS) drawOrbit(b, cx, cy, alpha * 0.5, [200, 190, 170, 0.22]);
     /* orbitele sateliților naturali */
     for (const b of PLANETS.concat(DWARFS)) {
       if (!b.moons) continue;
       const p = pos[b.id];
       for (const m of b.moons) {
-        if (m.a / cam.scale > 7) drawOrbit(m, sx(p.x), sy(p.y), alpha * 0.55, 'rgba(200,215,255,0.3)');
+        if (m.a / cam.scale > 7) drawOrbit(m, sx(p.x), sy(p.y), alpha * 0.55, [200, 215, 255, 0.3]);
       }
     }
   }
@@ -348,13 +436,7 @@ function drawSolarSystem(alpha) {
   /* Soarele */
   const sunRpx = SUN.radius / s;
   const sunDraw = Math.max(sunRpx, 7);
-  if (cx > -600 && cx < W + 600 && cy > -600 && cy < H + 600) {
-    const g = ctx.createRadialGradient(cx, cy, sunDraw * 0.8, cx, cy, sunDraw * 9);
-    g.addColorStop(0, 'rgba(255,210,110,' + 0.5 * alpha + ')');
-    g.addColorStop(0.25, 'rgba(255,160,60,' + 0.18 * alpha + ')');
-    g.addColorStop(1, 'rgba(255,140,40,0)');
-    ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(cx, cy, sunDraw * 9, 0, Math.PI * 2); ctx.fill();
+  if (cx > -sunDraw - 600 && cx < W + sunDraw + 600 && cy > -sunDraw - 600 && cy < H + sunDraw + 600) {
     const hit = drawBody(SUN, pos.sun, alpha, 7, 'sun');
     if (hit && alpha > 0.3) {
       hitList.push({ x: hit.x, y: hit.y, r: Math.max(hit.r, 16), obj: SUN });
@@ -362,35 +444,11 @@ function drawSolarSystem(alpha) {
     }
   }
 
-  /* comete (coada se desenează înaintea nucleului) */
+  /* comete (cozile se desenează înaintea nucleului) */
   for (const c of COMETS) {
     const p = pos[c.id];
     const px = sx(p.x), py = sy(p.y);
-    const d = p.r / AU;
-    const act = clamp(3.2 / d, 0, 1.6);
-    const tailLen = (0.55 * AU * act) / cam.scale;
-    if (tailLen > 3 && px > -400 && px < W + 400 && py > -400 && py < H + 400) {
-      const dirx = p.x / p.r, diry = p.y / p.r;
-      const ex = px + dirx * tailLen, ey = py + diry * tailLen;
-      const g = ctx.createLinearGradient(px, py, ex, ey);
-      g.addColorStop(0, 'rgba(190,240,255,' + 0.5 * alpha + ')');
-      g.addColorStop(0.3, 'rgba(150,215,255,' + 0.22 * alpha + ')');
-      g.addColorStop(1, 'rgba(120,180,255,0)');
-      ctx.strokeStyle = g;
-      ctx.lineWidth = Math.max(2, tailLen * 0.09);
-      ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(ex, ey); ctx.stroke();
-      /* coadă de praf, puțin curbată */
-      ctx.strokeStyle = 'rgba(255,230,190,' + 0.16 * alpha + ')';
-      ctx.lineWidth = Math.max(2, tailLen * 0.13);
-      ctx.beginPath();
-      ctx.moveTo(px, py);
-      ctx.quadraticCurveTo(px + dirx * tailLen * 0.5 - diry * tailLen * 0.2,
-        py + diry * tailLen * 0.5 + dirx * tailLen * 0.2,
-        px + dirx * tailLen * 0.8 - diry * tailLen * 0.35,
-        py + diry * tailLen * 0.8 + dirx * tailLen * 0.35);
-      ctx.stroke();
-    }
+    drawCometTails(c, p, px, py, alpha);
     const hit = drawBody(c, p, alpha, 2.6);
     if (hit && alpha > 0.3) {
       hitList.push({ x: hit.x, y: hit.y, r: Math.max(hit.r, 14), obj: c });
@@ -415,7 +473,7 @@ function drawSolarSystem(alpha) {
     if (hit) {
       if (alpha > 0.25) {
         hitList.push({ x: hit.x, y: hit.y, r: Math.max(hit.r, 18), obj: b });
-        label(b.name, hit.x, hit.y - hit.r - 11, 15, '#dfe9ff', true);
+        label(b.name, hit.x, hit.y - hit.r * (b.rings ? 1.15 : 1) - 11, 15, '#dfe9ff', true);
       }
       /* sateliți artificiali, sonde și roboți din jurul planetei */
       drawHostCraft(b.id, hit, alpha);
@@ -433,9 +491,70 @@ function drawSolarSystem(alpha) {
       if (px < -30 || px > W + 30 || py < -30 || py > H + 30) continue;
       drawCraftMarker(px, py, s2, scA);
       hitList.push({ x: px, y: py, r: 15, obj: s2 });
-      label(s2.short || s2.name, px, py - 15, 12, '#ffe9b8');
+      label(s2.short || s2.name, px, py - 17, 12, '#ffe9b8');
     }
   }
+}
+
+/* coada de praf (curbată, gălbuie, rămâne în urma mișcării) și coada de ioni
+   (dreaptă, albăstruie, mereu în direcția opusă Soarelui) */
+function drawCometTails(c, p, px, py, alpha) {
+  const d = p.r / AU;
+  const act = clamp(3.2 / d, 0, 1.6);
+  const tailLen = (0.55 * AU * act) / cam.scale;
+  if (!(tailLen > 3 && px > -400 && px < W + 400 && py > -400 && py < H + 400)) return;
+  const ax = p.x / p.r, ay = p.y / p.r;
+  const q = keplerPos(c, simDays + 1);
+  let vx = q.x - p.x, vy = q.y - p.y;
+  const vl = Math.hypot(vx, vy) || 1; vx /= vl; vy /= vl;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  /* praf */
+  const L = tailLen * 0.9;
+  const x1 = px + ax * L * 0.55, y1 = py + ay * L * 0.55;
+  const x2 = px + ax * L - vx * L * 0.42, y2 = py + ay * L - vy * L * 0.42;
+  const left = [], right = [], N = 14;
+  for (let i = 0; i <= N; i++) {
+    const t = i / N, mt = 1 - t;
+    const bx = mt * mt * px + 2 * mt * t * x1 + t * t * x2;
+    const by = mt * mt * py + 2 * mt * t * y1 + t * t * y2;
+    let tx = 2 * mt * (x1 - px) + 2 * t * (x2 - x1), ty = 2 * mt * (y1 - py) + 2 * t * (y2 - y1);
+    const tl = Math.hypot(tx, ty) || 1; tx /= tl; ty /= tl;
+    const wd = Math.max(1, L * (0.012 + 0.12 * Math.pow(t, 0.85)));
+    left.push([bx - ty * wd, by + tx * wd]); right.push([bx + ty * wd, by - tx * wd]);
+  }
+  ctx.beginPath();
+  ctx.moveTo(left[0][0], left[0][1]);
+  for (const pt of left) ctx.lineTo(pt[0], pt[1]);
+  for (let i = right.length - 1; i >= 0; i--) ctx.lineTo(right[i][0], right[i][1]);
+  ctx.closePath();
+  let g = ctx.createLinearGradient(px, py, x2, y2);
+  g.addColorStop(0, 'rgba(255,238,205,0.45)');
+  g.addColorStop(0.45, 'rgba(255,228,190,0.16)');
+  g.addColorStop(1, 'rgba(255,220,180,0)');
+  ctx.fillStyle = g; ctx.fill();
+  /* ioni */
+  const ex = px + ax * tailLen * 1.2, ey = py + ay * tailLen * 1.2;
+  const nx = -ay, ny = ax, w0 = 0.8, w1 = Math.max(1.5, tailLen * 0.035);
+  ctx.beginPath();
+  ctx.moveTo(px + nx * w0, py + ny * w0);
+  ctx.lineTo(ex + nx * w1, ey + ny * w1);
+  ctx.lineTo(ex - nx * w1, ey - ny * w1);
+  ctx.lineTo(px - nx * w0, py - ny * w0);
+  ctx.closePath();
+  g = ctx.createLinearGradient(px, py, ex, ey);
+  g.addColorStop(0, 'rgba(160,210,255,0.6)');
+  g.addColorStop(0.4, 'rgba(130,185,255,0.2)');
+  g.addColorStop(1, 'rgba(120,170,255,0)');
+  ctx.fillStyle = g; ctx.fill();
+  /* coama: norul mic de gaz din jurul nucleului */
+  const cr = clamp(3 + act * 4 + tailLen * 0.01, 3, 40);
+  g = ctx.createRadialGradient(px, py, 0, px, py, cr);
+  g.addColorStop(0, 'rgba(225,245,255,0.55)');
+  g.addColorStop(1, 'rgba(190,230,255,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(px, py, cr, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
 }
 
 /* sateliții naturali ai unei planete sau planete pitice */
@@ -708,31 +827,115 @@ function drawIssIcon(px, py, alpha, rot) {
   ctx.globalAlpha = 1;
 }
 
+/* sondele, desenate mic dar cu forma lor reală (antene, panouri, scuturi) */
 function drawCraftMarker(px, py, s, alpha) {
   if (s.id === 'iss') { drawIssIcon(px, py, alpha, 0); return; }
+  ctx.save();
   ctx.globalAlpha = alpha;
-  const g = ctx.createRadialGradient(px, py, 0, px, py, 9);
-  g.addColorStop(0, hexA(s.color, 0.9));
-  g.addColorStop(1, hexA(s.color, 0));
-  ctx.fillStyle = g;
-  ctx.beginPath(); ctx.arc(px, py, 9, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = s.color;
-  ctx.lineWidth = 1.6;
-  if (s.kind === 'station') {
-    ctx.beginPath(); ctx.moveTo(px - 5, py); ctx.lineTo(px + 5, py); ctx.stroke();
-    ctx.fillStyle = s.color;
-    ctx.fillRect(px - 1.6, py - 2.4, 3.2, 4.8);
-  } else if (s.kind === 'telescope') {
-    ctx.fillStyle = s.color;
-    ctx.fillRect(px - 3.6, py - 2, 7.2, 4);
-    ctx.beginPath(); ctx.arc(px + 4.4, py, 1.8, 0, Math.PI * 2); ctx.fill();
-  } else {
-    ctx.fillStyle = s.color;
+  ctx.translate(px, py);
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  const edge = 'rgba(10,14,26,0.9)';
+  const panel = (x, y, w, h) => {
+    ctx.fillStyle = '#23468f'; ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = '#7fa6e6'; ctx.lineWidth = 0.6; ctx.strokeRect(x, y, w, h);
     ctx.beginPath();
-    ctx.moveTo(px, py - 4.4); ctx.lineTo(px + 4, py + 3.4); ctx.lineTo(px - 4, py + 3.4);
-    ctx.closePath(); ctx.fill();
+    if (w > h) for (let i = 1; i < 4; i++) { ctx.moveTo(x + w * i / 4, y); ctx.lineTo(x + w * i / 4, y + h); }
+    else for (let i = 1; i < 4; i++) { ctx.moveTo(x, y + h * i / 4); ctx.lineTo(x + w, y + h * i / 4); }
+    ctx.stroke();
+  };
+  const dish = (x, y, rx, ry, rot) => {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(rot || 0);
+    const g = ctx.createLinearGradient(-rx, -ry, rx, ry);
+    g.addColorStop(0, '#ffffff'); g.addColorStop(1, '#9aa3b2');
+    ctx.fillStyle = g; ctx.strokeStyle = edge; ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.restore();
+  };
+  const box = (x, y, w, h, col) => {
+    const g = ctx.createLinearGradient(x, y, x + w, y + h);
+    g.addColorStop(0, '#fff0b0'); g.addColorStop(0.5, col || '#d9a63a'); g.addColorStop(1, '#8a5a14');
+    ctx.fillStyle = g; ctx.strokeStyle = edge; ctx.lineWidth = 0.8;
+    ctx.fillRect(x, y, w, h); ctx.strokeRect(x, y, w, h);
+  };
+  const id = s.id;
+  if (id === 'jwst') {
+    /* scutul solar în formă de romb, oglinda aurie din 18 hexagoane */
+    ctx.fillStyle = '#b9a9d6'; ctx.strokeStyle = edge; ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.moveTo(-13, 3); ctx.lineTo(0, -1); ctx.lineTo(13, 3); ctx.lineTo(0, 8); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.lineWidth = 0.5;
+    ctx.beginPath(); ctx.moveTo(-9, 3); ctx.lineTo(0, 0.5); ctx.lineTo(9, 3); ctx.stroke();
+    for (const [hx, hy] of [[0, -6], [-3, -7.7], [3, -7.7], [-3, -4.3], [3, -4.3], [0, -9.4], [0, -2.6]]) {
+      ctx.beginPath();
+      for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; ctx.lineTo(hx + Math.cos(a) * 1.9, hy + Math.sin(a) * 1.9); }
+      ctx.closePath(); ctx.fillStyle = '#f2c14e'; ctx.fill(); ctx.strokeStyle = '#8a6412'; ctx.lineWidth = 0.4; ctx.stroke();
+    }
+  } else if (id === 'parker') {
+    /* scutul termic gros, alb, cu sonda ascunsă în umbra lui */
+    panel(-9, 3, 6, 3); panel(3, 3, 6, 3);
+    box(-2.5, -1, 5, 7, '#c9c9c9');
+    ctx.fillStyle = '#f4f1ea'; ctx.strokeStyle = edge; ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.ellipse(0, -3, 8, 2.6, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  } else if (id === 'juno-probe') {
+    /* trei panouri solare lungi, la 120° */
+    for (let k = 0; k < 3; k++) {
+      ctx.save(); ctx.rotate(k * Math.PI * 2 / 3 - Math.PI / 2); panel(3, -1.8, 11, 3.6); ctx.restore();
+    }
+    ctx.fillStyle = '#d0d4dc'; ctx.strokeStyle = edge; ctx.lineWidth = 0.8;
+    ctx.beginPath(); for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; ctx.lineTo(Math.cos(a) * 3.6, Math.sin(a) * 3.6); } ctx.closePath(); ctx.fill(); ctx.stroke();
+    dish(0, 0, 2.4, 2.4);
+  } else if (id === 'clipper') {
+    panel(-15, -2, 11, 4); panel(4, -2, 11, 4);
+    box(-3, -3.5, 6, 7, '#c8ccd4');
+    dish(0, -5, 4.2, 1.6);
+  } else if (id === 'lucy') {
+    /* două panouri solare rotunde, uriașe */
+    for (const sx_ of [-1, 1]) {
+      ctx.fillStyle = '#23468f'; ctx.strokeStyle = '#7fa6e6'; ctx.lineWidth = 0.7;
+      ctx.beginPath(); ctx.arc(sx_ * 9, 0, 5.4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); for (let k = 0; k < 5; k++) { const a = k * Math.PI / 5; ctx.moveTo(sx_ * 9 + Math.cos(a) * 5.4, Math.sin(a) * 5.4); ctx.lineTo(sx_ * 9 - Math.cos(a) * 5.4, -Math.sin(a) * 5.4); } ctx.stroke();
+    }
+    box(-3, -3, 6, 6);
+    dish(0, -4.5, 3, 1.2);
+  } else if (id === 'newhorizons') {
+    /* corp triunghiular auriu, antenă mare, generator pe braț */
+    ctx.strokeStyle = '#3a3f4c'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(3, 2); ctx.lineTo(10, 6); ctx.stroke();
+    ctx.fillStyle = '#2b2f3a'; ctx.fillRect(9, 4.5, 4, 3);
+    ctx.beginPath(); ctx.moveTo(-6, 5); ctx.lineTo(6, 5); ctx.lineTo(0, -3); ctx.closePath();
+    const g = ctx.createLinearGradient(-6, -3, 6, 5); g.addColorStop(0, '#ffe7a0'); g.addColorStop(1, '#b07a1a');
+    ctx.fillStyle = g; ctx.strokeStyle = edge; ctx.lineWidth = 0.8; ctx.fill(); ctx.stroke();
+    dish(0, -4, 6, 2.2);
+  } else if (id === 'voyager1' || id === 'voyager2') {
+    /* antena albă mare, corpul zece-laturi, brațul magnetometrului și generatorul */
+    ctx.strokeStyle = '#c9ced8'; ctx.lineWidth = 0.7;
+    ctx.beginPath(); ctx.moveTo(0, 2); ctx.lineTo(-15, 7); ctx.moveTo(0, 2); ctx.lineTo(10, 7); ctx.stroke();
+    ctx.fillStyle = '#3a3f4c'; ctx.fillRect(8.5, 6, 4, 2.6);
+    ctx.fillStyle = '#7d8696'; ctx.strokeStyle = edge; ctx.lineWidth = 0.8;
+    ctx.beginPath(); for (let k = 0; k < 10; k++) { const a = k * Math.PI / 5; ctx.lineTo(Math.cos(a) * 3.2, 2 + Math.sin(a) * 1.6); } ctx.closePath(); ctx.fill(); ctx.stroke();
+    dish(0, -2.5, 7, 2.6);
+    ctx.strokeStyle = '#9aa3b2'; ctx.lineWidth = 0.6;
+    ctx.beginPath(); ctx.moveTo(0, -2.5); ctx.lineTo(0, -6); ctx.stroke();
+  } else if (s.kind === 'telescope') {
+    /* telescop: tub argintiu cu panouri solare (ca Hubble) */
+    panel(-4, -12, 8, 6); panel(-4, 6, 8, 6);
+    const g = ctx.createLinearGradient(0, -4, 0, 4); g.addColorStop(0, '#f4f6fa'); g.addColorStop(0.5, '#b8c0cc'); g.addColorStop(1, '#6b7482');
+    ctx.fillStyle = g; ctx.strokeStyle = edge; ctx.lineWidth = 0.8;
+    ctx.fillRect(-10, -4, 20, 8); ctx.strokeRect(-10, -4, 20, 8);
+    ctx.fillStyle = '#1a1e28'; ctx.fillRect(10, -3.4, 1.6, 6.8);
+  } else if (s.kind === 'station') {
+    /* stație: module în formă de T și două perechi de panouri */
+    panel(-15, -9, 6, 18); panel(9, -9, 6, 18);
+    ctx.fillStyle = '#d9dce3'; ctx.fillRect(-9, -0.8, 18, 1.6);
+    const g = ctx.createLinearGradient(0, -3, 0, 3); g.addColorStop(0, '#ffffff'); g.addColorStop(1, '#9aa3b2');
+    ctx.fillStyle = g; ctx.strokeStyle = edge; ctx.lineWidth = 0.8;
+    ctx.fillRect(-6, -2.6, 12, 5.2); ctx.strokeRect(-6, -2.6, 12, 5.2);
+    ctx.fillRect(-2, -8, 4, 6); ctx.strokeRect(-2, -8, 4, 6);
+  } else {
+    panel(-12, -1.6, 8, 3.2); panel(4, -1.6, 8, 3.2);
+    box(-3.5, -3, 7, 6);
+    dish(0, -4.5, 4.4, 1.6);
   }
-  ctx.globalAlpha = 1;
+  ctx.restore();
 }
 
 /* ============================================================
@@ -746,33 +949,17 @@ function drawStarField(alpha) {
     if (px < -60 || px > W + 60 || py < -60 || py > H + 60) continue;
     const r = st.size * 1.25;
     ctx.globalAlpha = alpha;
-    const g = ctx.createRadialGradient(px, py, 0, px, py, r * 3.6);
-    g.addColorStop(0, '#ffffff');
-    g.addColorStop(0.1, hexA(st.color, 0.95));
-    g.addColorStop(0.3, hexA(st.color, 0.35));
-    g.addColorStop(1, hexA(st.color, 0));
-    ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(px, py, r * 3.6, 0, Math.PI * 2); ctx.fill();
-    /* raze de lumină */
-    ctx.strokeStyle = hexA(st.color, 0.35);
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(px - r * 4, py); ctx.lineTo(px + r * 4, py);
-    ctx.moveTo(px, py - r * 4); ctx.lineTo(px, py + r * 4);
-    ctx.stroke();
+    const R = r * 3.4;
+    ctx.drawImage(getGlowSprite(st.color, true), px - R, py - R, R * 2, R * 2);
     ctx.globalAlpha = 1;
     hitList.push({ x: px, y: py, r: Math.max(r * 2, 16), obj: st });
-    label(st.name, px, py - r * 2.6 - 6, 13, hexA(st.color, 0.95));
+    label(st.name, px, py - r * 2.4 - 6, 13, hexA(st.color, 0.95));
   }
   /* marcajul Soarelui */
   const cx = sx(0), cy = sy(0);
   if (cx > -50 && cx < W + 50 && cy > -50 && cy < H + 50) {
     ctx.globalAlpha = alpha;
-    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 26);
-    g.addColorStop(0, '#fffbe8'); g.addColorStop(0.2, 'rgba(255,200,90,0.9)');
-    g.addColorStop(1, 'rgba(255,170,60,0)');
-    ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(cx, cy, 26, 0, Math.PI * 2); ctx.fill();
+    ctx.drawImage(getGlowSprite('#ffd27a', true), cx - 22, cy - 22, 44, 44);
     ctx.globalAlpha = 1;
     hitList.push({ x: cx, y: cy, r: 18, obj: SUN });
     label('Soarele (noi)', cx, cy - 16, 14, '#ffe08a', true);
@@ -797,13 +984,8 @@ function drawMilkyWay(alpha) {
     /* prea mică: rămâne doar un reper „aici suntem noi" */
     if (rpx < 0.2 || px < 0 || px > W || py < 0 || py > H) return;
     ctx.globalAlpha = alpha;
-    const g = ctx.createRadialGradient(px, py, 0, px, py, 11);
-    g.addColorStop(0, 'rgba(255,250,230,1)');
-    g.addColorStop(0.25, 'rgba(210,225,255,0.6)');
-    g.addColorStop(1, 'rgba(180,200,255,0)');
-    ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(px, py, 11, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = 'rgba(160,220,255,0.75)'; ctx.lineWidth = 1.2;
+    ctx.drawImage(getGlowSprite('#e6ecff', true), px - 10, py - 10, 20, 20);
+    ctx.strokeStyle = 'rgba(160,220,255,0.7)'; ctx.lineWidth = 1.2;
     ctx.beginPath(); ctx.arc(px, py, 14, 0, Math.PI * 2); ctx.stroke();
     ctx.globalAlpha = 1;
     hitList.push({ x: px, y: py, r: 18, obj: byId('milkyway') });
@@ -906,32 +1088,25 @@ function drawDeepSpace(alpha) {
       if (px < -60 || px > W + 60 || py < -60 || py > H + 60) continue;
       ctx.globalAlpha = bgA * clamp(rpx / 3, 0.25, 1);
       ctx.globalCompositeOperation = 'lighter';
+      ctx.save(); ctx.translate(px, py); ctx.rotate(g.rot); ctx.scale(1, g.sq);
       if (rpx > 7) {
         const tex = getGalaxyTexture('bg' + (g.seed % 14), g.hue > 0.5 ? '#dbe4ff' : '#ffe8d8', g.shape);
-        ctx.save(); ctx.translate(px, py); ctx.rotate(g.rot); ctx.scale(1, g.sq);
         ctx.drawImage(tex, -rpx, -rpx, rpx * 2, rpx * 2);
-        ctx.restore();
       } else {
         const rr = Math.max(rpx, 0.9) * 1.7;
-        const gg = ctx.createRadialGradient(px, py, 0, px, py, rr);
-        gg.addColorStop(0, 'rgba(255,248,235,0.95)');
-        gg.addColorStop(0.35, 'rgba(230,230,255,0.4)');
-        gg.addColorStop(1, 'rgba(190,200,255,0)');
-        ctx.fillStyle = gg;
-        ctx.save(); ctx.translate(px, py); ctx.rotate(g.rot); ctx.scale(1, g.sq);
-        ctx.beginPath(); ctx.arc(0, 0, rr, 0, Math.PI * 2); ctx.fill();
-        ctx.restore();
+        ctx.drawImage(getGlowSprite(g.hue > 0.5 ? '#e4eaff' : '#fff0e0', true), -rr, -rr, rr * 2, rr * 2);
       }
+      ctx.restore();
       ctx.globalCompositeOperation = 'source-over';
       ctx.globalAlpha = 1;
     }
   }
 
-  /* pânza cosmică */
+  /* pânza cosmică: filamente subțiri între roiuri de galaxii */
   const webA = alpha * ramp(cam.scale, 3e21, 2e22);
   if (webA > 0.02) {
-    ctx.globalAlpha = webA * 0.5;
-    ctx.strokeStyle = 'rgba(150,175,230,0.5)';
+    ctx.globalAlpha = webA * 0.55;
+    ctx.strokeStyle = 'rgba(150,175,230,0.45)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     for (const l of COSMIC_WEB.links) {
@@ -940,20 +1115,15 @@ function drawDeepSpace(alpha) {
     }
     ctx.stroke();
     ctx.globalAlpha = webA;
+    const spr = getGlowSprite('#e8eeff', true);
     for (const n of COSMIC_WEB.nodes) {
       const px = sx(n.x), py = sy(n.y);
       if (px < -20 || px > W + 20 || py < -20 || py > H + 20) continue;
-      const r = 0.9 + n.m * 2.1;
-      const g = ctx.createRadialGradient(px, py, 0, px, py, r * 2.2);
-      g.addColorStop(0, 'rgba(255,252,240,1)');
-      g.addColorStop(0.22, 'rgba(225,235,255,0.55)');
-      g.addColorStop(1, 'rgba(160,180,255,0)');
-      ctx.fillStyle = g;
-      ctx.beginPath(); ctx.arc(px, py, r * 2.2, 0, Math.PI * 2); ctx.fill();
+      const r = (0.9 + n.m * 2.1) * 2.2;
+      ctx.drawImage(spr, px - r, py - r, r * 2, r * 2);
     }
     ctx.globalAlpha = 1;
   }
-
 }
 
 /* galaxiile și structurile cu nume — vizibile și când zbori aproape de ele */
@@ -971,10 +1141,10 @@ function drawDeepNamed(alpha) {
     if (o.kind === 'web') {
       if (rpx < 26) continue;
       ctx.save();
-      ctx.globalAlpha = alpha * 0.5;
+      ctx.globalAlpha = alpha * 0.45;
       ctx.strokeStyle = hexA(o.color, 0.5);
-      ctx.setLineDash([10, 12]);
-      ctx.lineWidth = 1.5;
+      ctx.setLineDash([8, 10]);
+      ctx.lineWidth = 1.2;
       ctx.beginPath(); ctx.arc(px, py, drawR, 0, Math.PI * 2); ctx.stroke();
       ctx.restore();
       const ly = py - Math.min(drawR, H * 0.42);
@@ -989,7 +1159,7 @@ function drawDeepNamed(alpha) {
     ctx.save();
     ctx.translate(px, py);
     if (o.kind === 'galaxy') {
-      const tex = getGalaxyTexture(o.id, o.color, o.id === 'andromeda' || o.id === 'whirlpool' ? 'twoarm' : (o.id === 'sombrero' ? 'elliptical' : 'fourarm'));
+      const tex = getGalaxyTexture(o.id, o.color, galaxyShapeFor(o));
       ctx.rotate(o.ang * DEG * 0.7);
       if (o.id === 'sombrero') ctx.scale(1, 0.32);
       if (o.id === 'andromeda') ctx.scale(1, 0.55);
@@ -1095,10 +1265,10 @@ function drawSelectionRing() {
   const r = Math.max(h.r * 1.45, 16);
   const t = performance.now() / 1000;
   ctx.save();
-  ctx.strokeStyle = 'rgba(120,220,255,0.9)';
-  ctx.lineWidth = 2;
-  ctx.setLineDash([6, 6]);
-  ctx.lineDashOffset = -t * 14;
+  ctx.strokeStyle = 'rgba(130,215,255,0.85)';
+  ctx.lineWidth = 1.6;
+  ctx.setLineDash([5, 7]);
+  ctx.lineDashOffset = -t * 6;
   ctx.beginPath(); ctx.arc(h.x, h.y, r, 0, Math.PI * 2); ctx.stroke();
   ctx.restore();
 }
@@ -1558,9 +1728,12 @@ function setupEvents() {
   });
 }
 
+/* iconițele din sprite-ul SVG din index.html */
+function uiIcon(n) { return '<svg class="i" aria-hidden="true"><use href="#i-' + n + '"/></svg>'; }
+
 function togglePlay() {
   playing = !playing;
-  $('#btn-play').textContent = playing ? '⏸' : '▶';
+  $('#btn-play').innerHTML = uiIcon(playing ? 'pause' : 'play');
   $('#btn-play').title = playing ? 'Pauză' : 'Pornește';
 }
 
@@ -1584,7 +1757,7 @@ function setSkyMode(on) {
   skyMode = on;
   document.body.classList.toggle('sky-mode', on);
   $('#btn-sky').classList.toggle('tgl', on);
-  $('#btn-sky').querySelector('.ico').textContent = on ? '🌌' : '✨';
+  $('#btn-sky').querySelector('.ico').innerHTML = uiIcon(on ? 'planet' : 'sparkle');
   $('#btn-sky').querySelector('.t').textContent = on ? 'În spațiu' : 'Cerul nopții';
   select(null);
   if (quiz.on) quizStop();
@@ -1703,10 +1876,29 @@ function buildCatalog() {
   ];
   const wrap = $('#catalog-body');
   wrap.innerHTML = '';
+  const search = $('#catalog-search');
+  const norm = (x) => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (search && !search._wired) {
+    search._wired = true;
+    search.addEventListener('input', () => {
+      const q = norm(search.value.trim());
+      let any = false;
+      wrap.querySelectorAll('.cat-group').forEach((g) => {
+        let n = 0;
+        g.querySelectorAll('.chip').forEach((c) => { const ok = !q || norm(c.textContent).includes(q); c.hidden = !ok; if (ok) n++; });
+        g.hidden = n === 0; if (n) any = true;
+      });
+      const em = $('#catalog-empty'); if (em) em.hidden = any;
+    });
+  }
   for (const [title, items] of groups) {
+    const grp = document.createElement('section');
+    grp.className = 'cat-group';
     const h = document.createElement('h3');
     h.textContent = title;
-    wrap.appendChild(h);
+    const cnt = document.createElement('span'); cnt.className = 'cat-n'; cnt.textContent = items.length; h.appendChild(cnt);
+    grp.appendChild(h);
+    wrap.appendChild(grp);
     const box = document.createElement('div');
     box.className = 'chips';
     for (const o of items) {
@@ -1726,7 +1918,7 @@ function buildCatalog() {
       });
       box.appendChild(b);
     }
-    wrap.appendChild(box);
+    grp.appendChild(box);
   }
 }
 
@@ -1781,7 +1973,9 @@ function tourGo(i) {
   }
   $('#tour').classList.add('open');
   $('#tour-text').textContent = stop.say;
-  $('#tour-count').textContent = (i + 1) + ' / ' + TOUR.length;
+  $('#tour-count').textContent = 'Oprirea ' + (i + 1) + ' din ' + TOUR.length;
+  const tp = $('#tour-progress'); if (tp) tp.style.width = ((i + 1) / TOUR.length * 100) + '%';
+  $('#tour-prev').disabled = i === 0;
 }
 function tourNext() { if (tourIdx >= 0) tourGo(tourIdx + 1); }
 function tourPrev() { if (tourIdx > 0) tourGo(tourIdx - 1); }

@@ -14,7 +14,7 @@ Funcționează tot, mai puțin instalarea ca aplicație (service worker-ul cere 
 **Varianta recomandată (server local, permite instalarea):**
 
 ```bash
-python3 /Users/florin/Desktop/Munca/univers-app/serve.py
+python3 serve.py
 ```
 
 Apoi deschide `http://localhost:8787`. În Chrome apare în bara de adresă iconița „Instalează" —
@@ -67,7 +67,9 @@ Pentru proiector: tasta <kbd>F</kbd> (ecran complet).
 │   ├── sky.js              constelațiile și harta cerului
 │   ├── textures.js         texturi procedurale (planete, nebuloase, galaxii)
 │   ├── app.js              motorul Sistemului Solar: orbite Kepler, zoom, click, tur, joc, voce
-│   ├── core/modules.js     cadrul comun pentru module (canvas, panou de comenzi, bula de text)
+│   ├── core/art.js         biblioteca comună de desen (lumină, volume, tuburi, etichete, easing)
+│   ├── core/creatures.js   animale și plante desenate vectorial (folosite în Faună și Oceane)
+│   ├── core/modules.js     cadrul comun pentru module + navigarea cu adrese (#space, #m/heart, #harta)
 │   └── modules/            modulele interactive, câte un fișier pe modul
 │       ├── space/          gaură neagră, explozii cosmice, gravitație, Big Bang
 │       ├── earth/          Pământul în timp, relief, vulcani, straturi, oceane
@@ -75,12 +77,27 @@ Pentru proiector: tasta <kbd>F</kbd> (ecran complet).
 │       ├── tech/           circuit electric, calculator (biți), telefon, aparat foto
 │       ├── mechanics/      mecanisme, motor termic, motor electric
 │       └── vehicles/       avion, tren, mașină
+├── img/cards/m-*.jpg       imaginile cardurilor, capturate din module (?thumb=1)
 ├── photos/                 fotografiile reale + credits.json (autor și licență)
 ├── sw.js                   service worker (funcționare offline)
 ├── manifest.webmanifest    configurația PWA
 ├── icons/                  iconițele aplicației
 └── serve.py                server local pentru dezvoltare
 ```
+
+### Navigare și linkuri
+
+Fiecare secțiune și fiecare modul au propria adresă, iar butonul Back din browser / telefon funcționează:
+`#space`, `#body`, `#how`, `#earth` (secțiunile), `#m/<id>` (un modul, ex. `#m/heart`), `#harta` (Sistemul Solar).
+
+### Stilul desenelor
+
+Desenele trebuie să fie realiste și curate: subiecte cu proporții reale și volum, fundal simplu,
+fără efecte decorative (strălucire, granulație, sclipiri). Aplicația e gândită pentru copii de ~6 ani:
+fără nuditate și fără violență explicită. Folosește ajutoarele din `js/core/art.js` și `js/core/creatures.js`.
+
+Imaginea unui card se poate reface deschizând `http://localhost:8787/?nosw=1&thumb=1#m/<id>` la 1120×630
+(fără bare și panouri) și salvând captura ca `img/cards/m-<id>.jpg` (800×450).
 
 ### Cum adaugi un modul nou
 
@@ -113,7 +130,7 @@ Adaugă-l în lista potrivită (`PLANETS`, `DWARFS`, `COMETS`, `ASTEROIDS`, `SPA
 
 **Important:** după orice modificare a fișierelor `.js` / `.css`:
 
-1. urcă numărul din `index.html` (`?v=2` → `?v=3`, la toate scripturile și la stil) — și aceleași valori în lista `ASSETS` din `sw.js`;
+1. urcă numărul din `index.html` (acum `?v=41` → `?v=42`, la toate scripturile și la stil) — și aceleași valori în lista `ASSETS` din `sw.js`;
 2. urcă versiunea cache-ului din `sw.js` (`const CACHE = 'univers-v3'` → `v4`).
 
 Altfel browserul (și service worker-ul) servesc varianta veche. În timpul dezvoltării poți deschide

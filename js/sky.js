@@ -262,29 +262,68 @@ function skyStarRadius(mag) {
 }
 
 /* ---------- desenare ---------- */
+/* culoarea unei stele: din catalogul principal dacă o știm, altfel albă */
+const SKY_STAR_COL = new Map();
+function skyStarColor(name) {
+  if (SKY_STAR_COL.has(name)) return SKY_STAR_COL.get(name);
+  const k = (typeof STARS !== 'undefined') && STARS.find((s) => s.name.toLowerCase().startsWith(name.toLowerCase()) && name.length > 3);
+  const c = k && k.color ? k.color : '#eef3ff';
+  SKY_STAR_COL.set(name, c);
+  return c;
+}
+const SKY_BG_COLS = ['#b9cbff', '#e6ecff', '#ffffff', '#fff1dc', '#ffd8b0'];
+const SKY_FONT = 'ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI", system-ui, sans-serif';
+function skyText(ctx, txt, x, y, px, weight, color, align) {
+  ctx.font = weight + ' ' + px + 'px ' + SKY_FONT;
+  ctx.textAlign = align || 'center';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = 'rgba(3,6,16,0.8)';
+  ctx.lineWidth = Math.max(2.5, px * 0.22);
+  ctx.strokeText(txt, x, y);
+  ctx.fillStyle = color;
+  ctx.fillText(txt, x, y);
+}
+
 function drawSky(W, H, ctx, hitList, showLabels, selected) {
-  ctx.fillStyle = '#05070f';
+  ctx.save();
+  /* cer de noapte curat, puțin mai luminos spre orizont */
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#04060f');
+  bg.addColorStop(0.7, '#070b1c');
+  bg.addColorStop(1, '#0f1730');
+  ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
-  const g = ctx.createRadialGradient(W / 2, H * 1.15, 0, W / 2, H * 1.15, H * 1.3);
-  g.addColorStop(0, 'rgba(30,45,90,0.5)');
-  g.addColorStop(1, 'rgba(5,7,15,0)');
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  const fk = Math.min(1.45, Math.max(0.95, Math.min(W, H) / 760));
+  const boxes = [], starLabels = [];
+  const boxHit = (b) => boxes.some((q) => b[0] < q[0] + q[2] + 4 && b[0] + b[2] + 4 > q[0] && b[1] < q[1] + q[3] && b[1] + b[3] > q[1]);
 
-  /* Calea Lactee */
-  for (const p of MW_BAND) {
+  /* Calea Lactee: o bandă discretă, ca pe un cer fără poluare luminoasă */
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const mwSpr = getGlowSprite('#b4c2ee');
+  const mk = sky.fov < 60 ? 1.6 : 1;
+  for (let i = 0; i < MW_BAND.length; i++) {
+    const p = MW_BAND[i];
+    const s = skyProject(p[0], p[1], W, H);
+    if (!s || s[0] < -30 || s[0] > W + 30 || s[1] < -30 || s[1] > H + 30) continue;
+    const r = (5 + p[2] * 8) * mk;
+    ctx.globalAlpha = p[3] * 0.22;
+    ctx.drawImage(mwSpr, s[0] - r, s[1] - r, r * 2, r * 2);
+  }
+  ctx.restore();
+
+  /* stele de fundal, de culori ușor diferite, fără sclipire */
+  for (let i = 0; i < SKY_BG.length; i++) {
+    const p = SKY_BG[i];
     const s = skyProject(p[0], p[1], W, H);
     if (!s || s[0] < -20 || s[0] > W + 20 || s[1] < -20 || s[1] > H + 20) continue;
-    ctx.fillStyle = 'rgba(190,205,255,' + p[3] + ')';
-    ctx.beginPath(); ctx.arc(s[0], s[1], p[2], 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = p[3] * 0.85;
+    ctx.fillStyle = SKY_BG_COLS[i % 5];
+    const r = p[2] * 0.8;
+    if (r < 0.9) ctx.fillRect(s[0] - r, s[1] - r, r * 2, r * 2);
+    else { ctx.beginPath(); ctx.arc(s[0], s[1], r, 0, Math.PI * 2); ctx.fill(); }
   }
-
-  /* stele de fundal */
-  for (const p of SKY_BG) {
-    const s = skyProject(p[0], p[1], W, H);
-    if (!s || s[0] < -20 || s[0] > W + 20 || s[1] < -20 || s[1] > H + 20) continue;
-    ctx.fillStyle = 'rgba(255,255,255,' + p[3] * 0.8 + ')';
-    ctx.beginPath(); ctx.arc(s[0], s[1], p[2], 0, Math.PI * 2); ctx.fill();
-  }
+  ctx.globalAlpha = 1;
 
   /* constelații */
   for (const c of CONSTELLATIONS) {
@@ -293,52 +332,58 @@ function drawSky(W, H, ctx, hitList, showLabels, selected) {
     if (!vis.length) continue;
     const hot = selected === c;
 
-    /* linii */
-    ctx.strokeStyle = hot ? 'rgba(120,225,255,0.95)' : 'rgba(130,170,245,0.45)';
-    ctx.lineWidth = hot ? 2.4 : 1.4;
+    /* linii fine; ușor scurtate la capete, ca să nu acopere stelele */
+    ctx.strokeStyle = hot ? 'rgba(130,220,255,0.9)' : 'rgba(140,170,235,0.42)';
+    ctx.lineWidth = hot ? 2.2 : 1.2;
+    ctx.lineCap = 'round';
     ctx.beginPath();
     for (const [a, b] of c.lines) {
       const p1 = pts[a], p2 = pts[b];
       if (!p1 || !p2) continue;
-      ctx.moveTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]);
+      const dx = p2[0] - p1[0], dy = p2[1] - p1[1], L = Math.hypot(dx, dy);
+      if (L < 12) continue;
+      const g1 = skyStarRadius(c.stars[a][3]) + 3, g2 = skyStarRadius(c.stars[b][3]) + 3;
+      ctx.moveTo(p1[0] + dx / L * g1, p1[1] + dy / L * g1);
+      ctx.lineTo(p2[0] - dx / L * g2, p2[1] - dy / L * g2);
     }
     ctx.stroke();
 
-    /* stele */
+    /* stele: punct strălucitor, în culoarea lor reală */
     for (let i = 0; i < c.stars.length; i++) {
       const p = pts[i];
       if (!p) continue;
       const st = c.stars[i];
       const r = skyStarRadius(st[3]);
-      const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], r * 3.4);
-      gg.addColorStop(0, '#ffffff');
-      gg.addColorStop(0.25, 'rgba(215,235,255,0.9)');
-      gg.addColorStop(1, 'rgba(160,200,255,0)');
-      ctx.fillStyle = gg;
-      ctx.beginPath(); ctx.arc(p[0], p[1], r * 3.4, 0, Math.PI * 2); ctx.fill();
+      const R = r * 3.2;
+      ctx.drawImage(getGlowSprite(skyStarColor(st[0]), true), p[0] - R, p[1] - R, R * 2, R * 2);
       hitList.push({ x: p[0], y: p[1], r: Math.max(r * 2, 13), obj: skyStarObject(st, c) });
-      if (showLabels && st[3] < 2.6 && sky.fov < 150) {
-        ctx.font = '600 12px "Trebuchet MS", sans-serif';
-        ctx.fillStyle = 'rgba(190,215,255,0.85)';
-        ctx.textAlign = 'left';
-        ctx.fillText(st[0], p[0] + r * 2 + 3, p[1] + 4);
-      }
+      if (showLabels && st[3] < 2.6 && sky.fov < 150) starLabels.push([st[0], p[0] + r * 2 + 4, p[1] + 4, st[3]]);
     }
 
     /* numele constelației */
     const cx = vis.reduce((a, p) => a + p[0], 0) / vis.length;
     const cy = vis.reduce((a, p) => a + p[1], 0) / vis.length;
     if (showLabels) {
-      ctx.save();
-      ctx.font = (hot ? '700 ' : '600 ') + (hot ? 18 : 15) + 'px "Trebuchet MS", sans-serif';
-      ctx.fillStyle = hot ? '#8fe8ff' : 'rgba(150,200,255,0.75)';
-      ctx.textAlign = 'center';
-      ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 7;
-      ctx.fillText(c.name, cx, cy);
-      ctx.restore();
+      const px = Math.round((hot ? 18 : 15) * fk);
+      ctx.font = (hot ? '700 ' : '600 ') + px + 'px ' + SKY_FONT;
+      const w = ctx.measureText(c.name).width;
+      const box = [cx - w / 2, cy - px, w, px * 1.3];
+      if (hot || !boxHit(box)) { boxes.push(box); skyText(ctx, c.name, cx, cy, px, hot ? '700' : '600', hot ? '#9be9ff' : 'rgba(160,200,255,0.82)'); }
     }
     hitList.push({ x: cx, y: cy, r: 26, obj: c, weak: true });
   }
+  /* numele stelelor: doar unde au loc (cele mai strălucitoare au prioritate) */
+  starLabels.sort((a, b) => a[3] - b[3]);
+  const spx = Math.round(13 * fk);
+  ctx.font = '600 ' + spx + 'px ' + SKY_FONT;
+  for (const L of starLabels) {
+    const w = ctx.measureText(L[0]).width;
+    const box = [L[1], L[2] - spx, w, spx * 1.3];
+    if (boxHit(box)) continue;
+    boxes.push(box);
+    skyText(ctx, L[0], L[1], L[2], spx, '600', 'rgba(200,220,255,0.88)', 'left');
+  }
+  ctx.restore();
 }
 
 /* o stea din constelație devine obiect „clicabil"; dacă o avem deja

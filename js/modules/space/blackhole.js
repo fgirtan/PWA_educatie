@@ -142,18 +142,38 @@ defineModule({
     });
 
     /* ---------- fundal: stele lentilate ---------- */
+    const TAU = Math.PI * 2;
     const STARS = [];
     for (let i = 0; i < 380; i++) STARS.push({ x: Math.random(), y: Math.random(), s: 0.5 + Math.random() * 1.4, a: 0.35 + Math.random() * 0.65, h: Math.random() });
-    /* particulele discului de acreție */
-    const DISK = [];
-    for (let i = 0; i < 900; i++) {
-      const q = Math.pow(Math.random(), 1.5);
-      DISK.push({ q: q, ph: Math.random() * Math.PI * 2, j: (Math.random() - 0.5), s: 0.8 + Math.random() * 1.6 });
+    const R_IN = 1.5, R_OUT = 6.3;       // discul de acreție, în raze ale orizontului
+    /* cer adânc cu nebuloase (pre-randat) */
+    function skyTex() {
+      return Art.cached('bh-sky2', api.W, api.H, (c, w, h) => { Art.backdrop(c, w, h, { top: '#080a1c', bottom: '#020309', vignette: false }); });
     }
-    function diskColor(rr) {
-      return rr < 2.0 ? '255,244,214' : rr < 3.0 ? '255,214,128' : rr < 4.4 ? '255,158,64' : '222,84,44';
-    }
-
+    /* textura discului, văzut de sus (o singură dată, scalată apoi) */
+    const diskTex = () => Art.cached('bh-disk', 640, 640, (c, w) => {
+      const R = w / 2, ri = R * R_IN / R_OUT, k = (v) => (v - R_IN) / (R_OUT - R_IN);
+      const g = c.createRadialGradient(R, R, ri, R, R, R);
+      g.addColorStop(0, 'rgba(255,255,245,1)'); g.addColorStop(k(1.9), 'rgba(255,236,170,1)'); g.addColorStop(k(2.8), 'rgba(255,186,90,0.95)');
+      g.addColorStop(k(4.0), 'rgba(240,110,45,0.8)'); g.addColorStop(k(5.3), 'rgba(170,45,30,0.45)'); g.addColorStop(1, 'rgba(90,20,30,0)');
+      c.fillStyle = g; c.beginPath(); c.arc(R, R, R, 0, TAU); c.arc(R, R, ri, 0, TAU, true); c.fill();
+      c.save(); c.beginPath(); c.arc(R, R, R, 0, TAU); c.arc(R, R, ri, 0, TAU, true); c.clip();
+      let s = 23; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+      c.lineCap = 'round';
+      for (let i = 0; i < 900; i++) {
+        const rr = ri + Math.pow(rnd(), 1.3) * (R - ri), a0 = rnd() * TAU, len = 0.15 + rnd() * 1.1;
+        const bright = rnd() < 0.55;
+        c.strokeStyle = bright ? 'rgba(255,250,225,' + (0.05 + rnd() * 0.16).toFixed(3) + ')' : 'rgba(40,5,0,' + (0.08 + rnd() * 0.2).toFixed(3) + ')';
+        c.lineWidth = 0.8 + rnd() * 3.2;
+        c.beginPath(); c.arc(R, R, rr, a0, a0 + len); c.stroke();
+      }
+      c.restore();
+    });
+    /* scântei fierbinți (resturi rupte de gaura neagră) */
+    const sparks = [];
+    function emitSpark(x, y, vx, vy, col) { sparks.push({ x: x, y: y, vx: vx, vy: vy, age: 0, life: 0.4 + Math.random() * 0.6, c: col }); if (sparks.length > 500) sparks.shift(); }
+    function burst(x, y) { for (let i = 0; i < 8; i++) { const a = Math.random() * TAU, v = 30 + Math.random() * 60; emitSpark(x, y, Math.cos(a) * v, Math.sin(a) * v, '255,200,120'); } }
+    const hotRGB = (k) => k < 0.33 ? Art.mix('#ff6a3c', '#ffb050', k / 0.33) : k < 0.7 ? Art.mix('#ffb050', '#fff2c0', (k - 0.33) / 0.37) : Art.mix('#fff2c0', '#ffffff', (k - 0.7) / 0.3);
     function step(dt) {
       const sub = 5, h = dt / sub;
       for (let s = 0; s < sub; s++) {
@@ -162,7 +182,7 @@ defineModule({
           const dx = o.x - api.cx, dy = o.y - api.cy;
           const r = Math.hypot(dx, dy);
           if (r <= hr) {
-            o.dead = 1; swallowed++; flash = Math.min(1, flash + 0.5);
+            o.dead = 1; swallowed++; flash = Math.min(1, flash + 0.5); burst(o.x, o.y);
             if (swallowed === 1) api.say('<b>Înghițit!</b> Dincolo de orizontul evenimentelor nu mai poate ieși nimic — nici măcar lumina.', 7000);
             continue;
           }
@@ -189,127 +209,168 @@ defineModule({
       objs = objs.filter((o) => o.dead < 1.2 || o.type === 'photon' && o.dead < 0.8);
     }
 
+    /* discul (jumătatea din spate sau din față), cu efect Doppler: partea care vine spre noi e mai strălucitoare */
+    function drawDiskHalf(front, t) {
+      const cx = api.cx, cy = api.cy, Ro = hr * R_OUT, Ri = hr * R_IN, W = api.W, H = api.H;
+      ctx.save();
+      ctx.beginPath(); if (front) ctx.rect(0, cy, W, H - cy); else ctx.rect(0, 0, W, cy); ctx.clip();
+      ctx.translate(cx, cy); ctx.scale(1, tilt);
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.save(); ctx.rotate(-t * 0.5); ctx.drawImage(diskTex(), -Ro, -Ro, Ro * 2, Ro * 2); ctx.restore();
+      ctx.globalAlpha = 0.55; ctx.save(); ctx.rotate(-t * 1.3 + 1); ctx.drawImage(diskTex(), -Ro * 0.62, -Ro * 0.62, Ro * 1.24, Ro * 1.24); ctx.restore();
+      ctx.globalAlpha = 1;
+      ctx.beginPath(); ctx.arc(0, 0, Ro, 0, TAU); ctx.arc(0, 0, Ri, 0, TAU, true);
+      const dg = ctx.createLinearGradient(-Ro, 0, Ro, 0);
+      dg.addColorStop(0, 'rgba(255,230,190,0.22)'); dg.addColorStop(0.45, 'rgba(255,230,190,0.05)'); dg.addColorStop(0.5, 'rgba(0,0,0,0)'); dg.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = dg; ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+      const dd = ctx.createLinearGradient(-Ro, 0, Ro, 0);
+      dd.addColorStop(0, 'rgba(0,0,8,0)'); dd.addColorStop(0.5, 'rgba(0,0,8,0)'); dd.addColorStop(1, 'rgba(0,0,8,0.5)');
+      ctx.fillStyle = dd; ctx.fill('evenodd');
+      ctx.restore();
+    }
+    /* imaginea curbată a părții din spate a discului: arcul de deasupra (și cel slab de dedesubt) */
+    function drawLensedArc() {
+      const cx = api.cx, cy = api.cy, k = 0.55 + 0.45 * (1 - tilt);
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+      for (let i = 0; i < 7; i++) {
+        const r = hr * (1.1 + i * 0.09), a = (0.55 - i * 0.06) * (0.55 + 0.45 * (1 - tilt));
+        ctx.strokeStyle = 'rgba(' + (i < 2 ? '255,245,215' : i < 4 ? '255,200,120' : '240,120,60') + ',' + a.toFixed(3) + ')';
+        ctx.lineWidth = hr * 0.12;
+        ctx.beginPath(); ctx.ellipse(cx, cy, r, r * k, 0, Math.PI * 1.02, Math.PI * 1.98); ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,190,120,' + (a * 0.35).toFixed(3) + ')';
+        ctx.beginPath(); ctx.ellipse(cx, cy, r * 0.95, r * 0.95 * k * 0.8, 0, Math.PI * 0.08, Math.PI * 0.92); ctx.stroke();
+      }
+      ctx.restore();
+    }
+
     function frame(dt, t) {
       step(dt);
       flash = Math.max(0, flash - dt * 1.6);
-      const W = api.W, H = api.H, cx = api.cx, cy = api.cy;
+      for (let i = sparks.length - 1; i >= 0; i--) { const p = sparks[i]; p.age += dt; if (p.age > p.life) { sparks.splice(i, 1); continue; } p.vx *= 0.97; p.vy *= 0.97; p.x += p.vx * dt; p.y += p.vy * dt; }
+      const W = api.W, H = api.H, cx = api.cx, cy = api.cy, U = api.unit;
       /* fundal */
-      ctx.fillStyle = '#02030a'; ctx.fillRect(0, 0, W, H);
+      ctx.drawImage(skyTex(), 0, 0, W, H);
       const thE = hr * 1.7;      // raza Einstein (schematică)
       for (const s of STARS) {
         const x = s.x * W - cx, y = s.y * H - cy, r = Math.hypot(x, y) || 1;
         const sq = Math.sqrt(r * r + 4 * thE * thE);
         const r1 = 0.5 * (r + sq), r2 = 0.5 * (sq - r);
-        const bright = 0.5 + 0.5 * Math.sin(t * 1.5 + s.h * 30);
+        const bright = 0.6;
+        const mag = Math.min(2.2, 1 + thE * thE / (r * r) * 0.8);      // lentila mărește stelele de lângă gaură
         ctx.fillStyle = 'rgba(' + (s.h > 0.7 ? '190,210,255' : s.h < 0.2 ? '255,220,190' : '255,255,255') + ',' + (s.a * (0.7 + 0.3 * bright)).toFixed(2) + ')';
-        ctx.fillRect(cx + x / r * r1, cy + y / r * r1, s.s, s.s);
+        const px = cx + x / r * r1, py = cy + y / r * r1, sz = s.s * mag;
+        ctx.beginPath(); ctx.arc(px, py, sz * 0.6, 0, TAU); ctx.fill();
         if (r2 > hr * 1.05 && r < thE * 5) {
           ctx.globalAlpha = 0.5 * Math.min(1, (r2 - hr) / hr);
-          ctx.fillRect(cx - x / r * r2, cy - y / r * r2, s.s, s.s);
+          ctx.beginPath(); ctx.arc(cx - x / r * r2, cy - y / r * r2, sz * 0.6, 0, TAU); ctx.fill();
           ctx.globalAlpha = 1;
         }
       }
-      /* disc — partea din spate (și imaginea lui curbată peste gaură) */
-      const drawDisk = (front) => {
-        for (const d of DISK) {
-          const rr = 1.5 + d.q * 4.8;
-          const R = rr * hr;
-          const ph = d.ph + t * 1.4 / Math.pow(rr, 1.5);
-          const sinp = Math.sin(ph), cosp = Math.cos(ph);
-          const isFront = sinp > 0;
-          const dop = 0.55 + 0.45 * (-cosp);
-          const col = diskColor(rr);
-          if (isFront === front) {
-            ctx.fillStyle = 'rgba(' + col + ',' + (0.75 * dop).toFixed(2) + ')';
-            ctx.fillRect(cx + cosp * R, cy + sinp * R * tilt + d.j * hr * 0.12, d.s, d.s);
-          }
-          if (!front && !isFront && rr < 3.6) {
-            /* imaginea curbată a părții din spate: un arc deasupra găurii */
-            const lr = hr * (1.05 + (rr - 1.5) * 0.28);
-            ctx.fillStyle = 'rgba(' + col + ',' + (0.55 * dop).toFixed(2) + ')';
-            ctx.fillRect(cx + cosp * lr, cy - Math.abs(sinp) * lr * (0.55 + 0.45 * (1 - tilt)) + d.j * hr * 0.05, d.s, d.s);
-          }
-        }
-      };
-      ctx.globalCompositeOperation = 'lighter';
-      const glow = ctx.createRadialGradient(cx, cy, hr * 0.9, cx, cy, hr * 4.2);
-      glow.addColorStop(0, 'rgba(255,170,80,0.28)'); glow.addColorStop(1, 'rgba(255,120,40,0)');
-      ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(cx, cy, hr * 4.2, 0, 7); ctx.fill();
-      drawDisk(false);
-      ctx.globalCompositeOperation = 'source-over';
+      /* inelul Einstein: lumina stelelor din spate, adunată într-un cerc subțire */
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      const er = ctx.createRadialGradient(cx, cy, thE * 0.85, cx, cy, thE * 1.2);
+      er.addColorStop(0, 'rgba(160,190,255,0)'); er.addColorStop(0.5, 'rgba(170,200,255,0.10)'); er.addColorStop(1, 'rgba(160,190,255,0)');
+      ctx.fillStyle = er; ctx.beginPath(); ctx.arc(cx, cy, thE * 1.2, 0, TAU); ctx.fill();
+      ctx.restore();
+      /* umbra: lumina e deviată, deci în jurul găurii cerul pare mai întunecat */
+      const sh = ctx.createRadialGradient(cx, cy, hr, cx, cy, hr * 2.6);
+      sh.addColorStop(0, 'rgba(0,0,0,0.95)'); sh.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = sh; ctx.beginPath(); ctx.arc(cx, cy, hr * 2.6, 0, TAU); ctx.fill();
+
+      drawDiskHalf(false, t);
       /* orizontul + inelul de fotoni */
-      ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(cx, cy, hr, 0, 7); ctx.fill();
-      ctx.globalCompositeOperation = 'lighter';
-      ctx.strokeStyle = 'rgba(255,230,190,' + (0.65 + flash * 0.35).toFixed(2) + ')'; ctx.lineWidth = 2.2 + flash * 4;
-      ctx.beginPath(); ctx.arc(cx, cy, hr * 1.03, 0, 7); ctx.stroke();
-      ctx.strokeStyle = 'rgba(255,190,120,0.25)'; ctx.lineWidth = 6;
-      ctx.beginPath(); ctx.arc(cx, cy, hr * 1.06, 0, 7); ctx.stroke();
-      drawDisk(true);
-      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(cx, cy, hr, 0, TAU); ctx.fill();
+      drawLensedArc();
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      const pr = ctx.createRadialGradient(cx, cy, hr * 0.98, cx, cy, hr * 1.25);
+      pr.addColorStop(0, 'rgba(255,220,170,0)'); pr.addColorStop(0.15, 'rgba(255,235,200,' + (0.75 + flash * 0.25).toFixed(2) + ')'); pr.addColorStop(0.4, 'rgba(255,170,90,0.25)'); pr.addColorStop(1, 'rgba(255,140,60,0)');
+      ctx.fillStyle = pr; ctx.beginPath(); ctx.arc(cx, cy, hr * 1.25, 0, TAU); ctx.arc(cx, cy, hr * 0.98, 0, TAU, true); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,248,230,' + (0.8 + flash * 0.2).toFixed(2) + ')'; ctx.lineWidth = 1.4 + flash * 4;
+      ctx.beginPath(); ctx.arc(cx, cy, hr * 1.03, 0, TAU); ctx.stroke();
+      ctx.restore();
+      drawDiskHalf(true, t);
 
       /* cercuri educative */
       if (showGuides) {
-        ctx.save();
-        ctx.setLineDash([4, 6]); ctx.lineWidth = 1; ctx.font = '12px system-ui, sans-serif'; ctx.textAlign = 'left';
-        const ring = (k, col, text) => {
-          ctx.strokeStyle = col; ctx.fillStyle = col;
-          ctx.beginPath(); ctx.arc(cx, cy, hr * k, 0, 7); ctx.stroke();
-          ctx.fillText(text, cx + hr * k * 0.71 + 6, cy - hr * k * 0.71 - 4);
+        const fz = Art.fs(U, 0.032, 12);
+        const ring = (k, col, text, ang) => {
+          ctx.save(); ctx.setLineDash([4, 6]); ctx.lineWidth = 1.2; ctx.strokeStyle = col;
+          ctx.beginPath(); ctx.arc(cx, cy, hr * k, 0, TAU); ctx.stroke(); ctx.restore();
+          const tx = cx + Math.cos(ang) * hr * k, ty = cy + Math.sin(ang) * hr * k, right = Math.cos(ang) >= 0;
+          const lx = cx + Math.cos(ang) * (hr * 3 + fz * 1.5), ly = cy + Math.sin(ang) * (hr * 3 + fz * 1.5);
+          ctx.font = Art.font(fz, 700); const lw = ctx.measureText(text).width + fz * 1.1;
+          let ax = right ? Math.min(lx, api.freeW - 8 - lw) : Math.max(lx, 8 + lw);
+          Art.label(ctx, text, ax, ly, { size: fz, align: right ? 'left' : 'right', color: col, tx: tx, ty: ty, lineColor: col, bg: 'rgba(8,10,25,0.72)' });
         };
-        ring(1, 'rgba(255,120,120,0.9)', 'orizontul evenimentelor');
-        ring(1.5, 'rgba(255,230,120,0.75)', 'sfera fotonilor');
-        ring(3, 'rgba(120,220,255,0.75)', 'ultima orbită stabilă');
-        ctx.restore();
+        ring(1, 'rgba(255,140,140,0.95)', 'orizontul evenimentelor', 0.75);
+        ring(1.5, 'rgba(255,230,130,0.9)', 'sfera fotonilor', -2.35);
+        ring(3, 'rgba(130,220,255,0.9)', 'ultima orbită stabilă', -0.7);
       }
 
       /* obiectele lansate */
+      const sc = Math.max(0.8, Math.min(1.6, U / 300));
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
       for (const o of objs) {
-        const dx = o.x - cx, dy = o.y - cy, r = Math.hypot(dx, dy);
+        const dx = o.x - cx, dy = o.y - cy, r = Math.hypot(dx, dy) || 1;
         const fade = o.dead ? Math.max(0, 1 - o.dead * 1.4) : 1;
-        if (o.trail.length > 4) {
-          ctx.lineWidth = o.type === 'photon' ? 1.8 : 1.4;
-          ctx.strokeStyle = o.type === 'photon' ? 'rgba(255,255,220,' + (0.7 * fade).toFixed(2) + ')' : o.color;
-          ctx.globalAlpha = (o.type === 'photon' ? 1 : 0.55) * fade;
-          ctx.beginPath(); ctx.moveTo(o.trail[0], o.trail[1]);
-          for (let i = 2; i < o.trail.length; i += 2) ctx.lineTo(o.trail[i], o.trail[i + 1]);
-          ctx.stroke(); ctx.globalAlpha = 1;
-        }
-        if (o.dead && o.dead > 0.0) { if (o.type === 'photon') continue; }
-        if (o.type === 'photon') {
-          ctx.fillStyle = '#fffbe0';
-          ctx.beginPath(); ctx.arc(o.x, o.y, 2.6, 0, 7); ctx.fill();
-        } else {
-          /* spaghetificare: se întinde pe direcția găurii când e aproape */
-          const near = Math.max(0, (hr * 4.2 - r) / (hr * 3.2));
-          const stretch = 1 + near * 5.5;
-          const sz = 7 * (o.dead ? Math.max(0.1, 1 - o.dead * 1.4) : 1);
-          const red = Math.min(1, near);
-          ctx.save();
-          ctx.translate(o.x, o.y); ctx.rotate(Math.atan2(dy, dx));
-          ctx.globalAlpha = Math.max(0.15, 1 - near * 0.55) * (o.dead ? fade : 1);
-          ctx.fillStyle = red > 0.5 ? '#ff7a5a' : o.color;
-          ctx.beginPath(); ctx.ellipse(0, 0, sz * stretch, sz / Math.sqrt(stretch), 0, 0, 7); ctx.fill();
+        const near = Math.max(0, Math.min(1, (hr * 4.2 - r) / (hr * 3.2)));
+        /* dâra se estompează spre coadă */
+        const n = o.trail.length / 2;
+        if (n > 3) {
+          const chunks = 10, per = Math.ceil(n / chunks);
+          ctx.save(); ctx.globalCompositeOperation = 'lighter';
+          for (let c = 0; c < chunks; c++) {
+            const i0 = c * per, i1 = Math.min(n - 1, (c + 1) * per); if (i1 <= i0) continue;
+            const k = (c + 1) / chunks;
+            ctx.strokeStyle = o.type === 'photon' ? 'rgba(255,250,215,' + (0.75 * k * fade).toFixed(3) + ')' : Art.rgba(o.color, 0.55 * k * k * fade);
+            ctx.lineWidth = o.type === 'photon' ? 0.8 + 1.6 * k : 0.6 + 2.2 * k * sc;
+            ctx.beginPath(); ctx.moveTo(o.trail[i0 * 2], o.trail[i0 * 2 + 1]);
+            for (let i = i0 + 1; i <= i1; i++) ctx.lineTo(o.trail[i * 2], o.trail[i * 2 + 1]);
+            ctx.stroke();
+          }
           ctx.restore();
-          ctx.globalAlpha = 1;
         }
+        if (o.dead && o.type === 'photon') continue;
+        if (o.type === 'photon') {
+          ctx.save(); ctx.globalCompositeOperation = 'lighter';
+          Art.glow(ctx, o.x, o.y, 6 * sc, '#fff6c8', 0.5);
+          ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(o.x, o.y, 2.2 * sc, 0, TAU); ctx.fill();
+          ctx.restore();
+        } else {
+          /* spaghetificare: se întinde pe direcția găurii, se încinge și strălucește */
+          const stretch = 1 + near * 5.5;
+          const sz = 7 * sc * (o.dead ? Math.max(0.1, 1 - o.dead * 1.4) : 1);
+          const ang = Math.atan2(dy, dx);
+          if (!o.dead && near > 0.25 && Math.random() < near * 0.25) emitSpark(o.x, o.y, o.vx * 0.8 + (Math.random() - 0.5) * 40, o.vy * 0.8 + (Math.random() - 0.5) * 40, near > 0.7 ? '255,240,200' : '255,170,90');
+          ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(ang); ctx.globalAlpha = o.dead ? fade : 1;
+          if (near > 0.05) { ctx.globalCompositeOperation = 'lighter'; const gl = ctx.createRadialGradient(0, 0, 0, 0, 0, sz * stretch * 1.6); gl.addColorStop(0, Art.rgba('#ffb050', 0.5 * near)); gl.addColorStop(1, 'rgba(255,120,50,0)'); ctx.fillStyle = gl; ctx.beginPath(); ctx.ellipse(0, 0, sz * stretch * 1.6, sz * 2.2, 0, 0, TAU); ctx.fill(); ctx.globalCompositeOperation = 'source-over'; }
+          const L = sz * stretch, Wd = sz / Math.sqrt(stretch);
+          if (near < 0.05) {
+            ctx.rotate(-ang);
+            Art.sphere(ctx, 0, 0, sz, o.color, { lx: -dx / r * 0.45, ly: -dy / r * 0.45, rimColor: o.color });
+          } else {
+            const g = ctx.createLinearGradient(-L, 0, L, 0);
+            g.addColorStop(0, Art.rgba(o.color, 0.9)); g.addColorStop(0.5, hotRGB(near * 0.7)); g.addColorStop(1, hotRGB(Math.min(1, near * 1.2)));
+            ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(0, 0, L, Wd, 0, 0, TAU); ctx.fill();
+          }
+          ctx.restore();
+        }
+      }
+      if (sparks.length) {
+        ctx.save(); ctx.globalCompositeOperation = 'lighter';
+        for (const p of sparks) { if (Math.hypot(p.x - cx, p.y - cy) < hr * 1.02) continue; const k = 1 - p.age / p.life; ctx.strokeStyle = 'rgba(' + p.c + ',' + (0.85 * k).toFixed(2) + ')'; ctx.lineWidth = 1 + 1.5 * k; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx * 0.04, p.y - p.vy * 0.04); ctx.stroke(); }
+        ctx.restore();
       }
 
       /* săgeata de țintire */
       if (aim) {
-        const dx = aim.x1 - aim.x0, dy = aim.y1 - aim.y0;
-        if (Math.hypot(dx, dy) > 12) {
-          ctx.strokeStyle = '#7dffb0'; ctx.fillStyle = '#7dffb0'; ctx.lineWidth = 3; ctx.setLineDash([8, 6]);
-          ctx.beginPath(); ctx.moveTo(aim.x0, aim.y0); ctx.lineTo(aim.x1, aim.y1); ctx.stroke(); ctx.setLineDash([]);
-          const a = Math.atan2(dy, dx);
-          ctx.beginPath(); ctx.moveTo(aim.x1, aim.y1);
-          ctx.lineTo(aim.x1 - Math.cos(a - 0.4) * 14, aim.y1 - Math.sin(a - 0.4) * 14);
-          ctx.lineTo(aim.x1 - Math.cos(a + 0.4) * 14, aim.y1 - Math.sin(a + 0.4) * 14); ctx.fill();
-        }
-        ctx.fillStyle = '#7dffb0'; ctx.beginPath(); ctx.arc(aim.x0, aim.y0, 5, 0, 7); ctx.fill();
+        const dx = aim.x1 - aim.x0, dy = aim.y1 - aim.y0, col = mode === 'photon' ? '#fff2a8' : '#7dffb0';
+        if (Math.hypot(dx, dy) > 12) Art.arrow(ctx, aim.x0, aim.y0, aim.x1, aim.y1, { color: col, width: 3, dash: [8, 6] });
+        ctx.fillStyle = col; ctx.beginPath(); ctx.arc(aim.x0, aim.y0, 5, 0, TAU); ctx.fill();
       }
       /* contor */
-      ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.font = '600 14px system-ui, sans-serif'; ctx.textAlign = 'right';
-      ctx.fillText('Înghițite: ' + swallowed, api.freeW - 14, 80);
+      Art.label(ctx, 'Înghițite: ' + swallowed, api.freeW - 14, 80, { size: Art.fs(U, 0.04, 13), align: 'right', color: '#ffd0a0' });
     }
 
     return { frame: frame, resize: () => setMass(logM) };
