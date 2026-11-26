@@ -20,11 +20,13 @@
         buz: { n: 'Sonerie', R: 14, e: '🔔', tip: '<b>Soneria</b> transformă curentul în sunet. Dacă nu auzi nimic, ridică volumul telefonului!' }
       };
       let on = true, par = false, V = 6, comps = [], rmv = false, flowT = 0, aud = null, audLevel = 0;
+      const MAXC = 20, CAP = 5;                        // componente maxime; capacitatea bateriei (Ah)
+      let bats = [1], charge = 1, tscale = 150, elapsed = 0, energy = 0, drained = false, Veff = 6;
       const mk = (type) => ({ type: type, burnt: false, ang: 0 });
       comps.push(mk('bec'), mk('bec'));
       const r0 = api.row('Adaugă');
       Object.keys(TYPES).forEach((k) => api.button(r0, TYPES[k].e + ' ' + TYPES[k].n, () => {
-        if (comps.length >= 6) { api.say('Sunt destule componente! Scoate una ca să pui alta.', 3500); return; }
+        if (comps.length >= MAXC) { api.say('Sunt destule componente (' + MAXC + ')! Scoate una ca să pui alta.', 3500); return; }
         comps.push(mk(k)); rmv = false; bRm.classList.remove('on'); bRm.innerHTML = '🗑️ Scoate componente'; api.say(TYPES[k].tip, 10000);
       }));
       const r1 = api.row('');
@@ -33,7 +35,12 @@
       const bRm = api.button(r1, '🗑️ Scoate componente', () => { rmv = !rmv; bRm.classList.toggle('on', rmv); bRm.innerHTML = rmv ? '✋ Atinge o componentă ca s-o scoți' : '🗑️ Scoate componente'; if (rmv) api.say('Mod scoatere: <b>atinge o componentă</b> ca s-o ștergi din circuit.', 5000); });
       api.button(r1, '🔧 Repară', () => { comps.forEach((c) => { c.burnt = false; }); api.say('Componentele arse au fost înlocuite!', 2500); });
       api.button(r1, '🧹 Golește', () => { comps = []; });
+      api.button(r0, '➕ 5 becuri', () => { for (let i = 0; i < 5 && comps.length < MAXC; i++) comps.push(mk('bec')); api.say('Cu cât pui mai mulți consumatori, cu atât bateria se golește mai repede! Urmărește nivelul ei.', 8000); });
       const r2 = api.row('');
+      api.slider(r2, { label: 'Viteza timpului', min: 0, max: 1, step: 0.01, value: 0.5, fmt: (v) => '×' + Math.round(Math.exp(Math.log(20) + v * (Math.log(1500) - Math.log(20)))), onInput: (v) => { tscale = Math.exp(Math.log(20) + v * (Math.log(1500) - Math.log(20))); } });
+      api.button(r2, '🔋 Baterie nouă', () => { if (bats.length < 4) { bats.push(1); api.say('<b>Baterie nouă</b> adăugată în paralel: tensiunea rămâne la fel, dar <b>capacitatea crește</b> (' + bats.length + ' × ' + CAP + ' Ah), deci circuitul merge mai mult timp. Bateriile se golesc împreună.', 9000); } else { let m = 0; bats.forEach((c, i) => { if (c < bats[m]) m = i; }); bats[m] = 1; api.say('Ai 4 baterii: am înlocuit-o pe cea mai goală cu una nouă.', 5000); } drained = false; });
+      api.button(r2, '➖ Scoate o baterie', () => { if (bats.length > 1) { let m = 0; bats.forEach((c, i) => { if (c < bats[m]) m = i; }); bats.splice(m, 1); api.say('Am scos bateria cea mai goală. Rămân ' + bats.length + '.', 3500); } else api.say('Circuitul are nevoie de cel puțin o baterie!', 3500); });
+      api.button(r2, '⚡ Încarcă toate', () => { bats = bats.map(() => 1); drained = false; api.say('Toate bateriile sunt încărcate la 100%.', 3000); });
       api.slider(r2, { label: 'Tensiunea bateriei', min: 1.5, max: 24, step: 0.5, value: V, fmt: (v) => fmt(v) + ' V', onInput: (v) => { V = v; } });
       const info = document.createElement('div'); info.className = 'mod-readout'; r2.appendChild(info);
       api.say('Adaugă componente din paletă (💡 🔴 🟫 🌀 🔔). Schimbă între serie și paralel, crește tensiunea… dar ai grijă să nu arzi becurile sau LED-urile! Pentru a scoate ceva, apasă „Scoate componente”.', 14000);
@@ -54,17 +61,17 @@
         const R = comps.map((c) => TYPES[c.type].R);
         if (!par) {
           if (comps.some((c) => c.burnt)) return out;
-          const I = V / R.reduce((a, b) => a + b, 0); out.I = I;
+          const I = Veff / R.reduce((a, b) => a + b, 0); out.I = I;
           comps.forEach((c, i) => { out.I_k[i] = I; out.Vc[i] = I * R[i]; out.P[i] = I * I * R[i]; });
         } else {
-          comps.forEach((c, i) => { if (c.burnt) return; const I = V / R[i]; out.I_k[i] = I; out.Vc[i] = V; out.P[i] = I * I * R[i]; out.I += I; });
+          comps.forEach((c, i) => { if (c.burnt) return; const I = Veff / R[i]; out.I_k[i] = I; out.Vc[i] = Veff; out.P[i] = I * I * R[i]; out.I += I; });
         }
         return out;
       }
       /* desene */
-      function drawComp(c, x, y, p, I, t, dt) {
+      function drawComp(c, x, y, p, I, t, dt, sc) {
         const T = c.type, a = c.burnt ? 0 : 1;
-        ctx.save(); ctx.translate(x, y);
+        ctx.save(); ctx.translate(x, y); ctx.scale(sc, sc);
         ctx.fillStyle = '#0a1226'; ctx.fillRect(-30, -34, 60, 72);
         if (T === 'bec') {
           const ratio = clamp(p / 6, 0, 2.2);
@@ -97,35 +104,63 @@
           if (lvl > 0.03) for (let k = 0; k < 3; k++) { const ph = ((t * 2 + k * 0.33) % 1); ctx.strokeStyle = 'rgba(255,255,255,' + (1 - ph) * lvl + ')'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(14, 0, 8 + ph * 22, -0.9, 0.9); ctx.stroke(); }
         }
         if (rmv) { ctx.fillStyle = 'rgba(255,60,60,0.9)'; ctx.beginPath(); ctx.arc(22, -26, 11, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = '800 13px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillText('✕', 22, -21); ctx.strokeStyle = 'rgba(255,90,90,' + (0.5 + 0.4 * Math.sin(t * 8)) + ')'; ctx.lineWidth = 2; ctx.strokeRect(-30, -34, 60, 72); }
-        ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.font = '600 10px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillText(TYPES[T].n, 0, 52);
+        ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.font = '600 10px system-ui,sans-serif'; ctx.textAlign = 'center'; if (sc > 0.62) ctx.fillText(TYPES[T].n, 0, 52);
         ctx.restore();
       }
       let t = 0;
-      function compPos(g, i) { const n = comps.length; return !par ? [slotX(g, i, n), g.y0 + 4] : [slotX(g, i, n), (g.y0 + g.y1) / 2 + 4]; }
-      api.pointer({ down: (x, y) => { if (!rmv) return; const g = geom(); for (let i = 0; i < comps.length; i++) { const q = compPos(g, i); if (Math.abs(x - q[0]) < 34 && Math.abs(y - q[1]) < 44) { api.say(TYPES[comps[i].type].e + ' <b>' + TYPES[comps[i].type].n + '</b> scos din circuit.', 2500); comps.splice(i, 1); return; } } } });
+      function layoutComps(g) {
+        const n = comps.length, out = [];
+        if (!par) {
+          const pts = [[g.x0 + (g.x1 - g.x0) * 0.26, g.y0], [g.x1, g.y0], [g.x1, g.y1], [g.x0, g.y1], [g.x0, (g.y0 + g.y1) / 2 + Math.min(bats.length, 4) * 38 * (bats.length <= 1 ? 1 : bats.length === 2 ? 0.82 : 0.66) * 2 / 2 + 30]];
+          const cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+          const L = cum[cum.length - 1], sc = clamp((L / Math.max(n, 1)) / 78, 0.4, 1);
+          for (let i = 0; i < n; i++) { const d = (i + 0.5) / n * L; let k = 1; while (k < cum.length - 1 && cum[k] < d) k++; const f = (d - cum[k - 1]) / ((cum[k] - cum[k - 1]) || 1); out.push({ x: lerp(pts[k - 1][0], pts[k][0], f), y: lerp(pts[k - 1][1], pts[k][1], f) + 4, s: sc }); }
+        } else {
+          const sp = (g.x1 - g.x0) * 0.62 / Math.max(n, 1), sc = clamp(sp / 64, 0.38, 1);
+          for (let i = 0; i < n; i++) out.push({ x: slotX(g, i, n), y: (g.y0 + g.y1) / 2 + 4, s: sc });
+        }
+        return out;
+      }
+      function compPos(g, i) { const q = layoutComps(g)[i]; return [q.x, q.y, q.s]; }
+      api.pointer({ down: (x, y) => { if (!rmv) return; const g = geom(); for (let i = 0; i < comps.length; i++) { const q = compPos(g, i); if (Math.abs(x - q[0]) < 34 * q[2] + 6 && Math.abs(y - q[1]) < 44 * q[2] + 6) { api.say(TYPES[comps[i].type].e + ' <b>' + TYPES[comps[i].type].n + '</b> scos din circuit.', 2500); comps.splice(i, 1); return; } } } });
       function frame(dt, tm) {
         t = tm;
         bg(api, '#0a1226', '#05080f');
-        const g = geom(), n = comps.length; let S = solve();
+        const g = geom(), n = comps.length;
+        const liveB = bats.filter((c) => c > 0.0005), meanLive = liveB.length ? liveB.reduce((a, c) => a + c, 0) / liveB.length : 0;
+        charge = bats.reduce((a, c) => a + c, 0) / bats.length;
+        Veff = on && liveB.length ? V * (meanLive > 0.2 ? 1 : meanLive / 0.2) : 0;
+        let S = solve();
         for (let i = 0; i < n; i++) { const c = comps[i]; if (c.burnt) continue; if (c.type === 'bec' && S.P[i] > 13.5) { c.burnt = true; api.say('💥 <b>Becul s-a ars!</b> Tensiunea a fost prea mare pentru el. Apasă „Repară”.', 6000); } if (c.type === 'led' && S.I_k[i] > 0.15) { c.burnt = true; api.say('💥 <b>LED-ul s-a ars!</b> A trecut prea mult curent prin el. Pune un <b>rezistor în serie</b> și încearcă din nou.', 8000); } }
         S = solve();
+        /* bateria se consumă: curent × timp */
+        if (S.I > 0 && liveB.length) { const hrs = dt * tscale / 3600, per = S.I * hrs / CAP / liveB.length; bats = bats.map((c) => c > 0.0005 ? Math.max(0, c - per) : c); elapsed += hrs; energy += Veff * S.I * hrs; }
+        if (!liveB.length && !drained && on) { drained = true; api.say('🪫 <b>Bateria s-a descărcat!</b> Prea mulți consumatori au golit-o repede. Pune o <b>baterie nouă</b> sau apasă „Încarcă toate”.', 9000); }
+        if (liveB.length && meanLive > 0.05) drained = false;
         /* fire */
         ctx.lineWidth = 6; ctx.strokeStyle = S.short ? '#e04a3a' : '#c9843a'; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
         ctx.beginPath(); ctx.moveTo(g.x0, g.y1); ctx.lineTo(g.x0, g.y0); ctx.lineTo(g.x1, g.y0); ctx.lineTo(g.x1, g.y1); ctx.lineTo(g.x0, g.y1); ctx.stroke();
         if (par) for (let i = 0; i < n; i++) { const bx = slotX(g, i, n); ctx.beginPath(); ctx.moveTo(bx, g.y0); ctx.lineTo(bx, g.y1); ctx.stroke(); }
-        /* baterie */
-        const by = (g.y0 + g.y1) / 2;
-        ctx.fillStyle = '#0a1226'; ctx.fillRect(g.x0 - 18, by - 44, 36, 88);
-        ctx.fillStyle = S.short ? '#a0382a' : '#2a7a46'; ctx.fillRect(g.x0 - 18, by - 38, 36, 76); ctx.fillStyle = '#d9d2c0'; ctx.fillRect(g.x0 - 18, by - 38, 36, 18);
-        ctx.fillStyle = '#fff'; ctx.font = '700 14px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillText('+', g.x0, by - 24); ctx.fillText('−', g.x0, by + 28);
-        ctx.font = '600 12px system-ui,sans-serif'; ctx.fillText(fmt(V) + ' V', g.x0 + 46, by + 4);
+        /* pachet de baterii (în paralel), pe latura din stânga */
+        const by = (g.y0 + g.y1) / 2, kB = bats.length, bf = kB <= 1 ? 1 : kB === 2 ? 0.82 : 0.66, bH = 76 * bf, bStep = 88 * bf;
+        bats.forEach((cc, i) => {
+          const cy2 = by + (i - (kB - 1) / 2) * bStep, lv = clamp(cc, 0, 1);
+          ctx.fillStyle = '#0a1226'; ctx.fillRect(g.x0 - 20 * bf, cy2 - bH / 2 - 6, 40 * bf, bH + 12);
+          ctx.fillStyle = '#1a2a22'; ctx.fillRect(g.x0 - 18 * bf, cy2 - bH / 2, 36 * bf, bH);
+          ctx.fillStyle = S.short ? '#e04a3a' : lv > 0.5 ? '#2fbf62' : lv > 0.2 ? '#e0c23a' : '#e0503a'; ctx.fillRect(g.x0 - 18 * bf, cy2 + bH / 2 - bH * lv, 36 * bf, bH * lv);
+          ctx.fillStyle = '#d9d2c0'; ctx.fillRect(g.x0 - 18 * bf, cy2 - bH / 2, 36 * bf, 16 * bf);
+          ctx.strokeStyle = '#8aa0c8'; ctx.lineWidth = 2; ctx.strokeRect(g.x0 - 18 * bf, cy2 - bH / 2, 36 * bf, bH);
+          ctx.fillStyle = '#fff'; ctx.font = '700 ' + Math.round(14 * bf) + 'px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillText('+', g.x0, cy2 - bH / 2 + 12 * bf); ctx.fillText('−', g.x0, cy2 + bH / 2 - 6 * bf);
+          ctx.font = '700 ' + Math.round(12 * bf + 1) + 'px system-ui,sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = lv > 0.2 ? '#7dffb0' : '#ff8a7a'; ctx.fillText(Math.round(lv * 100) + '%', g.x0 + 26 * bf, cy2 + 4);
+        });
+        ctx.fillStyle = '#fff'; ctx.font = '600 12px system-ui,sans-serif'; ctx.textAlign = 'left'; ctx.fillText(fmt(V) + ' V' + (kB > 1 ? ' · ' + kB + ' baterii' : ''), g.x0 - 20, by - ((kB - 1) / 2) * bStep - bH / 2 - 14);
         /* întrerupător */
         const sx = g.x0 + (g.x1 - g.x0) * 0.16, sy = g.y0;
         ctx.fillStyle = '#0a1226'; ctx.fillRect(sx - 30, sy - 12, 60, 24);
         ctx.fillStyle = '#9aa3b2'; ctx.beginPath(); ctx.arc(sx - 26, sy, 5, 0, 7); ctx.arc(sx + 26, sy, 5, 0, 7); ctx.fill();
         ctx.strokeStyle = on ? '#7dffb0' : '#ff9a7a'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(sx - 26, sy); ctx.lineTo(on ? sx + 26 : sx + 18, on ? sy : sy - 22); ctx.stroke();
         /* componente */
-        comps.forEach((c, i) => { const q = compPos(g, i); drawComp(c, q[0], q[1], S.P[i], S.I_k[i], tm, dt); });
+        comps.forEach((c, i) => { const q = compPos(g, i); drawComp(c, q[0], q[1], S.P[i], S.I_k[i], tm, dt, q[2]); });
         /* electroni */
         if (S.I > 0) {
           flowT += dt * Math.min(S.I, 3) * 0.12;
@@ -138,7 +173,8 @@
         let lvl = 0; comps.forEach((c, i) => { if (c.type === 'buz' && !c.burnt) lvl = Math.max(lvl, clamp(S.P[i] / 4, 0, 1)); });
         if (lvl > 0 && !aud) { try { const AC = window.AudioContext || window.webkitAudioContext; const ac = new AC(), o = ac.createOscillator(), gn = ac.createGain(); o.type = 'square'; o.frequency.value = 520; gn.gain.value = 0; o.connect(gn); gn.connect(ac.destination); o.start(); aud = { ac: ac, o: o, g: gn }; } catch (e) { aud = { dead: true }; } }
         if (aud && aud.g) aud.g.gain.setTargetAtTime(lvl * 0.03 * ((Math.sin(tm * 14) > 0) ? 1 : 0.2), aud.ac.currentTime, 0.02);
-        info.innerHTML = S.short ? '<b>Scurtcircuit!</b> Pune ceva în circuit.' : '<b>Curent total:</b> ' + fmt(S.I, 2) + ' A · <b>Componente:</b> ' + n + '/6' + (n && S.I === 0 ? ' · <i>nu curge curent</i>' : '');
+        const left = S.I > 0 ? bats.reduce((a, c) => a + c, 0) * CAP / S.I : Infinity, ft = (h) => !isFinite(h) ? '—' : h < 1 ? fmt(h * 60, 0) + ' min' : fmt(h, 1) + ' ore';
+        info.innerHTML = (S.short ? '<b>Scurtcircuit!</b> ' : '') + '<b>Curent:</b> ' + fmt(S.I, 2) + ' A · <b>Componente:</b> ' + n + '/' + MAXC + ' · <b>Baterii:</b> ' + bats.length + ' (' + Math.round(charge * 100) + '%)' + (S.I > 0 ? ' · se golește în ~<b>' + ft(left) + '</b>' : ' · <i>nu curge curent</i>') + ' · <b>Energie consumată:</b> ' + fmt(energy, 1) + ' Wh · <b>Timp trecut:</b> ' + ft(elapsed);
       }
       api.onCleanup(() => { if (aud && aud.g) { try { aud.g.gain.value = 0; aud.o.stop(); aud.ac.close(); } catch (e) { } } });
       return { frame: frame };

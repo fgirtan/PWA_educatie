@@ -506,3 +506,5 @@ kbd {
 .sec-title span { font-size: 1.1em; }
 .sec-desc { color: var(--dim); margin: 4px 0 22px; font-size: clamp(15px, 2vw, 19px); }
 .sec-back { flex: 0 0 auto; }
+.art-solar { background: radial-gradient(circle at 75% 25%, #ffd35a 0 9%, rgba(255,200,60,.4) 16%, transparent 32%), linear-gradient(180deg, #2c6aa8, #bfe3f5); }
+.art-solar::after { content:""; position:absolute; left:24%; width:40%; top:46%; height:20%; background:#1b2f6e; border:2px solid #ccd; transform:skew(-14deg); }
