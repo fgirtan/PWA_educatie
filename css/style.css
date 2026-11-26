@@ -526,6 +526,20 @@ body.sky-mode .date-box { display: none; }
   font-size: 15.5px; line-height: 1.5; display: none; pointer-events: none;
 }
 #mod-info.show { display: block; }
+#mod-info { pointer-events: auto; cursor: pointer; }
+#mod-info::after { content: "atinge ca să închizi"; display: block; margin-top: 6px; font-size: 11.5px; color: var(--faint); font-weight: 700; }
+body.texts-off #mod-info { display: none !important; }
+
+/* comutatorul „Text” din bara modulului */
+.text-toggle {
+  position: relative; margin-left: auto; flex: 0 0 auto;
+  display: inline-flex; align-items: center; gap: 7px; height: 44px; padding: 0 14px;
+  border-radius: 999px; border: 1px solid var(--line); background: var(--glass);
+  font-size: 14px; font-weight: 800; color: var(--txt);
+}
+.text-toggle[aria-pressed="false"] { color: var(--dim); }
+.text-toggle[aria-pressed="false"] .i { opacity: .55; }
+.text-toggle.has-new::after { content: ""; position: absolute; top: 7px; right: 9px; width: 9px; height: 9px; border-radius: 50%; background: var(--accent-2); }
 #mod-info b { color: #fff; }
 
 /* panoul de comenzi de jos */
@@ -635,6 +649,8 @@ body.sky-mode .date-box { display: none; }
 
   /* module */
   .back-btn span { display: none; }
+  .text-toggle span { display: none; }
+  .text-toggle { width: 44px; padding: 0; justify-content: center; }
   .back-btn { width: 44px; padding: 0; justify-content: center; }
   .mod-titles strong { font-size: 16.5px; }
   .mod-titles small { font-size: 12px; }

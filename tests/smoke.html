@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<title>Test rapid — Universul Nostru</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../icons/icon-192.png">
+<style>
+  body { margin: 0; font: 15px/1.5 system-ui, sans-serif; background: #0b1020; color: #e8eeff; }
+  header { padding: 16px 20px; border-bottom: 1px solid #243056; display: flex; gap: 16px; align-items: center; }
+  h1 { font-size: 18px; margin: 0; }
+  #status { font-weight: 800; }
+  .ok { color: #4ade80; } .fail { color: #ff6b7a; } .run { color: #ffd166; }
+  main { display: grid; grid-template-columns: minmax(280px, 420px) 1fr; height: calc(100vh - 58px); }
+  ol { margin: 0; padding: 12px 20px 12px 40px; overflow: auto; }
+  li { margin: 2px 0; } li small { color: #93a0c4; display: block; }
+  iframe { width: 100%; height: 100%; border: 0; border-left: 1px solid #243056; background: #000; }
+</style>
+</head>
+<body>
+<header><h1>Test rapid</h1><span id="status" class="run">rulează…</span></header>
+<main>
+  <ol id="list"></ol>
+  <iframe id="app" src="../index.html?nosw=1&amp;smoke=1"></iframe>
+</main>
+<script>
+/* Deschide aplicația, apoi fiecare secțiune, fiecare modul și harta.
+   Verifică: nicio eroare JavaScript, modulul se deschide, desenul nu e gol.
+   Rezultatul ajunge în window.__smoke (folosit de tests/smoke.mjs în GitHub Actions). */
+(async function () {
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const list = document.getElementById('list'), status = document.getElementById('status');
+  const frame = document.getElementById('app');
+  const results = [];
+  function report(name, ok, detail) {
+    results.push({ name: name, ok: ok, detail: detail || '' });
+    const li = document.createElement('li');
+    li.innerHTML = '<span class="' + (ok ? 'ok' : 'fail') + '">' + (ok ? '✔' : '✘') + '</span> ' + name + (detail ? '<small></small>' : '');
+    if (detail) li.querySelector('small').textContent = detail;
+    list.appendChild(li); li.scrollIntoView({ block: 'nearest' });
+  }
+
+  await new Promise((r) => { if (frame.contentDocument && frame.contentDocument.readyState === 'complete' && frame.contentWindow.location.href !== 'about:blank') r(); else frame.addEventListener('load', r, { once: true }); });
+  const w = frame.contentWindow, d = frame.contentDocument;
+  let errors = [];
+  w.addEventListener('error', (e) => errors.push((e.message || 'eroare') + (e.filename ? ' @ ' + e.filename.split('/').pop() + ':' + e.lineno : '')));
+  w.addEventListener('unhandledrejection', (e) => errors.push('promisiune respinsă: ' + (e.reason && e.reason.message || e.reason)));
+  const origErr = w.console.error.bind(w.console);
+  w.console.error = function () { errors.push(Array.from(arguments).join(' ')); origErr.apply(null, arguments); };
+  const takeErrors = () => { const e = errors; errors = []; return e; };
+  await wait(600);
+
+  /* 1) scripturile de bază s-au încărcat */
+  const globals = ['Art', 'Creatures', 'defineModule', 'startApp', 'showSection', 'navTo'];
+  const missing = globals.filter((g) => typeof w[g] === 'undefined');
+  report('Scripturile de bază', missing.length === 0, missing.length ? 'lipsesc: ' + missing.join(', ') : '');
+
+  /* desenul nu e gol: pixeli de culori diferite pe o grilă */
+  function notBlank(canvas) {
+    try {
+      const c = canvas.getContext('2d'), W = canvas.width, H = canvas.height, seen = new Set();
+      const img = c.getImageData(0, 0, W, H).data;     // grilă deasă: unele module încep cu un singur obiect mic în centru
+      for (let i = 1; i < 48; i++) for (let j = 1; j < 28; j++) {
+        const k = (Math.floor(H * j / 28) * W + Math.floor(W * i / 48)) * 4;
+        seen.add((img[k] >> 4) + ',' + (img[k + 1] >> 4) + ',' + (img[k + 2] >> 4));
+      }
+      return seen.size >= 2;
+    } catch (e) { return true; }
+  }
+
+  /* 2) secțiunile */
+  for (const id of ['space', 'body', 'how', 'earth']) {
+    w.location.hash = '#' + id; await wait(250);
+    const v = d.getElementById('sec-' + id), cards = v ? v.querySelectorAll('.card').length : 0;
+    const e = takeErrors();
+    report('Secțiunea ' + id, !!v && !v.classList.contains('hidden') && cards > 0 && !e.length, cards + ' carduri' + (e.length ? ' · ' + e.join(' | ') : ''));
+  }
+
+  /* 3) fiecare modul */
+  const ids = Array.from(d.querySelectorAll('[data-module]')).map((el) => el.getAttribute('data-module'));
+  for (const id of ids) {
+    w.location.hash = '#m/' + id; await wait(900);
+    const open = !d.getElementById('module').classList.contains('hidden') && w.location.hash === '#m/' + id;
+    const drawn = notBlank(d.getElementById('mod-canvas'));
+    const title = d.getElementById('mod-title').textContent;
+    const e = takeErrors();
+    const why = [!open ? 'nu s-a deschis' : '', open && !drawn ? 'desenul pare gol' : ''].concat(e).filter(Boolean).join(' | ');
+    report('Modul ' + id + (title ? ' — ' + title : ''), open && drawn && !e.length, why);
+  }
+
+  /* 4) harta Sistemului Solar */
+  w.location.hash = '#harta'; await wait(2000);
+  { const e = takeErrors(); const ok = !d.getElementById('app').classList.contains('hidden') && notBlank(d.getElementById('sky'));
+    report('Harta Sistemului Solar', ok && !e.length, e.join(' | ')); }
+  w.location.hash = ''; await wait(300);
+
+  const failed = results.filter((r) => !r.ok);
+  status.textContent = failed.length ? failed.length + ' probleme din ' + results.length + ' verificări' : 'Totul e în regulă — ' + results.length + ' verificări';
+  status.className = failed.length ? 'fail' : 'ok';
+  window.__smoke = { done: true, total: results.length, failed: failed.length, results: results };
+})().catch((e) => { document.getElementById('status').textContent = 'Testul s-a oprit: ' + e.message; window.__smoke = { done: true, total: 0, failed: 1, results: [{ name: 'test', ok: false, detail: e.message }] }; });
+</script>
+</body>
+</html>

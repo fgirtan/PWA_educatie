@@ -438,7 +438,7 @@
         const rowH = clamp((avail * 0.36 - perH - 30) / SP.length, avail > 380 ? 15.5 : 12, 24);
         const rowsEnd = rowY + SP.length * rowH;
         const panelB = rowsEnd + Art.fs(api.unit, 0.05, 13) * 1.9 + 6;
-        const fName = Art.fs(api.unit, 0.045, 12), fH = Math.max(11, fName - 2);
+        const fName = Art.fs(api.unit, 0.045, 13), fH = Math.max(12, fName - 2);
         const groundY = bottom - (fName * 1.8 + fH * 1.3 + 12);
         const gY = Math.max(groundY, panelB + 60);
         lay = { W, top, bottom, labelW, cx0, cw, perY, perH, rowY, rowH, rowsEnd, panelB, groundY: gY, sceneTop: panelB + 6, narrow, fName, fH };
@@ -494,7 +494,7 @@
         pxPerM = pxPerM ? Art.damp(pxPerM, targetPx, 5, dt) : targetPx;
         /* rigla de înălțime */
         ctx.save();
-        const rx = 12, fs1 = Math.max(10.5, Art.fs(api.unit, 0.036, 11));
+        const rx = 12, fs1 = Math.max(12, Art.fs(api.unit, 0.036, 12));
         for (let m = 0.5; m <= 2.0001; m += 0.5) {
           const yy = L.groundY - m * pxPerM; if (yy < L.sceneTop - 4) continue;
           ctx.strokeStyle = 'rgba(30,40,60,0.14)'; ctx.setLineDash([3, 6]); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(rx, yy); ctx.lineTo(right, yy); ctx.stroke(); ctx.setLineDash([]);
@@ -555,7 +555,7 @@
           const x0 = X(p[1]), x1 = X(p[2]), w = Math.max(2, x1 - x0 - 1.5);
           ctx.save(); Art.roundRectPath(ctx, x0, L.perY, w, L.perH, Math.min(7, w / 2));
           ctx.fillStyle = p[3]; ctx.fill(); ctx.restore();
-          ctx.save(); ctx.font = Art.font(Math.max(11, fRow - 2), 700); const tw = ctx.measureText(p[0]).width; ctx.restore();
+          ctx.save(); ctx.font = Art.font(Math.max(12, fRow - 2), 700); const tw = ctx.measureText(p[0]).width; ctx.restore();
           if (tw + 8 < w) Art.text(ctx, p[0], x0 + w / 2, L.perY + L.perH / 2 + 0.5, { size: Math.max(11, fRow - 2), halo: false, color: '#fff' });
         });
         /* grila de timp, foarte discretă */

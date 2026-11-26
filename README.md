@@ -99,6 +99,17 @@ fără nuditate și fără violență explicită. Folosește ajutoarele din `js/
 Imaginea unui card se poate reface deschizând `http://localhost:8787/?nosw=1&thumb=1#m/<id>` la 1120×630
 (fără bare și panouri) și salvând captura ca `img/cards/m-<id>.jpg` (800×450).
 
+### Testul rapid
+
+Deschide `http://localhost:8787/tests/smoke.html`: aplicația se încarcă în dreapta și sunt verificate, pe rând,
+secțiunile, toate modulele și harta (nicio eroare, desenul nu e gol). Același test rulează automat pe GitHub
+la fiecare push (`.github/workflows/smoke.yml`).
+
+### Textele explicative
+
+În fiecare modul, butonul **Text** din dreapta-sus (sau tasta <kbd>T</kbd>) ascunde bulele cu explicații —
+util când povestește un părinte. Alegerea se păstrează. O bulă se închide și dacă o atingi.
+
 ### Cum adaugi un modul nou
 
 1. Creează `js/modules/<categorie>/<id>.js` cu `defineModule({ id, title, sub, start(api) { … return { frame(dt, t) {…} }; } })`.
@@ -130,7 +141,7 @@ Adaugă-l în lista potrivită (`PLANETS`, `DWARFS`, `COMETS`, `ASTEROIDS`, `SPA
 
 **Important:** după orice modificare a fișierelor `.js` / `.css`:
 
-1. urcă numărul din `index.html` (acum `?v=41` → `?v=42`, la toate scripturile și la stil) — și aceleași valori în lista `ASSETS` din `sw.js`;
+1. urcă numărul din `index.html` (acum `?v=42` → `?v=43`, la toate scripturile și la stil) — și aceleași valori în lista `ASSETS` din `sw.js`;
 2. urcă versiunea cache-ului din `sw.js` (`const CACHE = 'univers-v3'` → `v4`).
 
 Altfel browserul (și service worker-ul) servesc varianta veche. În timpul dezvoltării poți deschide

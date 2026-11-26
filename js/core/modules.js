@@ -6,6 +6,18 @@
    ============================================================ */
 (function () {
   const MODS = {};
+
+  /* ---------- textele explicative pot fi ascunse (util când părintele povestește) ---------- */
+  const textsOff = () => document.body.classList.contains('texts-off');
+  function markNew(on) { const b = document.getElementById('mod-text'); if (b) b.classList.toggle('has-new', !!on); }
+  function setTexts(on, save) {
+    document.body.classList.toggle('texts-off', !on);
+    const b = document.getElementById('mod-text');
+    if (b) { b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.querySelector('span').textContent = on ? 'Text' : 'Text ascuns'; }
+    if (on) markNew(false);
+    if (save) { try { localStorage.setItem('texts', on ? 'on' : 'off'); } catch (e) { } }
+    window.dispatchEvent(new Event('resize'));          // modulul își recalculează zona de desen
+  }
   window.defineModule = function (d) { MODS[d.id] = d; };
 
   const $ = (s) => document.querySelector(s);
@@ -56,7 +68,8 @@
         info.innerHTML = html;
         info.classList.add('show');
         clearTimeout(api._sayT);
-        if (ms) api._sayT = setTimeout(() => info.classList.remove('show'), ms);
+        if (ms) api._sayT = setTimeout(() => { info.classList.remove('show'); markNew(false); }, ms);
+        markNew(textsOff());                     // textele sunt ascunse: butonul „Text” arată că a apărut un mesaj nou
       },
       row: function (title) {
         const r = document.createElement('div');
@@ -118,6 +131,9 @@
     /* când apare/dispare/se schimbă bula de informații, mutăm desenul sub ea */
     const roInfo = window.ResizeObserver ? new ResizeObserver(() => { api.layout(); if (inst && inst.resize) inst.resize(); }) : null;
     if (roInfo) roInfo.observe(info);
+    const closeInfo = () => { info.classList.remove('show'); clearTimeout(api._sayT); api.layout(); if (inst && inst.resize) inst.resize(); };
+    info.addEventListener('click', closeInfo);
+    cleanups.push(() => info.removeEventListener('click', closeInfo));
     cleanups.push(() => { if (roInfo) roInfo.disconnect(); });
     if (ro) { ro.observe(canvas); ro.observe(panel); }
     window.addEventListener('resize', resize);
@@ -201,6 +217,11 @@
 
   window.addEventListener('DOMContentLoaded', () => {
     if (/[?&]thumb=1/.test(location.search)) document.body.classList.add('thumb');
+    let pref = 'on'; try { pref = localStorage.getItem('texts') || 'on'; } catch (e) { }
+    setTexts(pref !== 'off', false);
+    const tt = $('#mod-text');
+    if (tt) tt.addEventListener('click', () => { const on = textsOff(); setTexts(on, true); if (on) { const inf = $('#mod-info'); if (inf.innerHTML) inf.classList.add('show'); window.dispatchEvent(new Event('resize')); } });
+    window.addEventListener('keydown', (e) => { if ((e.key === 't' || e.key === 'T') && cur && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) $('#mod-text').click(); });
     document.querySelectorAll('.sec-tile').forEach((t) => {
       const id = t.getAttribute('data-section');
       const n = document.querySelectorAll('#sec-' + id + ' .card').length;
