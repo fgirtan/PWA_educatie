@@ -36,3 +36,23 @@
     ctx.fillStyle = '#1b1f33'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(txt, x, y + 1); ctx.restore();
   };
 })();
+/* desenează o creatură cu o înălțime dată în pixeli, cu picioarele pe y */
+(function () {
+  const M = {};
+  function measure(name, o) {
+    const key = name + (o && o.v ? ':' + o.v : '');
+    if (M[key]) return M[key];
+    const c = document.createElement('canvas'); c.width = 700; c.height = 700; const x = c.getContext('2d');
+    window.Creatures.draw(name, x, 350, 500, 100, 0, Object.assign({}, o || {}, { face: 1 }));
+    const d = x.getImageData(0, 0, 700, 700).data; let y0 = 700, y1 = 0, x0 = 700, x1 = 0;
+    for (let yy = 0; yy < 700; yy += 2) for (let xx = 0; xx < 700; xx += 2) if (d[(yy * 700 + xx) * 4 + 3] > 30) { if (yy < y0) y0 = yy; if (yy > y1) y1 = yy; if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; }
+    return (M[key] = { h: Math.max(1, y1 - y0), w: Math.max(1, x1 - x0), base: y1 - 500, cx: (x0 + x1) / 2 - 350 });
+  }
+  window.CreatureH = function (name, ctx, x, y, hpx, t, o) {
+    o = o || {}; const m = measure(name, o), s = 100 * hpx / m.h, f = o.face === undefined ? 1 : o.face;
+    window.Creatures.draw(name, ctx, x - m.cx * s / 100 * f, y - m.base * s / 100, s, t, o);
+    return { w: m.w * s / 100, h: hpx };
+  };
+  window.CreatureW = function (name, hpx, o) { const m = measure(name, o); return m.w * hpx / m.h; };
+  window.Emoji = function (ctx, e, x, y, s, rot) { ctx.save(); ctx.translate(x, y); if (rot) ctx.rotate(rot); ctx.font = Math.round(s) + 'px "Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(e, 0, 0); ctx.restore(); };
+})();

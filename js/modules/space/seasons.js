@@ -95,7 +95,7 @@
         rot += dt * spd * 14;
         A.scene(ctx, api.W, api.H, 'space'); A.stars(ctx, api.W, api.H, t);
         const U = api.unit, W = api.freeW, wide = W > 640;
-        const R = Math.min(U * 0.78, wide ? W * 0.24 : W * 0.36), gx = wide ? padL() + (W - padL()) * 0.45 : W * 0.55, gy = api.cy - (wide ? 0 : U * 0.2);
+        const R = wide ? Math.min(U * 0.78, W * 0.24) : Math.min(U * 0.55, W * 0.3), gx = wide ? padL() + (W - padL()) * 0.45 : W * 0.56, gy = api.cy - (wide ? 0 : U * 0.42);
         sunDisk(ctx, padL() - R * 0.2, gy, R * 0.45, t);
         for (let i = 0; i < 6; i++) { const yy = gy + (i - 2.5) * R * 0.32, ph = (t * 0.6 + i * 0.17) % 1; A.arrow(ctx, padL() + R * 0.35, yy, padL() + R * 0.35 + (gx - R - padL() - R * 0.45) * (0.4 + ph * 0.6), yy, { color: 'rgba(255,220,120,' + (0.25 + 0.3 * (1 - ph)) + ')', width: 2 }); }
         globe(ctx, gx, gy, R, rot, [-1, 0], 0, { lights: true, marker: true });
@@ -106,7 +106,7 @@
         /* ora în România */
         let lr = ((RO[0] + rot) % 360 + 540) % 360 - 180; const hour = ((12 + (lr + 90) / 15) % 24 + 24) % 24;
         const day = hour > 6 && hour < 18, alt = Math.sin((hour - 6) / 12 * Math.PI) * 60;
-        const bw = wide ? Math.min(240, W * 0.26) : Math.min(200, W * 0.5), bh = bw * 0.62, bx = wide ? W - bw - 16 : W - bw - 12, by = wide ? gy - bh / 2 : api.cy + U * 0.55 - bh;
+        const bw = wide ? Math.min(240, W * 0.26) : Math.min(200, W * 0.5), bh = bw * 0.62, bx = wide ? W - bw - 16 : W / 2 - bw / 2, by = wide ? gy - bh / 2 : gy + R + 64;
         const tw = clamp((hour < 12 ? hour - 5 : 19 - hour) / 2, 0, 1);
         homeScene(ctx, bx, by, bw, bh, { skyTop: [A.mix('#0b1433', '#3f8fe0', tw), A.mix('#1c2650', hour < 12 ? '#ffc58a' : '#ffb07a', tw * (1 - tw) * 3.5 > 1 ? 1 : tw)], ground: A.mix('#1d3a1d', '#5aa84a', tw), sunAlt: day ? alt : -20, sunX: clamp((hour - 6) / 12, 0, 1) * 0.8 + 0.1, stars: 1 - tw, night: tw < 0.5, tree: 'summer', moon: tw < 0.3, t: t });
         const hh = Math.floor(hour), mm = Math.floor((hour - hh) * 60 / 10) * 10;
