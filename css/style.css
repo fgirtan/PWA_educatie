@@ -423,6 +423,19 @@ body.sky-mode .date-box { display: none; }
 #catalog .chip:hover { background: var(--accent); color: #04121c; border-color: var(--accent); }
 #catalog .chip:active { transform: scale(.95); }
 
+/* ---------- „Urmărești: …” (fișa închisă, urmărirea continuă) ---------- */
+#follow-chip {
+  position: absolute; z-index: 8; left: 50%; top: 76px; transform: translateX(-50%);
+  display: none; align-items: center; gap: 4px; padding: 4px;
+  background: rgba(10, 15, 35, .88); border: 1px solid var(--line); border-radius: 99px;
+}
+#follow-chip.open { display: flex; }
+#follow-chip button { font: inherit; font-size: 15px; font-weight: 800; color: #e8eeff; background: none; border: 0; border-radius: 99px; padding: 8px 14px; cursor: pointer; }
+#follow-chip .fc-name::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #82d7ff; margin-right: 8px; vertical-align: 1px; }
+#follow-chip .fc-stop { background: rgba(255, 255, 255, .1); }
+#follow-chip button:hover { background: rgba(255, 255, 255, .18); }
+#app:has(#quiz.open) #follow-chip { display: none; }
+
 /* ---------- jocul „Găsește!” ---------- */
 #quiz {
   position: absolute; z-index: 9; left: 50%; top: 76px;

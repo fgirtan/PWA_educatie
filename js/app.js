@@ -1254,6 +1254,7 @@ function frame(now) {
 
   drawSelectionRing();
   updateHud();
+  updateFollowChip();
 
   requestAnimationFrame(frame);
 }
@@ -1410,6 +1411,33 @@ function select(o) {
   $('#btn-follow').style.display = (o.radius || SPACECRAFT.indexOf(o) >= 0) ? '' : 'none';
   $('#btn-zoomto').style.display = skyMode ? 'none' : '';
   updateLiveInfo();
+}
+
+/* închide fișa, dar urmărirea continuă (se oprește la atingere în altă parte sau la „Nu mai urmări”) */
+function closeInfo() {
+  selected = null;
+  $('#info').classList.remove('open');
+}
+
+/* eticheta „Urmărești …” cât timp fișa e închisă */
+let followChip = null, followChipKey = '';
+function updateFollowChip() {
+  const show = followId && !skyMode && !$('#info').classList.contains('open');
+  const key = show ? followId : '';
+  if (key === followChipKey) return;
+  followChipKey = key;
+  if (!followChip) {
+    followChip = document.createElement('div');
+    followChip.id = 'follow-chip';
+    followChip.innerHTML = '<button type="button" class="fc-name"></button><button type="button" class="fc-stop">Nu mai urmări</button>';
+    followChip.querySelector('.fc-name').addEventListener('click', () => { const o = byId(followId); if (o) select(o); });
+    followChip.querySelector('.fc-stop').addEventListener('click', () => { followId = null; });
+    $('#app').appendChild(followChip);
+  }
+  const o = show ? byId(followId) : null;
+  followChip.querySelector('.fc-name').textContent = o ? 'Urmărești: ' + o.name : '';
+  followChip.querySelector('.fc-name').title = 'Arată fișa';
+  followChip.classList.toggle('open', !!o);
 }
 
 /* ---------- informații care se schimbă în timp ---------- */
@@ -1682,7 +1710,7 @@ function setupEvents() {
   });
   $('#btn-menu').addEventListener('click', () => $('#catalog').classList.toggle('open'));
   $('#catalog-close').addEventListener('click', () => $('#catalog').classList.remove('open'));
-  $('#info-close').addEventListener('click', () => select(null));
+  $('#info-close').addEventListener('click', closeInfo);
   $('#btn-zoomto').addEventListener('click', () => { if (selected) flyTo(selected); });
   $('#btn-follow').addEventListener('click', () => {
     if (!selected) return;
