@@ -1,5 +1,5 @@
 /* Service worker — aplicația funcționează complet offline. */
-const CACHE = 'univers-v47';
+const CACHE = 'univers-v48';
 const ASSETS = [
   './',
   'index.html',
@@ -37,6 +37,7 @@ const ASSETS = [
   'js/modules/tech/circuit.js?v=46',
   'js/modules/tech/phone.js?v=46',
   'js/modules/tech/solar.js?v=46',
+  'js/modules/vehicles/aeroengine.js?v=46',
   'js/modules/vehicles/airplane.js?v=46',
   'js/modules/vehicles/car.js?v=46',
   'js/modules/vehicles/emotor.js?v=46',
@@ -46,6 +47,7 @@ const ASSETS = [
   'img/cards/blackhole.jpg',
   'img/cards/supernova.jpg',
   'img/hub/space.jpg',
+  'img/cards/m-aeroengine.jpg',
   'img/cards/m-airplane.jpg',
   'img/cards/m-binary.jpg',
   'img/cards/m-brain.jpg',
