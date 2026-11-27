@@ -24,6 +24,7 @@ let followId = null;
 const EPOCH = new Date(2026, 10, 26);  // 26 noiembrie 2026
 let simDays = 0;              // zile scurse de la EPOCH
 let speed = 3;                // zile pe secundă
+const SPEED_MIN = 1 / 86400;  // cea mai mică viteză: timp real (o secundă pe secundă)
 let playing = true;
 
 let showOrbits = true;
@@ -1561,6 +1562,10 @@ function updateHud() {
 function speedLabel() {
   if (!playing) return 'pauză';
   const d = speed;
+  const sec = d * 86400;
+  if (sec < 1.5) return 'timp real';
+  if (sec < 90) return Math.round(sec) + ' secunde/sec';
+  if (sec < 3600) return Math.round(sec / 60) + ' minute/sec';
   if (d < 0.9) return (d * 24).toFixed(1).replace('.0', '') + ' ore/sec';
   if (d < 20) return d.toFixed(d < 3 ? 1 : 0).replace('.0', '') + ' zile/sec';
   if (d < 700) return (d / 30.4).toFixed(1).replace('.0', '') + ' luni/sec';
@@ -1722,10 +1727,10 @@ function setupEvents() {
   const sp = $('#speed');
   sp.addEventListener('input', () => {
     const t = Number(sp.value) / 1000;
-    speed = Math.exp(lerp(Math.log(0.02), Math.log(2e6), t));
+    speed = Math.exp(lerp(Math.log(SPEED_MIN), Math.log(2e6), t));
     if (!playing) togglePlay();
   });
-  sp.value = String(Math.round(1000 * (Math.log(speed / 0.02) / Math.log(2e6 / 0.02))));
+  sp.value = String(Math.round(1000 * (Math.log(speed / SPEED_MIN) / Math.log(2e6 / SPEED_MIN))));
 
   /* zoom slider */
   zSlider().addEventListener('input', () => {

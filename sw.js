@@ -1,5 +1,5 @@
 /* Service worker — aplicația funcționează complet offline. */
-const CACHE = 'univers-v54';
+const CACHE = 'univers-v55';
 const ASSETS = [
   './',
   'index.html',
@@ -8,7 +8,7 @@ const ASSETS = [
   'js/data-extra.js?v=46',
   'js/textures.js?v=46',
   'js/sky.js?v=46',
-  'js/app.js?v=47',
+  'js/app.js?v=48',
   'js/core/art.js?v=46',
   'js/core/creatures.js?v=46',
   'js/core/fit.js?v=46',

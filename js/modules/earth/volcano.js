@@ -38,7 +38,7 @@
     id: 'volcano', title: 'Vulcani', sub: 'Cum se pregătește și cum explodează un vulcan',
     start: function (api) {
       const ctx = api.ctx;
-      let visc = 0.6, gas = 0.6, press = 0, erupt = 0, parts = [], ash = [], lava = [], bombs = [], shake = 0, flow = 0, ptime = 0, dark = 0, needle = 0;
+      let visc = 0.6, gas = 0.6, press = 0, erupt = 0, parts = [], ash = [], lava = [], bombs = [], shake = 0, flow = 0, ptime = 0, dark = 0, needle = 0, mag = 1, peak = 1, cond = 0;
       const r1 = api.row('Tipul magmei');
       api.slider(r1, { label: 'Vâscozitate', min: 0, max: 1, step: 0.01, value: visc, fmt: (v) => v < 0.35 ? 'fluidă' : v < 0.7 ? 'medie' : 'groasă', onInput: (v) => { visc = v; typeSay(); } });
       api.slider(r1, { label: 'Gaze în magmă', min: 0, max: 1, step: 0.01, value: gas, fmt: (v) => v < 0.35 ? 'puține' : v < 0.7 ? 'medii' : 'multe', onInput: (v) => { gas = v; typeSay(); } });
@@ -88,9 +88,10 @@
         if (ptime && !erupt) { press += dt * (0.12 + 0.1 * gas); sl.set(Math.min(1, press)); }
         const thr = 0.6 + 0.4 * visc;
         const vh = U * 0.8, vw = U * 1.15, craterW = 16 + 10 * (1 - visc), topY = gy - vh;
-        if (press >= thr && !erupt) { erupt = 1; ptime = 0; shake = 1; api.say(ex > 0.55 ? '💥 <b>EXPLOZIE!</b> Cenușă, bombe vulcanice și nori fierbinți.' : '🌋 <b>Erupție!</b> Lava iese și curge pe pantă.', 7000); }
+        if (press >= thr && !erupt) { erupt = 1; peak = Math.max(0.1, press); ptime = 0; shake = 1; api.say(ex > 0.55 ? '💥 <b>EXPLOZIE!</b> Cenușă, bombe vulcanice și nori fierbinți.' : '🌋 <b>Erupție!</b> Lava iese și curge pe pantă.', 7000); }
         if (erupt) {
           press = Math.max(0, press - dt * (ex > 0.55 ? 0.22 : 0.07)); sl.set(press);
+          mag = Math.min(mag, 0.1 + 0.9 * clamp(press / peak, 0, 1));   /* camera se golește pe măsură ce magma iese */
           const n = ex > 0.55 ? 5 : 3;
           for (let i = 0; i < n; i++) {
             const a = -Math.PI / 2 + (Math.random() - 0.5) * (ex > 0.55 ? 0.8 : 0.35), sp = (ex > 0.55 ? 380 : 190) * (0.5 + Math.random()) * U / 300;
@@ -103,7 +104,8 @@
           if (ex <= 0.55) flow = Math.min(1, flow + dt * 0.2);
           if (ex > 0.55 && Math.random() < dt * 5) lava.push({ x: cx, side: Math.random() < 0.5 ? -1 : 1, p: 0, s: Math.random() });
           if (press < 0.04) { erupt = 0; api.say('Erupția s-a oprit. Camera magmatică s-a golit și se va umple din nou în timp.', 7000); }
-        } else flow = Math.max(0, flow - dt * 0.02);
+        } else { flow = Math.max(0, flow - dt * 0.02); mag = Math.min(1, mag + dt * (ptime ? 0.3 : 0.04)); }   /* magma nouă urcă din adânc și reumple camera */
+        cond = A.damp(cond, erupt ? 1 : clamp(press / thr, 0, 1) * 0.92, 3, dt);
         shake = Math.max(0, shake - dt * 0.9);
         dark = A.damp(dark, erupt && ex > 0.55 ? 1 : Math.min(0.6, ash.length / 80), 0.8, dt);
         needle = A.damp(needle, press, 6, dt);
@@ -137,17 +139,26 @@
         const cwid = Math.max(4, U * (0.032 + press * 0.014));
         ctx.beginPath(); ctx.moveTo(cx - cwid - 5, chY - ery * 0.6); ctx.bezierCurveTo(cx - cwid - 6, gy, cx - cwid * 0.6 - 4, topY + vh * 0.5, cx - cwid * 0.8 - 3, topY); ctx.lineTo(cx + cwid * 0.8 + 3, topY); ctx.bezierCurveTo(cx + cwid * 0.6 + 4, topY + vh * 0.5, cx + cwid + 6, gy, cx + cwid + 5, chY - ery * 0.6); ctx.closePath(); ctx.fillStyle = '#2e1e1a'; ctx.fill();
         const mt = magmaTex();
-        const magmaFill = (path, scroll) => { ctx.save(); path(); ctx.clip(); const hh = (chY + ery) - topY, oy = (scroll % hh); for (let y = chY + ery - oy - hh; y < chY + ery + hh; y += hh - 1) ctx.drawImage(mt, cx - erx, y, erx * 2, hh); ctx.restore(); };
+        const surf = (y) => { ctx.beginPath(); ctx.moveTo(cx - erx - 4, y); for (let k = 0; k <= 24; k++) { const x = cx - erx - 4 + (erx * 2 + 8) * k / 24; ctx.lineTo(x, y + Math.sin(k * 0.9 + t * 2.2) * U * 0.006); } ctx.lineTo(cx + erx + 4, chY + ery + 4); ctx.lineTo(cx - erx - 4, chY + ery + 4); ctx.closePath(); };
+        const magmaFill = (path, scroll, top) => { ctx.save(); path(); ctx.clip(); if (top !== undefined) { surf(top); ctx.clip(); } const hh = (chY + ery) - topY, oy = (scroll % hh); for (let y = chY + ery - oy - hh; y < chY + ery + hh; y += hh - 1) ctx.drawImage(mt, cx - erx, y, erx * 2, hh); ctx.restore(); };
         const conduit = () => { ctx.beginPath(); ctx.moveTo(cx - cwid, chY - ery * 0.6); ctx.bezierCurveTo(cx - cwid, gy, cx - cwid * 0.6, topY + vh * 0.5, cx - cwid * 0.8, topY + 2); ctx.lineTo(cx + cwid * 0.8, topY + 2); ctx.bezierCurveTo(cx + cwid * 0.6, topY + vh * 0.5, cx + cwid, gy, cx + cwid, chY - ery * 0.6); ctx.closePath(); };
-        magmaFill(conduit, t * (20 + (erupt ? 120 : press * 40)));
+        const cBase = chY - ery * 0.6, cTop = lerp(cBase, topY, cond), mTop = chY + ery - 2 * ery * mag;
+        if (cond > 0.02) {
+          /* în camera goală coșul nu „atârnă”: magma din coș se vede doar deasupra tavanului camerei; la erupție coloana coboară până la suprafața magmei */
+          ctx.save(); ctx.beginPath(); ctx.rect(cx - erx, topY - 4, erx * 2, (mag > 0.9 ? cBase : chY - ery * 0.96) - topY + 4); ctx.clip();
+          magmaFill(conduit, t * (20 + (erupt ? 120 : press * 40)), cTop); ctx.restore();
+          if (erupt && mTop > chY - ery) magmaFill(() => { ctx.beginPath(); ctx.rect(cx - cwid * 0.8, chY - ery * 0.97, cwid * 1.6, mTop - (chY - ery * 0.97) + 2); }, t * 140);
+        }
         const chamber = () => { ctx.beginPath(); ctx.ellipse(cx, chY, erx, ery, 0, 0, TAU); };
-        magmaFill(chamber, t * 8);
+        magmaFill(chamber, t * 8, mTop);
         const sh = ctx.createRadialGradient(cx - erx * 0.2, chY - ery * 0.3, ery * 0.2, cx, chY, erx); sh.addColorStop(0, A.rgba('#fff2b0', 0.35 + press * 0.3)); sh.addColorStop(0.6, 'rgba(255,140,40,0)'); sh.addColorStop(1, 'rgba(120,20,6,0.65)');
-        ctx.fillStyle = sh; chamber(); ctx.fill();
+        ctx.save(); surf(mTop); ctx.clip(); ctx.fillStyle = sh; chamber(); ctx.fill(); ctx.restore();
+        /* pereții camerei goale: rocă întunecată, încă fierbinte */
+        if (mag < 0.98) { ctx.save(); chamber(); ctx.clip(); const eg = ctx.createLinearGradient(0, chY - ery, 0, mTop); eg.addColorStop(0, 'rgba(20,12,10,0.55)'); eg.addColorStop(1, 'rgba(120,40,14,0.35)'); ctx.fillStyle = eg; ctx.fillRect(cx - erx, chY - ery, erx * 2, Math.max(0, mTop - (chY - ery))); ctx.strokeStyle = 'rgba(255,214,120,0.8)'; ctx.lineWidth = Math.max(1.5, U * 0.006); ctx.beginPath(); for (let k = 0; k <= 24; k++) { const x = cx - erx + erx * 2 * k / 24, y = mTop + Math.sin(k * 0.9 + t * 2.2) * U * 0.006; k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke(); ctx.restore(); }
         /* rocă încălzită în jurul camerei (fenomenul: căldura magmei) */
-        ctx.save(); ctx.translate(cx, chY); ctx.scale(1, ery / erx); const hg2 = ctx.createRadialGradient(0, 0, erx * 0.95, 0, 0, erx * 1.22); hg2.addColorStop(0, A.rgba('#ff7a2f', 0.25 + press * 0.3)); hg2.addColorStop(1, 'rgba(255,122,47,0)'); ctx.fillStyle = hg2; ctx.beginPath(); ctx.arc(0, 0, erx * 1.22, 0, TAU); ctx.fill(); ctx.restore();
+        ctx.save(); ctx.translate(cx, chY); ctx.scale(1, ery / erx); const hg2 = ctx.createRadialGradient(0, 0, erx * 0.95, 0, 0, erx * 1.22); hg2.addColorStop(0, A.rgba('#ff7a2f', (0.25 + press * 0.3) * (0.4 + 0.6 * mag))); hg2.addColorStop(1, 'rgba(255,122,47,0)'); ctx.fillStyle = hg2; ctx.beginPath(); ctx.arc(0, 0, erx * 1.22, 0, TAU); ctx.fill(); ctx.restore();
         /* bule de gaz care urcă */
-        for (let i = 0; i < 6 + gas * 18; i++) { const a = ((t * (0.25 + visc * -0.15 + 0.15) + i * 0.173) % 1), bx = cx + Math.sin(i * 9.1 + t) * cwid * 0.45, byy = chY - a * (chY - topY), br = Math.max(1, cwid * (0.12 + (i % 3) * 0.06)); ctx.fillStyle = 'rgba(255,244,200,0.75)'; ctx.beginPath(); ctx.arc(bx, byy, br, 0, TAU); ctx.fill(); ctx.strokeStyle = 'rgba(160,60,10,0.5)'; ctx.lineWidth = 0.8; ctx.stroke(); }
+        for (let i = 0; i < 6 + gas * 18; i++) { const a = ((t * (0.25 + visc * -0.15 + 0.15) + i * 0.173) % 1), bx = cx + Math.sin(i * 9.1 + t) * cwid * 0.45, byy = chY - a * (chY - topY), br0 = (byy < cTop || (byy > cBase && byy < mTop)) ? 0 : 1, br = Math.max(1, cwid * (0.12 + (i % 3) * 0.06)); if (!br0) continue; ctx.fillStyle = 'rgba(255,244,200,0.75)'; ctx.beginPath(); ctx.arc(bx, byy, br, 0, TAU); ctx.fill(); ctx.strokeStyle = 'rgba(160,60,10,0.5)'; ctx.lineWidth = 0.8; ctx.stroke(); }
         /* craterul */
         ctx.fillStyle = '#2a201c'; ctx.beginPath(); ctx.ellipse(cx, topY + 1, craterW + 3, U * 0.018, 0, 0, TAU); ctx.fill();
         if (erupt || press > 0.4) { ctx.fillStyle = A.rgba('#ff8a2a', clamp(press * 1.4, 0.3, 1)); ctx.beginPath(); ctx.ellipse(cx, topY + 1, craterW * 0.8, U * 0.012, 0, 0, TAU); ctx.fill(); }
