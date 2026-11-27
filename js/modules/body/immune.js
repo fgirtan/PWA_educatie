@@ -20,13 +20,19 @@
       const rh = api.row(''), rf = api.row(''), rv = api.row('');
       api.button(rh, '🧼 Spală pe mâini (20 de secunde)', () => { washing = 0.001; });
       api.button(rh, '🖐️ Murdărește mâinile', () => { washing = 0; dirty(); });
-      api.button(rf, '🦠 Intră microbi', () => { addGerms(6); });
+      api.button(rf, '🦠 Câțiva microbi', () => { addGerms(6); });
+      api.button(rf, '🦠🦠🦠 Foarte mulți microbi', () => { addGerms(45); sickSaid = false; if (vax) api.say('<b>Au intrat foarte mulți microbi</b>, dar corpul e <b>vaccinat</b>! Globulele albe îi recunosc pe loc, fac repede o mulțime de anticorpi, iar corpul trimite întăriri. Microbii nu apucă să se înmulțească: <b>nici nu te îmbolnăvești</b>, sau treci ușor prin boală. 💪'); else api.say('<b>Au intrat foarte mulți microbi!</b> Ei se <b>înmulțesc</b> repede, iar globulele albe nu mai fac față: fiecare luptă cu prea mulți deodată și unele <b>mor</b> în luptă. Corpul face globule noi, dar nu destul de repede…'); });
+      api.button(rf, '💊 Medicamentul doctorului', () => { med = 4; api.say('<b>Doctorul</b> a dat un medicament. Pentru microbii numiți <b>bacterii</b>, un <b>antibiotic</b> îi oprește să se mai înmulțească și îi omoară, iar globulele albe pot termina treaba. (La viruși, antibioticul nu ajută: acolo corpul are nevoie de odihnă, iar uneori de alte medicamente sau de vaccin, dinainte.) Medicamentele se iau <b>doar</b> când le dă doctorul!'); });
+      const bvx = api.button(rf, '💉 Corp vaccinat', () => { vax = !vax; bvx.classList.toggle('on', vax); bvx.innerHTML = vax ? '💉 Vaccinat ✅' : '💉 Corp vaccinat'; if (vax) { sickSaid = false; newCells(3, true); } api.say(vax ? '<b>💉 Corpul e vaccinat!</b> Vaccinul i-a arătat dinainte corpului cum arată microbul. Acum globulele albe îl <b>recunosc imediat</b>: pornesc mai repede, fac <b>mult mai mulți anticorpi</b>, iar corpul trimite repede globule noi, pentru că își <b>amintește</b> dușmanul. Încearcă acum cu <b>Foarte mulți microbi</b>!' : 'Corpul nu mai e vaccinat: globulele albe trebuie să învețe singure cum arată microbul, și le ia mai mult timp.'); });
+      api.button(rf, '⟲ De la capăt', () => { fg.length = 0; abs.length = 0; cells.length = 0; newCells(3); addGerms(5); med = 0; sickSaid = false; });
       api.button(rv, '▶ Prima întâlnire', () => { round = 1; st = 0; resetV(); api.say('<b>Prima dată</b> când microbul intră, corpul nu-l cunoaște. Îi trebuie <b>câteva zile</b> să facă „cheile” potrivite (anticorpii). Între timp, microbii se înmulțesc și tu ești bolnav. 🤒'); });
       api.button(rv, '💉 Cu vaccin', () => { round = 2; st = 0; resetV(); api.say('<b>Vaccinul</b> îi arată corpului o „poză” a microbului, fără să te îmbolnăvească. Corpul învață și își <b>amintește</b>. Când vine microbul adevărat, anticorpii sunt <b>gata imediat</b> și îl prind înainte să se înmulțească! 💪'); });
       const MSG = { hands: 'Microbii sunt viețuitoare <b>atât de mici</b> încât nu le vezi cu ochiul liber. Ei stau peste tot: pe mâini, pe jucării, pe clanțe. Unii ne pot îmbolnăvi. <b>Săpunul</b> îi desprinde de piele, iar apa îi spală. Apasă butonul ca să speli mâinile!', fight: 'Dacă un microb intră în corp, îl așteaptă armata: <b>globulele albe</b>. Unele îl înghit, altele fac <b>anticorpi</b> (ca niște cleștișori în formă de Y) care se lipesc de microbi și îi opresc.', vaccine: 'Cum ne ajută un <b>vaccin</b>? Compară cele două întâlniri cu același microb: prima fără vaccin, a doua cu vaccin.' };
       function setMode(m) { mode = m; st = 0; for (const k in bs) bs[k].classList.toggle('on', k === m); rh.style.display = m === 'hands' ? '' : 'none'; rf.style.display = m === 'fight' ? '' : 'none'; rv.style.display = m === 'vaccine' ? '' : 'none'; api.say(MSG[m]); if (m === 'fight') { fg.length = 0; addGerms(5); } if (m === 'vaccine') { round = 0; resetV(); } api.layout(); }
       const hg = []; function dirty() { hg.length = 0; for (let i = 0; i < 28; i++) hg.push({ x: 320 + Math.random() * 360, y: 180 + Math.random() * 300, c: ['#5ac85a', '#ff8a3a', '#b46ae8', '#3ac8c8'][i % 4], r: 9 + Math.random() * 6, a: 1, vy: 0 }); } dirty();
-      const fg = [], cells = [{ x: 200, y: 300, vx: 0, vy: 0 }, { x: 800, y: 250, vx: 0, vy: 0 }, { x: 500, y: 480, vx: 0, vy: 0 }], abs = [];
+      const fg = [], cells = [], abs = []; let med = 0, sickSaid = false, spawnT = 0, vax = false;
+      function newCells(n, edge) { for (let i = 0; i < n; i++) cells.push({ x: edge ? 20 : 200 + i * 300, y: edge ? 150 + Math.random() * 350 : 250 + (i % 2) * 200, vx: edge ? 60 : 0, vy: 0, hp: 1, die: 0, born: edge ? 0 : 1 }); }
+      newCells(3);
       function addGerms(n) { for (let i = 0; i < n; i++) fg.push({ x: 60 + Math.random() * 120, y: 150 + Math.random() * 350, vx: 20 + Math.random() * 30, vy: (Math.random() - 0.5) * 30, hit: 0, dead: 0 }); }
       let vg = [], vab = [], hist = [];
       function resetV() { vg = [{ x: 200, y: 330, dead: 0 }]; vab = []; hist = []; }
@@ -52,13 +58,35 @@
           } else if (mode === 'fight') {
             const g0 = ctx.createRadialGradient(500, 300, 50, 500, 300, 560); g0.addColorStop(0, '#5a1a2a'); g0.addColorStop(1, '#250812'); ctx.fillStyle = g0; ctx.fillRect(0, 0, 1000, 600);
             for (let i = 0; i < 30; i++) { ctx.fillStyle = 'rgba(232,57,79,0.35)'; ctx.beginPath(); ctx.ellipse((i * 113 + t * 25) % 1040 - 20, (i * 71) % 600, 16, 10, i, 0, TAU); ctx.fill(); }
-            for (const g of fg) { if (g.dead) { g.dead += dt; continue; } g.x += g.vx * dt; g.y += g.vy * dt; if (g.y < 100 || g.y > 560) g.vy *= -1; if (g.x > 960) g.vx = -Math.abs(g.vx); if (g.x < 40) g.vx = Math.abs(g.vx); if (g.hit > 0.99) g.dead = 0.01; }
-            for (const c of cells) { const tg = fg.filter((g) => !g.dead).sort((a, b) => Math.hypot(a.x - c.x, a.y - c.y) - Math.hypot(b.x - c.x, b.y - c.y))[0]; const tx = tg ? tg.x : 500 + Math.sin(t * 0.3 + c.x) * 300, ty = tg ? tg.y : 320 + Math.cos(t * 0.4 + c.y) * 150; const d = Math.hypot(tx - c.x, ty - c.y) || 1; c.vx = lerp(c.vx, (tx - c.x) / d * 70, dt * 1.5); c.vy = lerp(c.vy, (ty - c.y) / d * 70, dt * 1.5); c.x += c.vx * dt; c.y += c.vy * dt; if (tg && d < 40) tg.hit = Math.min(1, tg.hit + dt * 0.8); if (tg && Math.random() < dt * 1.5) abs.push({ x: c.x, y: c.y, tg: tg, a: Math.random() * TAU, stuck: false }); }
-            for (let i = abs.length - 1; i >= 0; i--) { const a = abs[i]; if (!a.tg || a.tg.dead > 0.5) { abs.splice(i, 1); continue; } const dx = a.tg.x - a.x, dy = a.tg.y - a.y, d = Math.hypot(dx, dy); if (d > 22) { a.x += dx / d * 160 * dt; a.y += dy / d * 160 * dt; } else { a.stuck = true; a.tg.hit = Math.min(1, a.tg.hit + dt * 0.15); a.x = a.tg.x - dx / d * 22; a.y = a.tg.y - dy / d * 22; } antibody(ctx, a.x, a.y, 9, Math.atan2(dy, dx) + Math.PI / 2); }
-            for (let i = fg.length - 1; i >= 0; i--) { const g = fg[i]; if (g.dead > 1) { fg.splice(i, 1); continue; } germ(ctx, g.x, g.y, 18 * (g.dead ? 1 - g.dead : 1), t * 2 + i, '#5ac85a', true, g.dead ? 1 - g.dead : 1); }
-            for (const c of cells) wbc(ctx, c.x, c.y, 42, t);
-            A.label(ctx, 'globulă albă', cells[0].x, cells[0].y - 60, { size: 15 }); A.label(ctx, 'Y = anticorpi', 860, 560, { size: 15, color: '#ffe08a' });
-            A.text(ctx, fg.length ? '🦠 microbi: ' + fg.filter((g) => !g.dead).length : '🏆 Corpul a câștigat!', 500, 70, { size: 22, color: fg.length ? '#ffb0b8' : '#7dffb0' });
+            const live = fg.filter((g) => !g.dead);
+            if (med > 0) { med -= dt; for (const g of live) if (Math.random() < dt * 0.9) g.dead = 0.01; }
+            /* microbii se înmulțesc (mai încet decât îi pot prinde câteva globule, dar foarte mulți scapă de sub control) */
+            if (med <= 0 && live.length < 140) for (const g of live) if (Math.random() < dt * 0.11) fg.push({ x: g.x + (Math.random() - 0.5) * 30, y: g.y + (Math.random() - 0.5) * 30, vx: (Math.random() - 0.5) * 60, vy: (Math.random() - 0.5) * 40, hit: 0, dead: 0, born: 0 });
+            for (const g of fg) { g.born = Math.min(1, (g.born === undefined ? 1 : g.born) + dt * 2); if (g.dead) { g.dead += dt; continue; } g.x += g.vx * dt; g.y += g.vy * dt; if (g.y < 100 || g.y > 560) g.vy *= -1; if (g.x > 960) g.vx = -Math.abs(g.vx); if (g.x < 40) g.vx = Math.abs(g.vx); if (g.hit > 0.99) g.dead = 0.01; }
+            /* corpul trimite globule albe noi, dar încet */
+            spawnT += dt; const alive = cells.filter((c) => !c.die); if (spawnT > (vax ? 1.5 : 5) && alive.length < (vax ? 10 : 6)) { spawnT = 0; newCells(1, true); }
+            for (const c of cells) {
+              c.born = Math.min(1, c.born + dt); if (c.die) { c.die += dt * 0.7; continue; }
+              const near = live.filter((g) => Math.hypot(g.x - c.x, g.y - c.y) < 80).length;
+              if (near > 2) c.hp -= dt * (vax ? 0.015 : 0.045) * (near - 2); if (c.hp <= 0) { c.die = 0.01; continue; }
+              c.hp = Math.min(1, c.hp + dt * 0.02);
+              const tg = live.sort((a, b) => Math.hypot(a.x - c.x, a.y - c.y) - Math.hypot(b.x - c.x, b.y - c.y))[0]; const tx = tg ? tg.x : 500 + Math.sin(t * 0.3 + c.x) * 300, ty = tg ? tg.y : 320 + Math.cos(t * 0.4 + c.y) * 150; const d = Math.hypot(tx - c.x, ty - c.y) || 1; const spd = vax ? 120 : 70; c.vx = lerp(c.vx, (tx - c.x) / d * spd, dt * 1.5); c.vy = lerp(c.vy, (ty - c.y) / d * spd, dt * 1.5); c.x += c.vx * dt; c.y += c.vy * dt; if (tg && d < 40) tg.hit = Math.min(1, tg.hit + dt * (vax ? 2.2 : 0.8)); if (tg && Math.random() < dt * (vax ? 5 : 1.5)) abs.push({ x: c.x, y: c.y, tg: tg, a: Math.random() * TAU, stuck: false });
+            }
+            for (let i = abs.length - 1; i >= 0; i--) { const a = abs[i]; if (!a.tg || a.tg.dead > 0.5) { abs.splice(i, 1); continue; } const dx = a.tg.x - a.x, dy = a.tg.y - a.y, d = Math.hypot(dx, dy); if (d > 22) { a.x += dx / d * 160 * dt; a.y += dy / d * 160 * dt; } else { a.stuck = true; a.tg.hit = Math.min(1, a.tg.hit + dt * (vax ? 0.45 : 0.15)); a.x = a.tg.x - dx / d * 22; a.y = a.tg.y - dy / d * 22; } antibody(ctx, a.x, a.y, 9, Math.atan2(dy, dx) + Math.PI / 2); }
+            if (abs.length > 200) abs.splice(0, abs.length - 200);
+            for (let i = fg.length - 1; i >= 0; i--) { const g = fg[i]; if (g.dead > 1) { fg.splice(i, 1); continue; } germ(ctx, g.x, g.y, 18 * (g.dead ? 1 - g.dead : 1) * (0.4 + 0.6 * g.born), t * 2 + i, '#5ac85a', true, g.dead ? 1 - g.dead : 1); }
+            for (let i = cells.length - 1; i >= 0; i--) { const c = cells[i];
+              if (c.die) { if (c.die > 1) { cells.splice(i, 1); continue; } ctx.save(); ctx.globalAlpha = 1 - c.die; ctx.fillStyle = '#8a8a96'; for (let k = 0; k < 7; k++) { const a = k / 7 * TAU, r = 10 + c.die * 50; ctx.beginPath(); ctx.arc(c.x + Math.cos(a) * r, c.y + Math.sin(a) * r, 10 * (1 - c.die * 0.6), 0, TAU); ctx.fill(); } ctx.restore(); A.text(ctx, '💀', c.x, c.y, { size: 26, halo: false }); continue; }
+              ctx.save(); ctx.globalAlpha = c.born; if (vax) A.glow(ctx, c.x, c.y, 60, '#7ad0ff', 0.35); wbc(ctx, c.x, c.y, 42 * (0.8 + 0.2 * c.hp), t); ctx.restore(); if (vax) A.text(ctx, '🛡️', c.x + 30, c.y + 30, { size: 18, halo: false });
+              if (c.hp < 0.95) { A.meter(ctx, c.x - 30, c.y - 58, 60, 7, c.hp, c.hp > 0.5 ? '#4ade80' : c.hp > 0.25 ? '#ffb43d' : '#ff5a6a'); if (c.hp < 0.4) A.text(ctx, '😰', c.x + 34, c.y - 40, { size: 20, halo: false }); }
+            }
+            const nG = fg.filter((g) => !g.dead).length, nW = cells.filter((c) => !c.die).length;
+            const sick = nG > 60 || (nW === 0 && nG > 0);
+            if (sick && !sickSaid) { sickSaid = true; api.say('<b>🤒 Corpul nu mai face față singur!</b> Microbii sunt prea mulți și se înmulțesc mai repede decât îi pot prinde globulele albe, iar multe globule au murit în luptă. Acum ești <b>bolnav</b>: ai febră și te simți rău. E momentul să mergi la <b>doctor</b>. Apasă <b>Medicamentul doctorului</b>.'); }
+            A.panel(ctx, 30, 20, 250, 76, { r: 12 }); A.text(ctx, '🦠 microbi: ' + nG, 155, 44, { size: 17, color: '#b0ffb0' }); A.text(ctx, '⚪ globule albe: ' + nW + (vax ? '  💉' : ''), 155, 72, { size: 17 });
+            if (cells[0] && !cells[0].die) A.label(ctx, 'globulă albă', cells[0].x, cells[0].y - 72, { size: 15 });
+            A.label(ctx, 'Y = anticorpi', 860, 560, { size: 15, color: '#ffe08a' });
+            A.text(ctx, sick ? '🤒 Corpul are nevoie de ajutor!' : med > 0 ? '💊 Medicamentul lucrează…' : nG ? (nG > 20 ? '⚠️ Microbii se înmulțesc!' : '⚔️ Globulele albe luptă') : '🏆 Corpul a câștigat!', 600, 58, { size: 22, color: sick ? '#ff8a9a' : nG ? '#ffe08a' : '#7dffb0' });
           } else {
             /* două „cronologii”: microbi în timp */
             const x0 = 120, x1 = 900, y0 = 140, y1 = 470;
