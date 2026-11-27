@@ -9,6 +9,67 @@
     { k: 'trex', o: { v: 'small' }, n: 'Velociraptor', e: '🦖', h: 0.6, L: 2, w: '15 kg (cât un câine)', f: '🥩 carnivor', p: 'acum 75–71 milioane de ani', t: 'Mic și rapid, cât un curcan mare. Avea <b>pene</b> și o gheară curbată la picioare. Vâna probabil în grup.' },
     { k: 'ptero', o: {}, n: 'Pteranodon', e: '🦅', h: 1.8, L: 6, w: '25 kg', f: '🐟 pește', p: 'acum 86–84 milioane de ani', t: 'Nu era chiar dinozaur, ci o „reptilă zburătoare”, rudă cu ei. Aripile lui întinse măsurau 6 metri, cât o mașină și jumătate!' }
   ];
+
+  const BONE = '#f2ead6', ROCK = '#6a4a2e', STONE = '#d8c8a4';
+  const leg = (ctx, x, y, a, l1, l2, w) => { ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x, y); const kx = x + Math.sin(a) * l1, ky = y + Math.cos(a) * l1; ctx.lineTo(kx, ky); ctx.lineTo(kx - Math.sin(a) * l2 * 0.4, ky + l2); ctx.lineTo(kx - Math.sin(a) * l2 * 0.4 + 22, ky + l2 + 4); ctx.stroke(); };
+  const ribs = (ctx, x0, n, dx, y, h, w) => { ctx.lineWidth = w || 5; for (let i = 0; i < n; i++) { const x = x0 + i * dx, k = 1 - Math.abs(i - n / 2) / n; ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + 10, y + h * k * 0.6, x - 5, y + h * k); ctx.stroke(); } };
+  const FOS = [
+    { n: 'un schelet de T-rex', t: 'Cel mai faimos dinozaur carnivor. Primul schelet de T-rex a fost găsit acum peste 100 de ani, în America.', draw: function (ctx, t) {
+      ctx.beginPath(); ctx.moveTo(-330, -40); ctx.quadraticCurveTo(-200, -90, -40, -60); ctx.quadraticCurveTo(80, -40, 190, -110); ctx.stroke();
+      for (let i = 0; i < 12; i++) { const x = -200 + i * 20; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(x, -70 + Math.abs(i - 6) * 2); ctx.quadraticCurveTo(x + 10, 0, x - 5, 40 - Math.abs(i - 6) * 4); ctx.stroke(); }
+      ctx.lineWidth = 10; ctx.beginPath(); ctx.moveTo(-60, -50); ctx.lineTo(-40, 60); ctx.lineTo(-70, 140); ctx.lineTo(-30, 150); ctx.moveTo(-20, -50); ctx.lineTo(20, 60); ctx.lineTo(0, 140); ctx.lineTo(40, 150); ctx.stroke();
+      ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(150, -80); ctx.lineTo(175, -40); ctx.lineTo(160, -20); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(190, -150); ctx.quadraticCurveTo(300, -170, 330, -110); ctx.lineTo(290, -85); ctx.quadraticCurveTo(230, -70, 190, -90); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = ROCK; ctx.beginPath(); ctx.arc(240, -130, 12, 0, TAU); ctx.fill(); ctx.fillStyle = BONE; for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.moveTo(250 + i * 12, -92); ctx.lineTo(255 + i * 12, -78); ctx.lineTo(260 + i * 12, -92); ctx.fill(); }
+    } },
+    { n: 'un craniu de Triceratops', t: 'Craniul lui Triceratops e uriaș: aproape 2 metri, cât un om matur! Avea 3 coarne și un guler de os.', draw: function (ctx) {
+      ctx.beginPath(); ctx.moveTo(-60, -120); ctx.quadraticCurveTo(80, -230, 230, -120); ctx.quadraticCurveTo(250, -30, 180, 40); ctx.lineTo(60, 60); ctx.quadraticCurveTo(-40, 90, -150, 80); ctx.lineTo(-250, 60); ctx.quadraticCurveTo(-260, 20, -210, 0); ctx.quadraticCurveTo(-120, -60, -60, -120); ctx.fill();
+      ctx.fillStyle = ROCK; ctx.beginPath(); ctx.ellipse(110, -110, 40, 26, -0.3, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(180, -60, 26, 20, 0.4, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(-50, -20, 20, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(-170, 30, 18, 10, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = BONE; for (let i = 0; i < 9; i++) { const a = -2.6 + i * 0.32; ctx.beginPath(); ctx.arc(90 + Math.cos(a) * 160, -40 + Math.sin(a) * 140, 12, 0, Math.PI * 2); ctx.fill(); }
+      const horn = (x, y, a, l, w) => { ctx.save(); ctx.translate(x, y); ctx.rotate(a); ctx.beginPath(); ctx.moveTo(-w, 0); ctx.quadraticCurveTo(-w * 0.3, -l * 0.6, 0, -l); ctx.quadraticCurveTo(w * 0.2, -l * 0.5, w, 0); ctx.fill(); ctx.restore(); };
+      horn(-60, -60, -1.0, 170, 22); horn(-20, -40, -0.9, 150, 20); horn(-200, -5, -0.6, 60, 14);
+      ctx.beginPath(); ctx.moveTo(-250, 60); ctx.quadraticCurveTo(-300, 50, -290, 90); ctx.lineTo(-240, 80); ctx.fill();
+      ctx.lineWidth = 12; ctx.beginPath(); ctx.moveTo(-150, 90); ctx.quadraticCurveTo(-30, 140, 80, 90); ctx.stroke();
+      ctx.fillStyle = ROCK; for (let i = 0; i < 6; i++) ctx.fillRect(-140 + i * 30, 92 + Math.sin(i) * 3, 6, 12);
+    } },
+    { n: 'un schelet de Stegosaurus', t: 'Stegosaurus avea plăci mari pe spate și 4 țepi în coadă. Plăcile poate îl ajutau să se încălzească la soare sau să-și sperie dușmanii.', draw: function (ctx) {
+      ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(-350, 30); ctx.quadraticCurveTo(-150, -110, 30, -90); ctx.quadraticCurveTo(200, -70, 300, 20); ctx.stroke();
+      for (let i = 0; i < 9; i++) { const u = i / 8, x = -250 + u * 470, y = -60 - Math.sin(u * Math.PI) * 60, h = 40 + Math.sin(u * Math.PI) * 50; ctx.beginPath(); ctx.moveTo(x - 22, y + 8); ctx.lineTo(x, y - h); ctx.lineTo(x + 22, y + 8); ctx.closePath(); ctx.fill(); }
+      ribs(ctx, -130, 10, 22, -80, 110);
+      for (const [x, a] of [[-330, -0.9], [-310, -0.5], [-345, 0.6], [-325, 0.9]]) { ctx.save(); ctx.translate(x, 30); ctx.rotate(a); ctx.beginPath(); ctx.moveTo(-6, 0); ctx.lineTo(0, -60); ctx.lineTo(6, 0); ctx.fill(); ctx.restore(); }
+      leg(ctx, -80, -40, -0.2, 90, 80, 12); leg(ctx, -40, -40, 0.1, 90, 80, 11); leg(ctx, 170, -40, 0.15, 70, 60, 10); leg(ctx, 200, -30, -0.1, 70, 60, 9);
+      ctx.beginPath(); ctx.ellipse(310, 30, 34, 16, 0.4, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = ROCK; ctx.beginPath(); ctx.arc(318, 24, 5, 0, Math.PI * 2); ctx.fill();
+    } },
+    { n: 'un schelet de Brachiosaurus', t: 'Gâtul lui Brachiosaurus avea vertebre uriașe, unele cât un copil! Paleontologii găsesc de obicei doar câteva oase și ghicesc restul.', draw: function (ctx) {
+      ctx.lineWidth = 11; ctx.beginPath(); ctx.moveTo(-380, 40); ctx.quadraticCurveTo(-200, -40, -60, -20); ctx.quadraticCurveTo(80, -10, 150, -80); ctx.quadraticCurveTo(220, -170, 250, -200); ctx.stroke();
+      for (let i = 0; i < 10; i++) { const u = i / 9, x = 160 + u * 85, y = -90 - u * 110; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.fill(); }
+      ctx.beginPath(); ctx.ellipse(275, -205, 34, 18, 0.2, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = ROCK; ctx.beginPath(); ctx.arc(275, -212, 6, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = BONE;
+      ribs(ctx, -130, 9, 24, -25, 110, 6);
+      leg(ctx, -140, -10, -0.1, 100, 90, 15); leg(ctx, -100, -10, 0.15, 100, 90, 13); leg(ctx, 60, -20, 0.05, 110, 90, 14); leg(ctx, 100, -25, -0.15, 110, 90, 12);
+    } },
+    { n: 'un schelet de Pteranodon', t: 'Oasele lui Pteranodon erau goale pe dinăuntru, ca la păsări, ca să fie ușor în zbor. Aripa era făcută din pielea întinsă pe un deget foarte lung!', draw: function (ctx) {
+      ctx.lineWidth = 7; for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(s * 90, -60); ctx.lineTo(s * 160, -20); ctx.lineTo(s * 380, -110); ctx.stroke(); ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(s * 160, -20); ctx.lineTo(s * 175, 10); ctx.moveTo(s * 160, -20); ctx.lineTo(s * 185, -5); ctx.stroke(); ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(s * 10, 60); ctx.lineTo(s * 40, 130); ctx.lineTo(s * 30, 180); ctx.stroke(); }
+      ctx.beginPath(); ctx.ellipse(0, 20, 22, 50, 0, 0, Math.PI * 2); ctx.fill(); ribs(ctx, -14, 4, 9, 0, 40, 3);
+      ctx.beginPath(); ctx.moveTo(-10, -60); ctx.lineTo(-170, -70); ctx.lineTo(-10, -40); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(10, -60); ctx.lineTo(120, -140); ctx.lineTo(0, -45); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.arc(0, -55, 22, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = ROCK; ctx.beginPath(); ctx.arc(-6, -58, 6, 0, Math.PI * 2); ctx.fill();
+    } },
+    { n: 'un amonit', t: 'Amoniții erau rude ale caracatițelor, cu o cochilie în spirală. Au trăit în mări pe vremea dinozaurilor. Fosilele lor se găsesc și în România!', draw: function (ctx) {
+      ctx.fillStyle = STONE; ctx.beginPath(); ctx.arc(0, 0, 170, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#8a7652'; ctx.lineWidth = 5;
+      ctx.beginPath(); for (let a = 0; a < Math.PI * 7; a += 0.05) { const r = 170 * Math.exp(-a * 0.12); ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); } ctx.stroke();
+      ctx.lineWidth = 3; for (let a = 0; a < Math.PI * 6; a += 0.22) { const r1 = 170 * Math.exp(-a * 0.12), r2 = 170 * Math.exp(-(a + Math.PI * 2) * 0.12); ctx.beginPath(); ctx.moveTo(Math.cos(a) * r1, Math.sin(a) * r1); ctx.lineTo(Math.cos(a) * r2, Math.sin(a) * r2); ctx.stroke(); }
+    } },
+    { n: 'un trilobit', t: 'Trilobiții au trăit în mări acum peste 500 de milioane de ani, cu mult înaintea dinozaurilor. Erau rude cu insectele și racii și aveau ochi făcuți din cristale!', draw: function (ctx) {
+      ctx.save(); ctx.rotate(-0.2); ctx.fillStyle = STONE; ctx.beginPath(); ctx.ellipse(0, 0, 140, 210, 0, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#7a6648'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.ellipse(0, -150, 135, 70, 0, Math.PI, Math.PI * 2); ctx.closePath(); ctx.stroke(); ctx.fillStyle = '#b8a47e'; ctx.beginPath(); ctx.ellipse(0, -160, 40, 50, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(-70, -150, 18, 14, 0, 0, Math.PI * 2); ctx.ellipse(70, -150, 18, 14, 0, 0, Math.PI * 2); ctx.fill();
+      for (let i = 0; i < 12; i++) { const y = -90 + i * 22, w = 130 * Math.sqrt(1 - Math.pow((y + 10) / 220, 2)); ctx.beginPath(); ctx.moveTo(-w, y); ctx.quadraticCurveTo(0, y + 10, w, y); ctx.stroke(); }
+      ctx.beginPath(); ctx.moveTo(-40, -100); ctx.lineTo(-30, 190); ctx.moveTo(40, -100); ctx.lineTo(30, 190); ctx.stroke(); ctx.restore();
+    } },
+    { n: 'un pește fosil', t: 'Când un pește moare și e acoperit repede de mâl, oasele lui se pot transforma în piatră. Așa vedem azi pești de acum milioane de ani, cu fiecare os la locul lui.', draw: function (ctx) {
+      ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(-280, 0); ctx.quadraticCurveTo(0, -20, 230, 0); ctx.stroke();
+      ctx.lineWidth = 3; for (let i = 0; i < 22; i++) { const x = -200 + i * 19, k = Math.sin((i + 1) / 23 * Math.PI); ctx.beginPath(); ctx.moveTo(x, -8); ctx.quadraticCurveTo(x + 12, -60 * k, x + 22, -100 * k); ctx.moveTo(x, -4); ctx.quadraticCurveTo(x + 12, 50 * k, x + 22, 90 * k); ctx.stroke(); }
+      ctx.beginPath(); ctx.moveTo(-280, 0); ctx.lineTo(-360, -80); ctx.lineTo(-340, 0); ctx.lineTo(-360, 80); ctx.closePath(); ctx.stroke();
+      ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(230, -60); ctx.quadraticCurveTo(320, -40, 330, 10); ctx.quadraticCurveTo(300, 60, 230, 60); ctx.closePath(); ctx.stroke(); ctx.beginPath(); ctx.arc(285, -15, 14, 0, Math.PI * 2); ctx.stroke();
+    } }
+  ];
   function kid(ctx, x, y, h) { const s = h; ctx.fillStyle = '#3a6ad0'; ctx.fillRect(x - s * 0.08, y - s * 0.45, s * 0.07, s * 0.45); ctx.fillRect(x + s * 0.01, y - s * 0.45, s * 0.07, s * 0.45); ctx.fillStyle = '#ff5a6a'; A.roundRectPath(ctx, x - s * 0.13, y - s * 0.8, s * 0.26, s * 0.38, s * 0.06); ctx.fill(); ctx.fillStyle = '#f2c09a'; ctx.beginPath(); ctx.arc(x, y - s * 0.89, s * 0.11, 0, TAU); ctx.fill(); ctx.fillStyle = '#5a3a1a'; ctx.beginPath(); ctx.arc(x, y - s * 0.92, s * 0.11, Math.PI, TAU); ctx.fill(); }
   defineModule({
     id: 'dinosaurs', title: 'Dinozaurii', sub: 'Cât de mari erau, ce mâncau și ce s-a întâmplat cu ei',
@@ -22,7 +83,7 @@
       api.button(rdg, '🔄 Groapă nouă', () => resetSand());
       function pick(i) { sel = i; st = 0; db.forEach((b, j) => b.classList.toggle('on', j === i)); const d = DINO[i]; api.say('<b>' + d.e + ' ' + d.n + '.</b> ' + d.t); }
       function setMode(m) { mode = m; st = 0; for (const k in bs) bs[k].classList.toggle('on', k === m); rg.style.display = m === 'gallery' ? '' : 'none'; rmt.style.display = m === 'meteor' ? '' : 'none'; rdg.style.display = m === 'dig' ? '' : 'none'; if (m === 'gallery') pick(sel); else if (m === 'meteor') api.say('Acum <b>66 de milioane de ani</b>, un <b>asteroid</b> mare cât un oraș a lovit Pământul. Praful a acoperit Soarele mulți ani, s-a făcut frig, plantele s-au uscat și dinozaurii mari au dispărut. Dar unii au supraviețuit: <b>păsările</b> de azi sunt urmașii dinozaurilor! 🐦'); else { resetSand(); api.say('Dinozaurii au lăsat <b>fosile</b>: oase care, în milioane de ani, s-au transformat în piatră. <b>Paleontologii</b> le scot din pământ cu grijă, cu pensule. Freacă cu degetul ca să dai nisipul la o parte!'); } api.layout(); }
-      const GW = 40, GH = 22; function resetSand() { sand = new Float32Array(GW * GH).fill(1); found = 0; }
+      const GW = 40, GH = 22; let fos = 0, first = true; function resetSand() { sand = new Float32Array(GW * GH).fill(1); found = 0; if (first) { first = false; fos = Math.floor(Math.random() * FOS.length); } else { let n; do { n = Math.floor(Math.random() * FOS.length); } while (n === fos); fos = n; } }
       let V = null;
       api.pointer({ move: (x, y) => { if (mode !== 'dig' || !V || !sand) return; const p = V.inv(x, y); const gx = (p[0] - 100) / 800 * GW, gy = (p[1] - 120) / 400 * GH; for (let j = 0; j < GH; j++) for (let i = 0; i < GW; i++) { const d = Math.hypot(i + 0.5 - gx, (j + 0.5 - gy) * 1.3); if (d < 2.2) sand[j * GW + i] = Math.max(0, sand[j * GW + i] - 0.25 * (2.2 - d)); } }, down: (x, y) => {} });
       function land(t, dark) {
@@ -64,19 +125,15 @@
             A.label(ctx, cap, 500, 60, { size: 20 });
           } else {
             ctx.fillStyle = '#6a4a2e'; ctx.fillRect(60, 90, 880, 460);
-            /* scheletul de dedesubt */
-            ctx.save(); ctx.translate(500, 330); ctx.strokeStyle = '#f2ead6'; ctx.fillStyle = '#f2ead6'; ctx.lineCap = 'round'; ctx.lineWidth = 9;
-            ctx.beginPath(); ctx.moveTo(-330, -40); ctx.quadraticCurveTo(-200, -90, -40, -60); ctx.quadraticCurveTo(80, -40, 190, -110); ctx.stroke();
-            for (let i = 0; i < 12; i++) { const x = -200 + i * 20; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(x, -70 + Math.abs(i - 6) * 2); ctx.quadraticCurveTo(x + 10, 0, x - 5, 40 - Math.abs(i - 6) * 4); ctx.stroke(); }
-            ctx.lineWidth = 10; ctx.beginPath(); ctx.moveTo(-60, -50); ctx.lineTo(-40, 60); ctx.lineTo(-70, 140); ctx.lineTo(-30, 150); ctx.moveTo(-20, -50); ctx.lineTo(20, 60); ctx.lineTo(0, 140); ctx.lineTo(40, 150); ctx.stroke();
-            ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(150, -80); ctx.lineTo(175, -40); ctx.lineTo(160, -20); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(190, -150); ctx.quadraticCurveTo(300, -170, 330, -110); ctx.lineTo(290, -85); ctx.quadraticCurveTo(230, -70, 190, -90); ctx.closePath(); ctx.fill();
-            ctx.fillStyle = '#6a4a2e'; ctx.beginPath(); ctx.arc(240, -130, 12, 0, TAU); ctx.fill(); ctx.fillStyle = '#f2ead6'; for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.moveTo(250 + i * 12, -92); ctx.lineTo(255 + i * 12, -78); ctx.lineTo(260 + i * 12, -92); ctx.fill(); }
+            /* fosila de dedesubt (alta la fiecare groapă nouă) */
+            ctx.save(); ctx.translate(500, 330); ctx.strokeStyle = BONE; ctx.fillStyle = BONE; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.lineWidth = 9;
+            FOS[fos].draw(ctx, t);
             ctx.restore();
             /* nisipul */
             let left = 0; for (let j = 0; j < GH; j++) for (let i = 0; i < GW; i++) { const a = sand[j * GW + i]; left += a; if (a <= 0.02) continue; ctx.fillStyle = 'rgba(' + (196 + ((i * 7 + j * 3) % 5) * 6) + ',' + (160 + ((i * 3 + j * 5) % 5) * 5) + ',110,' + a + ')'; ctx.fillRect(100 + i * 20, 120 + j * (400 / GH), 21, 400 / GH + 1); }
             const pct = 1 - left / (GW * GH);
-            A.label(ctx, pct > 0.7 ? '🎉 Ai găsit un schelet de T-rex!' : '👆 Freacă cu degetul ca să sapi · ' + Math.round(pct * 100) + '%', 500, 60, { size: 18 });
+            if (pct > 0.7 && !found) { found = 1; api.say('<b>🎉 Ai găsit: ' + FOS[fos].n + '!</b> ' + FOS[fos].t); }
+            A.label(ctx, pct > 0.7 ? '🎉 Ai găsit: ' + FOS[fos].n + '!' : '👆 Freacă cu degetul ca să sapi · ' + Math.round(pct * 100) + '%', 500, 60, { size: 18 });
           }
           ctx.restore();
         }

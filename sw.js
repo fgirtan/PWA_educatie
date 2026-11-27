@@ -1,5 +1,5 @@
 /* Service worker — aplicația funcționează complet offline. */
-const CACHE = 'univers-v49';
+const CACHE = 'univers-v50';
 const ASSETS = [
   './',
   'index.html',
