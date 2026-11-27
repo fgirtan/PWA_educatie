@@ -16,7 +16,7 @@
       return {
         frame: function (dt, t) {
           const lift = pow * 2, acc = (lift - 1) * 6; vy += acc * dt; vy *= Math.exp(-1.6 * dt); alt = clamp(alt + vy * dt, 0, 1); if (alt <= 0 && vy < 0) vy = 0; if (alt >= 1 && vy > 0) vy = 0;
-          tilt = A.damp(tilt, tiltT * 0.22, 3, dt); vx = A.damp(vx, alt > 0.05 ? tilt * 3 : 0, 2, dt); scroll += vx * dt * 300;
+          tilt = A.damp(tilt, tiltT * 0.22, 3, dt); vx = A.damp(vx, alt > 0.05 ? tilt * 3 : 0, 2, dt); scroll -= vx * dt * 300;   // botul e în stânga: înainte = peisajul fuge spre dreapta
           if (!tail && pow > 0.1) yawV += dt * pow * 1.6; yawV *= Math.exp(-(tail ? 3 : 0.3) * dt); yaw += yawV * dt; if (tail) yaw = A.damp(yaw, Math.round(yaw / TAU) * TAU, 2, dt);
           ph += dt * pow * 40;
           const g = ctx.createLinearGradient(0, 0, 0, api.H); g.addColorStop(0, '#4f97e0'); g.addColorStop(1, '#d6ecfb'); ctx.fillStyle = g; ctx.fillRect(0, 0, api.W, api.H);
